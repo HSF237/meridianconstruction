@@ -920,12 +920,61 @@
             }
         }
 
+        .db-filter-bar {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            background: #F8F9FB
+        }
+
+        .db-stats {
+            font-size: 11px;
+            color: #666;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .db-date-cell {
+            font-weight: 700;
+            color: #1A3C5E;
+            white-space: nowrap
+        }
+
+        .db-type-receipt {
+            color: #1D9E75;
+            font-weight: 600
+        }
+
+        .db-type-mat {
+            color: #185FA5
+        }
+
+        .db-type-lab {
+            color: #534AB7
+        }
+
+        .db-total-row td {
+            background: #1A3C5E;
+            color: #fff;
+            font-weight: 700;
+            border-bottom: none
+        }
+
+        .db-net-row td {
+            background: #EAF3DE;
+            font-weight: 700;
+            border-bottom: none
+        }
+
         @media print {
 
             .topbar,
             .nav-tabs,
             .sec-tabs,
             .sec-toolbar,
+            .db-filter-bar,
             .form-row,
             .btn,
             .add-site-bar,
@@ -1003,6 +1052,7 @@
         <div class="nav-tab on" id="nt-dash" onclick="showTab('dash')">&#9632; Dashboard</div>
         <div class="nav-tab" id="nt-sites" onclick="showTab('sites')">&#9776; All Sites</div>
         <div class="nav-tab" id="nt-vsummary" onclick="showTab('vsummary')">&#128200; Vendor Summary</div>
+        <div class="nav-tab" id="nt-daybook" onclick="showTab('daybook')">&#128218; Day Book</div>
     </div>
 
     <div class="main">
@@ -1057,6 +1107,21 @@
                     <p>Vendor &amp; Labour Summary — All Sites</p>
                 </div>
                 <div id="vsummaryContent" style="padding:14px"></div>
+            </div>
+        </div>
+
+        <div id="view-daybook" style="display:none">
+            <div class="dash-tbl-wrap">
+                <div class="dash-tbl-hdr">
+                    <span>&#128218; Day Book — Transaction Register</span>
+                    <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
+                        onclick="window.print()">&#128424; Print</button>
+                </div>
+                <div class="print-header">
+                    <h2>Meridian Construction Company</h2>
+                    <p>Day Book — Transaction Register</p>
+                </div>
+                <div id="daybookContent"></div>
             </div>
         </div>
     </div>
@@ -1232,13 +1297,14 @@
 
         // ── NAVIGATION ──
         function showTab(t) {
-            ["dash", "sites", "vsummary"].forEach(v => {
+            ["dash", "sites", "vsummary", "daybook"].forEach(v => {
                 document.getElementById("view-" + v).style.display = t === v ? "block" : "none";
                 document.getElementById("nt-" + v).className = "nav-tab" + (t === v ? " on" : "");
             });
             if (t === "dash") renderDash();
             if (t === "sites") renderSites();
             if (t === "vsummary") renderVendorSummary();
+            if (t === "daybook") renderDayBook();
         }
 
         // ── DASHBOARD ──
@@ -1785,6 +1851,166 @@
             const ds = d.getDate() + "-" + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()] + "-" + d.getFullYear();
             XLSX.writeFile(wb, "Meridian_IE_" + ds + ".xlsx");
             notif("Excel exported!");
+        }
+
+        // ── DAY BOOK ──
+        let dbFilters = { from: "", to: "", site: "", type: "" };
+
+        function inDbRange(date) {
+            const { from, to } = dbFilters;
+            if (!from && !to) return true;
+            if (!date) return false;
+            if (from && date < from) return false;
+            if (to && date > to) return false;
+            return true;
+        }
+
+        function dbFilter() {
+            const ids = ["db-from", "db-to", "db-site", "db-type"];
+            const keys = ["from", "to", "site", "type"];
+            ids.forEach((id, k) => { const el = document.getElementById(id); if (el) dbFilters[keys[k]] = el.value; });
+            renderDayBook();
+        }
+
+        function clearDbFilters() {
+            dbFilters = { from: "", to: "", site: "", type: "" };
+            renderDayBook();
+        }
+
+        function renderDayBook() {
+            const siteOptions = `<option value="">All Sites</option>` +
+                sites.map((s, i) => `<option value="${i}"${dbFilters.site === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
+
+            const entries = [];
+            const siteIdx = dbFilters.site !== "" ? parseInt(dbFilters.site) : -1;
+
+            sites.forEach((s, idx) => {
+                if (siteIdx >= 0 && siteIdx !== idx) return;
+
+                s.cash.forEach(r => {
+                    if (!inDbRange(r.date)) return;
+                    entries.push({ date: r.date || "", site: s.name, type: "Receipt", typeKey: "receipt", part: r.part || "", ref: "", dr: 0, cr: r.amt || 0 });
+                });
+
+                s.matCats.forEach(cat => {
+                    (s.mat[cat] || []).forEach(r => {
+                        if (!inDbRange(r.date)) return;
+                        entries.push({ date: r.date || "", site: s.name, type: "Material — " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0 });
+                    });
+                });
+
+                s.labCats.forEach(cat => {
+                    const lb = s.lab[cat];
+                    if (!lb) return;
+                    if (lb.contract !== null) {
+                        if (!inDbRange("")) return;
+                        entries.push({ date: "", site: s.name, type: "Labour — " + cat + " (SC)", typeKey: "labour", part: lb.scName || "Subcontractor", ref: "", dr: lb.contract || 0, cr: 0 });
+                    } else {
+                        (lb.daily || []).forEach(r => {
+                            if (!inDbRange(r.date)) return;
+                            entries.push({ date: r.date || "", site: s.name, type: "Labour — " + cat, typeKey: "labour", part: r.part || "", ref: r.voucher || "", dr: r.amt || 0, cr: 0 });
+                        });
+                    }
+                });
+            });
+
+            const tf = dbFilters.type;
+            const filtered = entries.filter(e => !tf || e.typeKey === tf);
+
+            filtered.sort((a, b) => {
+                if (!a.date && !b.date) return 0;
+                if (!a.date) return 1;
+                if (!b.date) return -1;
+                return a.date.localeCompare(b.date);
+            });
+
+            const groups = {};
+            const groupOrder = [];
+            filtered.forEach(e => {
+                const key = e.date || "—";
+                if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+                groups[key].push(e);
+            });
+
+            let totalDr = 0, totalCr = 0;
+            let tableRows = "";
+
+            if (filtered.length === 0) {
+                tableRows = '<tr class="empty-row"><td colspan="7">No entries found for the selected filters.</td></tr>';
+            } else {
+                groupOrder.forEach(dateKey => {
+                    const grp = groups[dateKey];
+                    let grpDr = 0, grpCr = 0;
+
+                    grp.forEach((e, j) => {
+                        grpDr += e.dr; grpCr += e.cr;
+                        const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : "db-type-lab";
+                        tableRows += `<tr>
+                            <td>${j === 0 ? (dateKey === "—" ? "<span style='color:#aaa'>—</span>" : `<span class="db-date-cell">${fmtDate(dateKey)}</span>`) : ""}</td>
+                            <td style="font-size:11px">${esc(e.site)}</td>
+                            <td class="${typeClass}" style="font-size:11px">${esc(e.type)}</td>
+                            <td>${esc(e.part) || "—"}</td>
+                            <td class="muted">${esc(e.ref) || "—"}</td>
+                            <td class="r">${e.dr > 0 ? fmt(e.dr) : "<span style='color:#ddd'>—</span>"}</td>
+                            <td class="r" style="color:#1D9E75">${e.cr > 0 ? fmt(e.cr) : "<span style='color:#ddd'>—</span>"}</td>
+                        </tr>`;
+                    });
+
+                    totalDr += grpDr; totalCr += grpCr;
+
+                    tableRows += `<tr class="sub-row">
+                        <td colspan="5" style="text-align:right">${dateKey === "—" ? "Subtotal (No Date)" : fmtDate(dateKey) + " — Daily Total"}</td>
+                        <td class="r">${grpDr > 0 ? fmt(grpDr) : "—"}</td>
+                        <td class="r">${grpCr > 0 ? fmt(grpCr) : "—"}</td>
+                    </tr>`;
+                });
+
+                const net = totalCr - totalDr;
+                tableRows += `<tr class="db-total-row">
+                    <td colspan="5">PERIOD TOTAL</td>
+                    <td class="r">${fmt(totalDr)}</td>
+                    <td class="r">${fmt(totalCr)}</td>
+                </tr>`;
+                tableRows += `<tr class="db-net-row">
+                    <td colspan="5" style="text-align:right;color:#1A3C5E">Net Balance (Receipts − Expenses)</td>
+                    <td colspan="2" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td>
+                </tr>`;
+            }
+
+            document.getElementById("daybookContent").innerHTML = `
+            <div class="db-filter-bar">
+              <div class="form-row fg4" style="margin-bottom:0">
+                <div class="fi"><label>From Date</label><input type="date" id="db-from" value="${esc(dbFilters.from)}" onchange="dbFilter()"></div>
+                <div class="fi"><label>To Date</label><input type="date" id="db-to" value="${esc(dbFilters.to)}" onchange="dbFilter()"></div>
+                <div class="fi"><label>Site</label><select id="db-site" onchange="dbFilter()">${siteOptions}</select></div>
+                <div class="fi"><label>Type</label><select id="db-type" onchange="dbFilter()">
+                  <option value=""${!tf ? " selected" : ""}>All Types</option>
+                  <option value="receipt"${tf === "receipt" ? " selected" : ""}>Receipts Only</option>
+                  <option value="material"${tf === "material" ? " selected" : ""}>Materials Only</option>
+                  <option value="labour"${tf === "labour" ? " selected" : ""}>Labour Only</option>
+                </select></div>
+              </div>
+              <div class="db-stats">
+                <span>${filtered.length} entr${filtered.length === 1 ? "y" : "ies"}</span>
+                <span style="color:#C00000">&#9660; Expenses: <strong>${fmt(totalDr)}</strong></span>
+                <span style="color:#1D9E75">&#9650; Receipts: <strong>${fmt(totalCr)}</strong></span>
+                <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearDbFilters()">Clear Filters</button>
+              </div>
+            </div>
+            <div class="tbl-wrap" style="margin-top:0">
+              <table class="etbl">
+                <thead><tr>
+                  <th style="width:11%">Date</th>
+                  <th style="width:15%">Site</th>
+                  <th style="width:20%">Type</th>
+                  <th>Particulars</th>
+                  <th style="width:9%">Ref No</th>
+                  <th class="r" style="width:11%">Debit (&#8377;)</th>
+                  <th class="r" style="width:11%">Credit (&#8377;)</th>
+                </tr></thead>
+                <tbody>${tableRows}</tbody>
+              </table>
+            </div>`;
         }
 
         // ── BOOT ──
