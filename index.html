@@ -6,13 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meridian Construction — IE Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
+
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCkhf_MbNk-8GAqKBXCeJQ2pk1V_sLyzPU",
             authDomain: "meridian-construction.firebaseapp.com",
@@ -23,17 +22,18 @@
             measurementId: "G-VX1TG3LXFG"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Export for use in main script
         window.db = db;
         window.fsDoc = doc;
         window.fsGetDoc = getDoc;
         window.fsSetDoc = setDoc;
         window.fsOnSnapshot = onSnapshot;
+        window.firebaseReady = true;
+        window.dispatchEvent(new Event("firebaseReady"));
     </script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -48,12 +48,6 @@
             font-size: 13px
         }
 
-        a {
-            color: inherit;
-            text-decoration: none
-        }
-
-        /* ── TOP BAR ── */
         .topbar {
             background: #1A3C5E;
             padding: 10px 18px;
@@ -62,14 +56,15 @@
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 100
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 8px
         }
 
         .tb-left h1 {
             color: #fff;
             font-size: 15px;
-            font-weight: 700;
-            letter-spacing: .3px
+            font-weight: 700
         }
 
         .tb-left p {
@@ -81,7 +76,8 @@
         .tb-right {
             display: flex;
             gap: 6px;
-            align-items: center
+            align-items: center;
+            flex-wrap: wrap
         }
 
         .btn {
@@ -134,15 +130,36 @@
             border: 1px solid #1A3C5E
         }
 
-        .saved-badge {
-            color: #7EB4D8;
+        .cloud-status {
             font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 99px;
             display: flex;
             align-items: center;
             gap: 4px
         }
 
-        /* ── NAV TABS ── */
+        .cloud-synced {
+            background: #1D9E75;
+            color: #fff
+        }
+
+        .cloud-syncing {
+            background: #BA7517;
+            color: #fff
+        }
+
+        .cloud-offline {
+            background: #777;
+            color: #fff
+        }
+
+        .cloud-error {
+            background: #C00000;
+            color: #fff
+        }
+
         .nav-tabs {
             background: #fff;
             border-bottom: 1px solid #ddd;
@@ -151,7 +168,8 @@
             gap: 2px;
             position: sticky;
             top: 48px;
-            z-index: 99
+            z-index: 99;
+            overflow-x: auto
         }
 
         .nav-tab {
@@ -174,13 +192,11 @@
             border-bottom-color: #1A3C5E
         }
 
-        /* ── MAIN CONTENT ── */
         .main {
             padding: 16px 18px;
             max-width: 1200px
         }
 
-        /* ── DASHBOARD ── */
         .dash-cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -229,7 +245,8 @@
             background: #fff;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
-            overflow: hidden
+            overflow: hidden;
+            margin-bottom: 16px
         }
 
         .dash-tbl-hdr {
@@ -237,7 +254,12 @@
             padding: 10px 14px;
             color: #fff;
             font-size: 12px;
-            font-weight: 700
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px
         }
 
         .dash-tbl {
@@ -260,8 +282,7 @@
 
         .dash-tbl td {
             padding: 8px 12px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle
+            border-bottom: 1px solid #f0f0f0
         }
 
         .dash-tbl td:not(:first-child) {
@@ -278,10 +299,7 @@
             background: #1A3C5E;
             color: #fff;
             font-weight: 700;
-            border-bottom: none
-        }
-
-        .dash-tbl .gt td {
+            border-bottom: none;
             text-align: right
         }
 
@@ -319,7 +337,6 @@
             margin-left: 4px
         }
 
-        /* ── SITES LIST ── */
         .sites-list {
             display: flex;
             flex-direction: column;
@@ -339,8 +356,7 @@
             gap: 12px;
             padding: 11px 16px;
             cursor: pointer;
-            user-select: none;
-            transition: background .15s
+            user-select: none
         }
 
         .site-hdr:hover {
@@ -405,11 +421,6 @@
             color: #9DC8E8
         }
 
-        .site-actions {
-            display: flex;
-            gap: 5px
-        }
-
         .site-body {
             display: none;
             border-top: 1px solid #eee
@@ -419,22 +430,21 @@
             display: block
         }
 
-        /* ── SECTION TABS ── */
         .sec-tabs {
             display: flex;
             background: #F8F9FB;
-            border-bottom: 1px solid #e8e8e8
+            border-bottom: 1px solid #e8e8e8;
+            flex-wrap: wrap
         }
 
         .sec-tab {
-            flex: 1;
-            padding: 9px 4px;
-            text-align: center;
+            padding: 9px 12px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             color: #666;
-            border-bottom: 3px solid transparent
+            border-bottom: 3px solid transparent;
+            white-space: nowrap
         }
 
         .sec-tab:hover {
@@ -457,28 +467,37 @@
             display: block
         }
 
-        /* ── CAT TABS ── */
+        .sec-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
         .cat-tabs {
             display: flex;
             gap: 5px;
-            flex-wrap: wrap;
-            margin-bottom: 12px
+            flex-wrap: wrap
         }
 
         .ctab {
-            padding: 4px 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
             border-radius: 99px;
             font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             border: 1px solid #ddd;
             background: #f5f5f5;
-            color: #555;
-            transition: all .15s
+            color: #555
         }
 
         .ctab:hover {
-            background: #e0e0e0
+            background: #e8e8e8
         }
 
         .ctab.on {
@@ -487,12 +506,56 @@
             border-color: #1A3C5E
         }
 
-        /* ── FORMS ── */
+        .ctab .rm {
+            background: rgba(255, 255, 255, .3);
+            border: none;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            font-size: 9px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            line-height: 1;
+            padding: 0
+        }
+
+        .ctab:not(.on) .rm {
+            background: rgba(0, 0, 0, .15);
+            color: #555
+        }
+
+        .ctab .rm:hover {
+            background: #C00000;
+            color: #fff
+        }
+
+        .add-cat-btn {
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px dashed #2E75B6;
+            background: #E6F1FB;
+            color: #185FA5
+        }
+
+        .add-cat-btn:hover {
+            background: #B5D4F4
+        }
+
         .form-row {
             display: grid;
             gap: 8px;
             margin-bottom: 10px;
             align-items: end
+        }
+
+        .fg2 {
+            grid-template-columns: repeat(2, 1fr)
         }
 
         .fg3 {
@@ -503,8 +566,8 @@
             grid-template-columns: repeat(4, 1fr)
         }
 
-        .fg2 {
-            grid-template-columns: repeat(2, 1fr)
+        .fg5 {
+            grid-template-columns: repeat(5, 1fr)
         }
 
         .fi label {
@@ -516,8 +579,7 @@
         }
 
         .fi input,
-        .fi select,
-        .fi textarea {
+        .fi select {
             width: 100%;
             padding: 6px 9px;
             border: 1px solid #ccc;
@@ -525,8 +587,7 @@
             font-size: 12px;
             font-family: Arial, sans-serif;
             background: #fff;
-            color: #1a1a1a;
-            transition: border .15s
+            color: #1a1a1a
         }
 
         .fi input:focus,
@@ -536,12 +597,6 @@
             box-shadow: 0 0 0 2px rgba(46, 117, 182, .15)
         }
 
-        .fi textarea {
-            resize: vertical;
-            min-height: 50px
-        }
-
-        /* ── TABLES ── */
         .tbl-wrap {
             overflow-x: auto;
             margin-top: 12px
@@ -568,8 +623,7 @@
 
         .etbl td {
             padding: 7px 10px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle
+            border-bottom: 1px solid #f0f0f0
         }
 
         .etbl td.r {
@@ -605,19 +659,6 @@
             color: #1A3C5E
         }
 
-        .pft-row td {
-            background: #FFFBE6;
-            color: #854F0B;
-            font-weight: 600
-        }
-
-        .gnd-row td {
-            background: #1A3C5E;
-            color: #fff;
-            font-weight: 700;
-            border-bottom: none
-        }
-
         .sc-row td {
             background: #EEEDFE;
             color: #3C3489;
@@ -631,7 +672,22 @@
             font-style: italic
         }
 
-        /* ── SUMMARY CARDS ── */
+        .vend-site-row td {
+            background: #F5F7FA;
+            font-size: 11px;
+            color: #666
+        }
+
+        .vsec-hdr {
+            background: #2E75B6;
+            color: #fff;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 14px;
+            border-radius: 4px
+        }
+
         .sum-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -710,20 +766,6 @@
             color: #185FA5
         }
 
-        .sp {
-            background: #EEEDFE;
-            border-color: #AFA9EC
-        }
-
-        .sp .sl {
-            color: #3C3489
-        }
-
-        .sp .sv {
-            color: #534AB7
-        }
-
-        /* ── SC BOX ── */
         .sc-box {
             background: #EEEDFE;
             border: 1px solid #AFA9EC;
@@ -745,7 +787,6 @@
             margin-top: 6px
         }
 
-        /* ── MODE TOGGLE ── */
         .mode-toggle {
             display: flex;
             gap: 6px;
@@ -775,7 +816,6 @@
             border-color: #534AB7
         }
 
-        /* ── NOTIFICATIONS ── */
         .notif {
             position: fixed;
             bottom: 20px;
@@ -796,7 +836,6 @@
             opacity: 1
         }
 
-        /* ── ADD SITE FORM ── */
         .add-site-bar {
             background: #fff;
             border: 1px solid #ddd;
@@ -809,11 +848,11 @@
         .add-site-bar.open {
             display: flex;
             gap: 8px;
-            align-items: flex-end
+            align-items: flex-end;
+            flex-wrap: wrap
         }
 
-        /* ── EDIT OVERLAY ── */
-        .edit-overlay {
+        .modal-bg {
             display: none;
             position: fixed;
             inset: 0;
@@ -823,37 +862,56 @@
             justify-content: center
         }
 
-        .edit-overlay.open {
+        .modal-bg.open {
             display: flex
         }
 
-        .edit-box {
+        .modal {
             background: #fff;
             border-radius: 10px;
             padding: 20px;
-            width: 400px;
+            width: 380px;
             max-width: 95vw
         }
 
-        .edit-box h3 {
+        .modal h3 {
             font-size: 14px;
             font-weight: 700;
             margin-bottom: 14px;
             color: #1A3C5E
         }
 
-        .edit-box .fi {
+        .modal .fi {
             margin-bottom: 10px
         }
 
-        /* Responsive */
+        .print-header {
+            display: none;
+            text-align: center;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #1A3C5E;
+            padding-bottom: 8px
+        }
+
+        .print-header h2 {
+            font-size: 16px;
+            color: #1A3C5E
+        }
+
+        .print-header p {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px
+        }
+
         @media(max-width:700px) {
             .dash-cards {
                 grid-template-columns: repeat(2, 1fr)
             }
 
             .fg3,
-            .fg4 {
+            .fg4,
+            .fg5 {
                 grid-template-columns: 1fr 1fr
             }
 
@@ -861,47 +919,113 @@
                 grid-template-columns: 1fr
             }
         }
+
+        @media print {
+
+            .topbar,
+            .nav-tabs,
+            .sec-tabs,
+            .sec-toolbar,
+            .form-row,
+            .btn,
+            .add-site-bar,
+            .notif,
+            .modal-bg,
+            .sarr,
+            .add-cat-btn,
+            .del-btn,
+            .mode-toggle,
+            .cloud-status {
+                display: none !important
+            }
+
+            .site-card {
+                border: none;
+                box-shadow: none;
+                break-inside: avoid
+            }
+
+            .site-hdr {
+                background: none !important;
+                color: #000 !important
+            }
+
+            .site-hdr .sname {
+                color: #000 !important
+            }
+
+            .site-body {
+                display: block !important;
+                border: none
+            }
+
+            .sec-panel {
+                display: block !important
+            }
+
+            body {
+                background: #fff;
+                font-size: 11px
+            }
+
+            .main {
+                padding: 0;
+                max-width: 100%
+            }
+
+            .print-header {
+                display: block !important
+            }
+
+            .ctab .rm {
+                display: none
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- TOP BAR -->
     <div class="topbar">
         <div class="tb-left">
             <h1>&#127959; Meridian Construction Company</h1>
             <p>Income &amp; Expenditure — Site Manager</p>
         </div>
         <div class="tb-right">
-            <span class="saved-badge" id="saveBadge">&#10003; Saved</span>
+            <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
             <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
             <button class="btn btn-amber" onclick="exportExcel()">&#8595; Export Excel</button>
-            <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset Data</button>
+            <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
         </div>
     </div>
 
-    <!-- NAV TABS -->
     <div class="nav-tabs">
         <div class="nav-tab on" id="nt-dash" onclick="showTab('dash')">&#9632; Dashboard</div>
         <div class="nav-tab" id="nt-sites" onclick="showTab('sites')">&#9776; All Sites</div>
+        <div class="nav-tab" id="nt-vsummary" onclick="showTab('vsummary')">&#128200; Vendor Summary</div>
     </div>
 
-    <!-- MAIN -->
     <div class="main">
-
-        <!-- ADD SITE BAR -->
         <div class="add-site-bar" id="addSiteBar">
-            <div class="fi" style="flex:1"><label>New Site Name</label><input type="text" id="newSiteName"
-                    placeholder="e.g. Site 21 — Kavya Residency" onkeydown="if(event.key==='Enter')addSite()"></div>
+            <div class="fi" style="flex:1;min-width:200px"><label>New Site Name</label><input type="text"
+                    id="newSiteName" placeholder="e.g. Site 21 — Kavya Residency"
+                    onkeydown="if(event.key==='Enter')addSite()"></div>
             <button class="btn btn-green" onclick="addSite()">Add</button>
             <button class="btn btn-grey" onclick="toggleAddSite()">Cancel</button>
         </div>
 
-        <!-- DASHBOARD VIEW -->
         <div id="view-dash">
             <div class="dash-cards" id="dashCards"></div>
             <div class="dash-tbl-wrap">
-                <div class="dash-tbl-hdr">All Sites — Income &amp; Expenditure Summary</div>
+                <div class="dash-tbl-hdr">
+                    <span>All Sites — Income &amp; Expenditure Summary</span>
+                    <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
+                        onclick="window.print()">&#128424; Print</button>
+                </div>
+                <div class="print-header">
+                    <h2>Meridian Construction Company</h2>
+                    <p>Dashboard — All Sites Summary</p>
+                </div>
                 <table class="dash-tbl">
                     <thead>
                         <tr>
@@ -917,139 +1041,174 @@
             </div>
         </div>
 
-        <!-- SITES VIEW -->
         <div id="view-sites" style="display:none">
             <div class="sites-list" id="sitesList"></div>
         </div>
 
-    </div>
-
-    <!-- EDIT ENTRY OVERLAY -->
-    <div class="edit-overlay" id="editOverlay">
-        <div class="edit-box">
-            <h3 id="editTitle">Edit Entry</h3>
-            <div class="fi"><label>Date</label><input type="date" id="editDate"></div>
-            <div class="fi"><label id="editLbl2">Particulars / Details</label><input type="text" id="editText"></div>
-            <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="editAmt"></div>
-            <div style="display:flex;gap:8px;margin-top:14px">
-                <button class="btn btn-blue" style="flex:1" onclick="saveEdit()">Save Changes</button>
-                <button class="btn btn-grey" onclick="closeEdit()">Cancel</button>
+        <div id="view-vsummary" style="display:none">
+            <div class="dash-tbl-wrap">
+                <div class="dash-tbl-hdr">
+                    <span>&#128200; Vendor &amp; Labour Summary — All Sites</span>
+                    <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
+                        onclick="window.print()">&#128424; Print</button>
+                </div>
+                <div class="print-header">
+                    <h2>Meridian Construction Company</h2>
+                    <p>Vendor &amp; Labour Summary — All Sites</p>
+                </div>
+                <div id="vsummaryContent" style="padding:14px"></div>
             </div>
         </div>
     </div>
 
-    <!-- NOTIFICATION -->
+    <div class="modal-bg" id="addCatModal">
+        <div class="modal">
+            <h3 id="addCatTitle">Add New Category</h3>
+            <div class="fi"><label>Category Name</label><input type="text" id="addCatName"
+                    placeholder="e.g. Timber, Roofing..." onkeydown="if(event.key==='Enter')confirmAddCat()"></div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+                <button class="btn btn-blue" style="flex:1" onclick="confirmAddCat()">Add</button>
+                <button class="btn btn-grey" onclick="closeModal('addCatModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <div class="notif" id="notif"></div>
 
     <script>
-        // ── CONSTANTS ─────────────────────────────────────────────────────────────────
-        const MAT = ['Stone', 'Cement', 'Sand', 'Metal', 'Steel'];
-        const LAB = ['Stone Masonry', 'Concrete Mason', 'Man Labor', 'Plastering'];
         const PT = 0.15;
-        const STORE_KEY = 'meridian_v1';
+        const STORE_KEY = "meridian_v3";
+        const FB_DOC = "meridian/main";
+        const DEF_MAT = ["Stone", "Cement", "Sand", "Metal", "Steel"];
+        const DEF_LAB = ["Stone Masonry", "Concrete Mason", "Man Labor", "Plastering"];
 
-        // ── STATE ─────────────────────────────────────────────────────────────────────
         let sites = [];
         let openSite = null;
         let openSec = {};
         let openCat = {};
-        let editCtx = null;
+        let addCatCtx = null;
+        let fbConnected = false;
+        let saveTimer = null;
 
-        // ── INIT ──────────────────────────────────────────────────────────────────────
+        // ── SITE FACTORY ──
         function mkSite(name) {
             return {
                 name,
                 cash: [],
-                mat: Object.fromEntries(MAT.map(c => [c, []])),
-                lab: Object.fromEntries(LAB.map(c => [c, { daily: [], contract: null, scName: '', scDesc: '' }]))
+                matCats: [...DEF_MAT],
+                mat: Object.fromEntries(DEF_MAT.map(c => [c, []])),
+                labCats: [...DEF_LAB],
+                lab: Object.fromEntries(DEF_LAB.map(c => [c, { daily: [], contract: null, scName: "", scDesc: "" }]))
             };
         }
 
-        // ── FIREBASE SYNC ─────────────────────────────────────────────────────────────
-        const DB_PATH = 'data/main'; // Single document for all sites (or split if needed)
-        let isInitialLoad = true;
-
-        async function load() {
-            const b = document.getElementById('saveBadge');
-            b.textContent = '⏳ Connecting...';
-            
-            // Reference to the main data document
-            const docRef = window.fsDoc(window.db, "meridian", "dashboard");
-
-            // Real-time listener
-            window.fsOnSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    sites = data.sites || [];
-                    
-                    // Data Migration / Fixes
-                    sites.forEach(s => {
-                        if (!s.mat) s.mat = Object.fromEntries(MAT.map(c => [c, []]));
-                        LAB.forEach(lc => {
-                            if (!s.lab) s.lab = {};
-                            if (!s.lab[lc]) s.lab[lc] = { daily: [], contract: null, scName: '', scDesc: '' };
-                            if (Array.isArray(s.lab[lc])) s.lab[lc] = { daily: s.lab[lc], contract: null, scName: '', scDesc: '' };
-                        });
-                    });
-
-                    if (isInitialLoad) {
-                        isInitialLoad = false;
-                        renderDash();
-                        if (openSite !== null) renderSites();
-                    } else {
-                        // Refresh current view if updated by another user
-                        if (document.getElementById('view-dash').style.display === 'block') renderDash();
-                        else renderSites();
-                    }
-
-                    b.textContent = '✓ Cloud Synced';
-                    b.style.color = '#7EB4D8';
-                } else {
-                    // Initialize empty if first time
-                    if (isInitialLoad) {
-                        isInitialLoad = false;
-                        for (let i = 1; i <= 20; i++) sites.push(mkSite('Site ' + i));
-                        save(); // Create the doc
-                    }
-                }
-            }, (error) => {
-                console.error("Firebase Sync Error:", error);
-                notif("Connection Error. Check internet.");
+        function migrateSite(s) {
+            if (!s.matCats) s.matCats = [...DEF_MAT];
+            if (!s.labCats) s.labCats = [...DEF_LAB];
+            if (!s.mat) s.mat = {};
+            if (!s.lab) s.lab = {};
+            if (!s.cash) s.cash = [];
+            s.matCats.forEach(c => { if (!s.mat[c]) s.mat[c] = []; });
+            s.labCats.forEach(c => {
+                if (!s.lab[c]) s.lab[c] = { daily: [], contract: null, scName: "", scDesc: "" };
+                if (Array.isArray(s.lab[c])) s.lab[c] = { daily: s.lab[c], contract: null, scName: "", scDesc: "" };
+                if (!s.lab[c].daily) s.lab[c].daily = [];
             });
+            return s;
         }
 
-        async function save() {
-            const b = document.getElementById('saveBadge');
-            b.textContent = '⏳ Saving...';
-            b.style.color = '#fbc02d';
+        // ── CLOUD STATUS ──
+        function setCloudStatus(state, text) {
+            const el = document.getElementById("cloudStatus");
+            el.className = "cloud-status cloud-" + state;
+            el.innerHTML = text;
+        }
 
+        // ── LOAD ──
+        async function loadData() {
+            // Try Firebase first
+            if (window.firebaseReady && window.db) {
+                try {
+                    setCloudStatus("syncing", "&#9881; Loading from cloud...");
+                    const ref = window.fsDoc(window.db, "meridian", "main");
+                    const snap = await window.fsGetDoc(ref);
+                    if (snap.exists()) {
+                        const d = snap.data();
+                        if (d.sites && d.sites.length > 0) {
+                            sites = d.sites.map(migrateSite);
+                            fbConnected = true;
+                            setCloudStatus("synced", "&#9728; Cloud Synced");
+                            // Also save to localStorage as backup
+                            localStorage.setItem(STORE_KEY, JSON.stringify({ sites }));
+                            return;
+                        }
+                    }
+                    // No cloud data yet — load local or default, then push to cloud
+                    loadLocal();
+                    fbConnected = true;
+                    saveData();
+                    setCloudStatus("synced", "&#9728; Cloud Synced");
+                    return;
+                } catch (e) {
+                    console.error("Firebase load error:", e);
+                    setCloudStatus("error", "&#9888; Cloud offline (using local)");
+                    loadLocal();
+                    return;
+                }
+            }
+            loadLocal();
+            setCloudStatus("offline", "&#128190; Local only");
+        }
+
+        function loadLocal() {
             try {
-                const docRef = window.fsDoc(window.db, "meridian", "dashboard");
-                await window.fsSetDoc(docRef, { 
-                    sites,
-                    lastUpdated: new Date().toISOString()
-                }, { merge: true });
-                
-                b.textContent = '✓ Saved to Cloud';
-                b.style.color = '#7EB4D8';
+                const raw = localStorage.getItem(STORE_KEY);
+                if (raw) {
+                    const d = JSON.parse(raw);
+                    sites = (d.sites || []).map(migrateSite);
+                } else {
+                    for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
+                }
             } catch (e) {
-                console.error("Error saving to Firestore:", e);
-                b.textContent = '✖ Save Failed';
-                b.style.color = '#f44336';
-                notif("Failed to save to cloud");
+                sites = [];
+                for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
             }
         }
 
-        // ── CALCULATIONS ──────────────────────────────────────────────────────────────
+        // ── SAVE (local instant + cloud debounced) ──
+        function saveData() {
+            // Always save locally instantly
+            try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites })); } catch (e) { }
+
+            // Debounce cloud save
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(async () => {
+                if (!window.firebaseReady || !window.db || !fbConnected) {
+                    setCloudStatus("offline", "&#128190; Local only");
+                    return;
+                }
+                try {
+                    setCloudStatus("syncing", "&#9881; Saving...");
+                    const ref = window.fsDoc(window.db, "meridian", "main");
+                    await window.fsSetDoc(ref, { sites, updated: new Date().toISOString() });
+                    setCloudStatus("synced", "&#9728; Cloud Synced");
+                } catch (e) {
+                    console.error("Cloud save error:", e);
+                    setCloudStatus("error", "&#9888; Cloud error");
+                }
+            }, 800);
+        }
+
+        // ── CALC ──
         function calc(i) {
             const s = sites[i];
-            const rec = s.cash.reduce((a, r) => a + r.amt, 0);
+            const rec = s.cash.reduce((a, r) => a + (r.amt || 0), 0);
             let matExp = 0;
-            MAT.forEach(c => { matExp += s.mat[c].reduce((a, r) => a + r.amt, 0); });
+            s.matCats.forEach(c => { matExp += (s.mat[c] || []).reduce((a, r) => a + (r.amt || 0), 0); });
             let labExp = 0;
-            LAB.forEach(c => {
-                const lb = s.lab[c];
-                labExp += (lb.contract !== null ? lb.contract : lb.daily.reduce((a, r) => a + r.amt, 0));
+            s.labCats.forEach(c => {
+                const lb = s.lab[c] || { daily: [], contract: null };
+                labExp += (lb.contract !== null ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0));
             });
             const exp = matExp + labExp;
             const prof = Math.round(exp * PT);
@@ -1058,84 +1217,146 @@
         }
 
         function fmt(n) {
-            if (n === null || n === undefined) return '—';
-            const v = Math.round(n);
-            return '\u20B9' + v.toLocaleString('en-IN');
+            if (n === null || n === undefined || isNaN(n)) return "—";
+            return "\u20B9" + Math.round(n).toLocaleString("en-IN");
         }
-
         function fmtDate(d) {
-            if (!d) return '—';
-            try { const p = d.split('-'); return p[2] + '-' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+p[1] - 1] + '-' + p[0]; }
+            if (!d) return "—";
+            try { const p = d.split("-"); return p[2] + "-" + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+p[1] - 1] + "-" + p[0]; }
             catch { return d; }
         }
-
-        // ── TAB NAVIGATION ────────────────────────────────────────────────────────────
-        function showTab(t) {
-            document.getElementById('view-dash').style.display = t === 'dash' ? 'block' : 'none';
-            document.getElementById('view-sites').style.display = t === 'sites' ? 'block' : 'none';
-            document.getElementById('nt-dash').className = 'nav-tab' + (t === 'dash' ? ' on' : '');
-            document.getElementById('nt-sites').className = 'nav-tab' + (t === 'sites' ? ' on' : '');
-            if (t === 'dash') renderDash();
-            if (t === 'sites') renderSites();
+        function esc(s) {
+            if (s === null || s === undefined) return "";
+            return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\\/g, "&#92;").replace(/'/g, "&#39;");
         }
 
-        // ── DASHBOARD ─────────────────────────────────────────────────────────────────
+        // ── NAVIGATION ──
+        function showTab(t) {
+            ["dash", "sites", "vsummary"].forEach(v => {
+                document.getElementById("view-" + v).style.display = t === v ? "block" : "none";
+                document.getElementById("nt-" + v).className = "nav-tab" + (t === v ? " on" : "");
+            });
+            if (t === "dash") renderDash();
+            if (t === "sites") renderSites();
+            if (t === "vsummary") renderVendorSummary();
+        }
+
+        // ── DASHBOARD ──
         function renderDash() {
             let tR = 0, tE = 0, tP = 0, tB = 0;
             sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; });
-            document.getElementById('dashCards').innerHTML = `
+            document.getElementById("dashCards").innerHTML = `
     <div class="dcard"><div class="dl">Total Receipts</div><div class="dv dv-green">${fmt(tR)}</div></div>
     <div class="dcard"><div class="dl">Total Expenditure</div><div class="dv dv-red">${fmt(tE)}</div></div>
     <div class="dcard"><div class="dl">Total Profit (15%)</div><div class="dv dv-amber">${fmt(tP)}</div></div>
     <div class="dcard"><div class="dl">Net Balance</div><div class="dv dv-blue">${fmt(tB)}</div></div>`;
-            let rows = '';
+            let rows = "";
             sites.forEach((s, i) => {
                 const c = calc(i);
-                const hasSC = LAB.some(lc => s.lab[lc].contract !== null);
-                const bc = c.bal >= 0 ? 'bal-p' : 'bal-n';
-                rows += `<tr>
-      <td><span class="site-lnk" onclick="goSite(${i})">${s.name}</span>${hasSC ? '<span class="sc-pill">SC</span>' : ''}</td>
-      <td>${fmt(c.rec)}</td><td>${fmt(c.exp)}</td><td>${fmt(c.prof)}</td>
-      <td class="${bc}">${fmt(c.bal)}</td></tr>`;
+                const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
+                const bc = c.bal >= 0 ? "bal-p" : "bal-n";
+                rows += `<tr><td><span class="site-lnk" onclick="goSite(${i})">${esc(s.name)}</span>${hasSC ? '<span class="sc-pill">SC</span>' : ''}</td><td>${fmt(c.rec)}</td><td>${fmt(c.exp)}</td><td>${fmt(c.prof)}</td><td class="${bc}">${fmt(c.bal)}</td></tr>`;
             });
             rows += `<tr class="gt"><td>GRAND TOTAL — ALL SITES</td><td>${fmt(tR)}</td><td>${fmt(tE)}</td><td>${fmt(tP)}</td><td>${fmt(tB)}</td></tr>`;
-            document.getElementById('dashBody').innerHTML = rows;
+            document.getElementById("dashBody").innerHTML = rows;
         }
 
         function goSite(i) {
-            showTab('sites');
-            openSite = i;
-            renderSites();
-            setTimeout(() => {
-                const el = document.getElementById('sc-' + i);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 80);
+            showTab("sites"); openSite = i; renderSites();
+            setTimeout(() => { const el = document.getElementById("sc-" + i); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 80);
         }
 
-        // ── SITES LIST ────────────────────────────────────────────────────────────────
+        // ── VENDOR SUMMARY ──
+        function renderVendorSummary() {
+            let html = "";
+            const allMatCats = new Set();
+            sites.forEach(s => s.matCats.forEach(c => allMatCats.add(c)));
+
+            allMatCats.forEach(cat => {
+                let catTotal = 0;
+                let siteRows = "";
+                sites.forEach((s, i) => {
+                    const entries = s.mat[cat] || [];
+                    if (entries.length === 0) return;
+                    const sub = entries.reduce((a, r) => a + (r.amt || 0), 0);
+                    catTotal += sub;
+                    const vendors = {};
+                    entries.forEach(r => {
+                        const v = r.det || "(No vendor name)";
+                        if (!vendors[v]) vendors[v] = { amt: 0, bills: [] };
+                        vendors[v].amt += (r.amt || 0);
+                        if (r.bill) vendors[v].bills.push(r.bill);
+                    });
+                    Object.entries(vendors).forEach(([v, info]) => {
+                        const billStr = info.bills.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.bills.join(", "))}]</span>` : "";
+                        siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(v)}${billStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
+                    });
+                });
+                if (!siteRows) return;
+                html += `<div class="vsec-hdr">&#129521; Material: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Vendor / Bills</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)} (All Sites)</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
+            });
+
+            const allLabCats = new Set();
+            sites.forEach(s => s.labCats.forEach(c => allLabCats.add(c)));
+
+            allLabCats.forEach(cat => {
+                let catTotal = 0;
+                let siteRows = "";
+                sites.forEach((s, i) => {
+                    const lb = s.lab[cat];
+                    if (!lb) return;
+                    const isSC = lb.contract !== null;
+                    const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    if (!sub) return;
+                    catTotal += sub;
+                    if (isSC) {
+                        siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(lb.scName) || "Subcontractor"} <span class="sc-pill">SC</span></td><td class="r">${fmt(sub)}</td></tr>`;
+                    } else {
+                        const workers = {};
+                        (lb.daily || []).forEach(r => {
+                            const w = r.part || "(No name)";
+                            if (!workers[w]) workers[w] = { amt: 0, vouchers: [] };
+                            workers[w].amt += (r.amt || 0);
+                            if (r.voucher) workers[w].vouchers.push(r.voucher);
+                        });
+                        Object.entries(workers).forEach(([w, info]) => {
+                            const vchStr = info.vouchers.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.vouchers.join(", "))}]</span>` : "";
+                            siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(w)}${vchStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
+                        });
+                    }
+                });
+                if (!siteRows) return;
+                html += `<div class="vsec-hdr">&#128119; Labour: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Worker / Contractor / Vouchers</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)} (All Sites)</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
+            });
+
+            if (!html) html = '<p style="text-align:center;color:#aaa;padding:40px">No entries yet across any site.</p>';
+            document.getElementById("vsummaryContent").innerHTML = html;
+        }
+
+        // ── SITES LIST ──
         function renderSites() {
-            const wrap = document.getElementById('sitesList');
-            wrap.innerHTML = '';
+            const wrap = document.getElementById("sitesList");
+            wrap.innerHTML = "";
             sites.forEach((s, i) => {
                 const { rec, exp, bal } = calc(i);
                 const isOpen = openSite === i;
-                const hasSC = LAB.some(lc => s.lab[lc].contract !== null);
-                const bc = bal >= 0 ? 'bal-p' : 'bal-n';
-                const div = document.createElement('div');
-                div.className = 'site-card'; div.id = 'sc-' + i;
+                const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
+                const bc = bal >= 0 ? "bal-p" : "bal-n";
+                const div = document.createElement("div");
+                div.className = "site-card"; div.id = "sc-" + i;
                 div.innerHTML = `
-      <div class="site-hdr${isOpen ? ' open' : ''}" onclick="toggleSite(${i})">
-        <div class="snum">${String(i + 1).padStart(2, '0')}</div>
+      <div class="site-hdr${isOpen ? " open" : ""}" onclick="toggleSite(${i})">
+        <div class="snum">${String(i + 1).padStart(2, "0")}</div>
         <div class="sinfo">
           <div class="sname">${esc(s.name)}${hasSC ? '<span class="sc-pill">Subcontract</span>' : ''}</div>
           <div class="smeta">Receipts: ${fmt(rec)} &nbsp;|&nbsp; Expense: ${fmt(exp)} &nbsp;|&nbsp; <span class="${bc}">Balance: ${fmt(bal)}</span></div>
         </div>
-        <div class="site-actions" onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px" onclick="event.stopPropagation()">
           <button class="btn btn-outline" style="font-size:10px;padding:4px 8px" onclick="renameSite(${i})">Rename</button>
         </div>
         <span class="sarr">&#9654;</span>
       </div>
-      <div class="site-body${isOpen ? ' open' : ''}" id="sb-${i}">${isOpen ? bodyHTML(i) : ''}</div>`;
+      <div class="site-body${isOpen ? " open" : ""}" id="sb-${i}">${isOpen ? bodyHTML(i) : ""}</div>`;
                 wrap.appendChild(div);
             });
         }
@@ -1145,192 +1366,203 @@
             renderSites();
         }
 
-        // ── SITE BODY ─────────────────────────────────────────────────────────────────
+        // ── BODY ──
         function bodyHTML(i) {
-            const sec = openSec[i] || 'cash';
+            const sec = openSec[i] || "cash";
             return `
     <div class="sec-tabs">
-      ${['cash', 'mat', 'lab', 'sum'].map((s, j) => `<div class="sec-tab${sec === s ? ' on' : ''}" onclick="setSec(${i},'${s}')">${['&#128176; Cash', '&#129521; Materials', '&#128119; Labour', '&#128202; Summary'][j]}</div>`).join('')}
+      ${["cash", "mat", "lab", "sum"].map((s, j) => `<div class="sec-tab${sec === s ? " on" : ""}" onclick="setSec(${i},'${s}')">${["&#128176; Cash", "&#129521; Materials", "&#128119; Labour", "&#128202; Summary"][j]}</div>`).join("")}
     </div>
-    <div class="sec-panel${sec === 'cash' ? ' on' : ''}">${sec === 'cash' ? cashHTML(i) : ''}</div>
-    <div class="sec-panel${sec === 'mat' ? ' on' : ''}">${sec === 'mat' ? matHTML(i) : ''}</div>
-    <div class="sec-panel${sec === 'lab' ? ' on' : ''}">${sec === 'lab' ? labHTML(i) : ''}</div>
-    <div class="sec-panel${sec === 'sum' ? ' on' : ''}">${sec === 'sum' ? sumHTML(i) : ''}</div>`;
+    <div class="sec-panel${sec === "cash" ? " on" : ""}">${sec === "cash" ? cashHTML(i) : ""}</div>
+    <div class="sec-panel${sec === "mat" ? " on" : ""}">${sec === "mat" ? matHTML(i) : ""}</div>
+    <div class="sec-panel${sec === "lab" ? " on" : ""}">${sec === "lab" ? labHTML(i) : ""}</div>
+    <div class="sec-panel${sec === "sum" ? " on" : ""}">${sec === "sum" ? sumHTML(i) : ""}</div>`;
         }
 
         function setSec(i, sec) {
             openSec[i] = sec;
-            document.getElementById('sb-' + i).innerHTML = bodyHTML(i);
+            document.getElementById("sb-" + i).innerHTML = bodyHTML(i);
         }
 
-        // ── CASH ──────────────────────────────────────────────────────────────────────
+        // ── CASH ──
         function cashHTML(i) {
             const rows = sites[i].cash;
-            const tot = rows.reduce((a, r) => a + r.amt, 0);
+            const tot = rows.reduce((a, r) => a + (r.amt || 0), 0);
             return `
-    <div class="form-row fg3">
-      <div class="fi"><label>Date</label><input type="date" id="cd-${i}"></div>
-      <div class="fi"><label>Particulars</label><input type="text" id="cp-${i}" placeholder="Running bill, advance, final payment..."></div>
-      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ca-${i}" placeholder="0" min="0"></div>
+    <div class="print-header"><h2>${esc(sites[i].name)} — Cash Receipts</h2><p>Meridian Construction Company</p></div>
+    <div class="sec-toolbar">
+      <div></div>
+      <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'cash')">&#128424; Print</button>
     </div>
-    <button class="btn btn-green" onclick="addCash(${i})">+ Add Receipt</button>
+    <div class="form-row fg4">
+      <div class="fi"><label>Date</label><input type="date" id="cd-${i}"></div>
+      <div class="fi"><label>Particulars</label><input type="text" id="cp-${i}" placeholder="Running bill, advance..."></div>
+      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ca-${i}" placeholder="0" min="0"></div>
+      <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%" onclick="addCash(${i})">+ Add</button></div>
+    </div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th style="width:5%">#</th><th style="width:18%">Date</th><th>Particulars</th><th class="r" style="width:22%">Amount (&#8377;)</th><th style="width:5%"></th></tr></thead>
+      <thead><tr><th style="width:4%">#</th><th style="width:16%">Date</th><th>Particulars</th><th class="r" style="width:20%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
       <tbody>
-        ${rows.length === 0 ? '<tr class="empty-row"><td colspan="5">No receipts entered yet</td></tr>' : ''}
-        ${rows.map((r, j) => `<tr>
-          <td class="muted">${j + 1}</td>
-          <td>${fmtDate(r.date)}</td>
-          <td>${esc(r.part) || '—'}</td>
-          <td class="r">${fmt(r.amt)}</td>
-          <td><button class="del-btn" onclick="delEntry(${i},'cash',${j})">&#10005;</button></td>
-        </tr>`).join('')}
-        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="3">Total Receipts</td><td class="r">${fmt(tot)}</td><td></td></tr>` : ''}
+        ${rows.length === 0 ? '<tr class="empty-row"><td colspan="5">No receipts entered yet</td></tr>' : ""}
+        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "—"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'cash',${j})">&#10005;</button></td></tr>`).join("")}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="3">Total Receipts</td><td class="r">${fmt(tot)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
         }
 
         function addCash(i) {
-            const d = document.getElementById('cd-' + i).value;
-            const p = document.getElementById('cp-' + i).value.trim();
-            const a = parseFloat(document.getElementById('ca-' + i).value) || 0;
-            if (!a) { notif('Enter an amount'); return; }
+            const d = val("cd-" + i), p = val("cp-" + i), a = num("ca-" + i);
+            if (!a) { notif("Enter an amount"); return; }
             sites[i].cash.push({ date: d, part: p, amt: a });
-            save(); refreshBody(i, 'cash'); refreshHdr(i); notif('Receipt added');
+            saveData(); refreshBody(i, "cash"); refreshHdr(i); notif("Receipt added");
         }
 
-        // ── MATERIALS ─────────────────────────────────────────────────────────────────
+        // ── MATERIALS ──
         function matHTML(i) {
-            const cat = openCat['m' + i] || MAT[0];
-            const rows = sites[i].mat[cat];
-            const sub = rows.reduce((a, r) => a + r.amt, 0);
-            return `
-    <div class="cat-tabs">${MAT.map(c => `<div class="ctab${cat === c ? ' on' : ''}" onclick="setCat(${i},'m','${c}')">${c}</div>`).join('')}</div>
-    <div class="form-row fg3">
-      <div class="fi"><label>Date</label><input type="date" id="md-${i}"></div>
-      <div class="fi"><label>Details / Vendor Name</label><input type="text" id="mdt-${i}" placeholder="Vendor or description"></div>
-      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ma-${i}" placeholder="0" min="0"></div>
+            const s = sites[i];
+            const cat = openCat["m" + i] || s.matCats[0] || "";
+            if (!cat) return `
+    <div class="sec-toolbar">
+      <div class="cat-tabs"><div class="add-cat-btn" onclick="openAddCat(${i},'mat')">+ Add Category</div></div>
     </div>
-    <button class="btn btn-blue" onclick="addMat(${i},'${cat}')">+ Add ${cat} Entry</button>
+    <p style="color:#aaa;padding:20px;text-align:center">No material categories. Add one above.</p>`;
+            const rows = s.mat[cat] || [];
+            const sub = rows.reduce((a, r) => a + (r.amt || 0), 0);
+            return `
+    <div class="print-header"><h2>${esc(s.name)} — Materials: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
+    <div class="sec-toolbar">
+      <div class="cat-tabs">
+        ${s.matCats.map(c => `<div class="ctab${cat === c ? " on" : ""}" onclick="setCat(${i},'m','${esc(c).replace(/'/g, "&#39;")}')">${esc(c)}<button class="rm" onclick="event.stopPropagation();removeCat(${i},'mat','${esc(c).replace(/'/g, "&#39;")}')" title="Remove">&#10005;</button></div>`).join("")}
+        <div class="add-cat-btn" onclick="openAddCat(${i},'mat')">+ Add</div>
+      </div>
+      <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'mat')">&#128424; Print</button>
+    </div>
+    <div class="form-row fg5">
+      <div class="fi"><label>Date</label><input type="date" id="md-${i}"></div>
+      <div class="fi"><label>Details / Vendor</label><input type="text" id="mdt-${i}" placeholder="Vendor name"></div>
+      <div class="fi"><label>Bill No</label><input type="text" id="mbn-${i}" placeholder="Bill / Invoice"></div>
+      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ma-${i}" placeholder="0" min="0"></div>
+      <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addMat(${i},'${esc(cat).replace(/'/g, "&#39;")}')">+ Add</button></div>
+    </div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th style="width:5%">#</th><th style="width:18%">Date</th><th>Details / Vendor</th><th class="r" style="width:22%">Amount (&#8377;)</th><th style="width:5%"></th></tr></thead>
+      <thead><tr><th style="width:4%">#</th><th style="width:14%">Date</th><th>Details / Vendor</th><th style="width:14%">Bill No</th><th class="r" style="width:18%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
       <tbody>
-        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="5">No ${cat} entries yet</td></tr>` : ''}
-        ${rows.map((r, j) => `<tr>
-          <td class="muted">${j + 1}</td>
-          <td>${fmtDate(r.date)}</td>
-          <td>${esc(r.det) || '—'}</td>
-          <td class="r">${fmt(r.amt)}</td>
-          <td><button class="del-btn" onclick="delEntry(${i},'mat-${cat}',${j})">&#10005;</button></td>
-        </tr>`).join('')}
-        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="3">Sub Total — ${cat}</td><td class="r">${fmt(sub)}</td><td></td></tr>` : ''}
+        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="6">No ${esc(cat)} entries yet</td></tr>` : ""}
+        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "—"}</td><td class="muted">${esc(r.bill) || "—"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'mat-${esc(cat).replace(/'/g, "&#39;")}',${j})">&#10005;</button></td></tr>`).join("")}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total — ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
         }
 
         function addMat(i, cat) {
-            const d = document.getElementById('md-' + i).value;
-            const dt = document.getElementById('mdt-' + i).value.trim();
-            const a = parseFloat(document.getElementById('ma-' + i).value) || 0;
-            if (!a) { notif('Enter an amount'); return; }
-            sites[i].mat[cat].push({ date: d, det: dt, amt: a });
-            save(); refreshBody(i, 'mat'); refreshHdr(i); notif(cat + ' entry added');
+            const d = val("md-" + i), dt = val("mdt-" + i), bn = val("mbn-" + i), a = num("ma-" + i);
+            if (!a) { notif("Enter an amount"); return; }
+            if (!sites[i].mat[cat]) sites[i].mat[cat] = [];
+            sites[i].mat[cat].push({ date: d, det: dt, bill: bn, amt: a });
+            saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); notif(cat + " entry added");
         }
 
-        // ── LABOUR ────────────────────────────────────────────────────────────────────
+        // ── LABOUR ──
         function labHTML(i) {
-            const cat = openCat['l' + i] || LAB[0];
-            const lb = sites[i].lab[cat];
+            const s = sites[i];
+            const cat = openCat["l" + i] || s.labCats[0] || "";
+            if (!cat) return `
+    <div class="sec-toolbar">
+      <div class="cat-tabs"><div class="add-cat-btn" onclick="openAddCat(${i},'lab')">+ Add Category</div></div>
+    </div>
+    <p style="color:#aaa;padding:20px;text-align:center">No labour categories. Add one above.</p>`;
+            const lb = s.lab[cat] || { daily: [], contract: null, scName: "", scDesc: "" };
             const isSC = lb.contract !== null;
-            const sub = isSC ? lb.contract : lb.daily.reduce((a, r) => a + r.amt, 0);
+            const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
             return `
-    <div class="cat-tabs">${LAB.map(c => {
-                const hasSC = sites[i].lab[c].contract !== null;
-                return `<div class="ctab${cat === c ? ' on' : ''}" onclick="setCat(${i},'l','${c}')">${c}${hasSC ? '<span class="sc-pill" style="margin-left:4px">SC</span>' : ''}</div>`;
-            }).join('')}</div>
+    <div class="print-header"><h2>${esc(s.name)} — Labour: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
+    <div class="sec-toolbar">
+      <div class="cat-tabs">
+        ${s.labCats.map(c => { const hsc = s.lab[c] && s.lab[c].contract !== null; return `<div class="ctab${cat === c ? " on" : ""}" onclick="setCat(${i},'l','${esc(c).replace(/'/g, "&#39;")}')">${esc(c)}${hsc ? '<span class="sc-pill" style="font-size:9px">SC</span>' : ''}<button class="rm" onclick="event.stopPropagation();removeCat(${i},'lab','${esc(c).replace(/'/g, "&#39;")}')" title="Remove">&#10005;</button></div>`; }).join("")}
+        <div class="add-cat-btn" onclick="openAddCat(${i},'lab')">+ Add</div>
+      </div>
+      <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'lab')">&#128424; Print</button>
+    </div>
     <div class="mode-toggle">
-      <button class="mtbtn${!isSC ? ' on' : ''}" onclick="setMode(${i},'${cat}',false)">&#128467; Daily Entry</button>
-      <button class="mtbtn${isSC ? ' on-sc' : ''}" onclick="setMode(${i},'${cat}',true)">&#128196; Subcontract</button>
+      <button class="mtbtn${!isSC ? " on" : ""}" onclick="setMode(${i},'${esc(cat).replace(/'/g, "&#39;")}',false)">&#128467; Daily Entry</button>
+      <button class="mtbtn${isSC ? " on-sc" : ""}" onclick="setMode(${i},'${esc(cat).replace(/'/g, "&#39;")}',true)">&#128196; Subcontract</button>
     </div>
     ${isSC ? `
       <div class="sc-box">
-        <div class="sc-box-title">&#128196; Subcontract Details — ${cat}</div>
+        <div class="sc-box-title">&#128196; Subcontract — ${esc(cat)}</div>
         <div class="form-row fg3">
-          <div class="fi"><label>Subcontractor Name</label><input type="text" id="scn-${i}" value="${esc(lb.scName || '')}" placeholder="Contractor name"></div>
-          <div class="fi"><label>Contract Amount (&#8377;)</label><input type="number" id="sca-${i}" value="${lb.contract || ''}" placeholder="Total contract value" min="0"></div>
-          <div class="fi"><label>Work Description</label><input type="text" id="scd-${i}" value="${esc(lb.scDesc || '')}" placeholder="Scope of work"></div>
+          <div class="fi"><label>Subcontractor Name</label><input type="text" id="scn-${i}" value="${esc(lb.scName || "")}" placeholder="Contractor name"></div>
+          <div class="fi"><label>Contract Amount (&#8377;)</label><input type="number" id="sca-${i}" value="${lb.contract || ""}" placeholder="Total value" min="0"></div>
+          <div class="fi"><label>Work Description</label><input type="text" id="scd-${i}" value="${esc(lb.scDesc || "")}" placeholder="Scope"></div>
         </div>
-        <button class="btn btn-purple" onclick="saveContract(${i},'${cat}')">Save Contract</button>
-        <div class="sc-note">&#9432; The full contract amount is taken as the labour cost. No daily entries needed.</div>
+        <button class="btn btn-purple" onclick="saveContract(${i},'${esc(cat).replace(/'/g, "&#39;")}')">Save Contract</button>
+        <div class="sc-note">&#9432; Contract amount is taken as total labour cost.</div>
       </div>
       <div class="tbl-wrap"><table class="etbl">
         <thead><tr><th>Item</th><th>Subcontractor</th><th class="r">Amount (&#8377;)</th></tr></thead>
-        <tbody>
-          ${lb.contract ? `
-            <tr class="sc-row"><td>Subcontract — ${cat}</td><td>${esc(lb.scName) || '—'}</td><td class="r">${fmt(lb.contract)}</td></tr>`
-                        : '<tr class="empty-row"><td colspan="3">Enter contract amount above and click Save</td></tr>'}
-        </tbody>
+        <tbody>${lb.contract ? `<tr class="sc-row"><td>Subcontract — ${esc(cat)}</td><td>${esc(lb.scName) || "—"}</td><td class="r">${fmt(lb.contract)}</td></tr>` : '<tr class="empty-row"><td colspan="3">Enter contract details above and click Save</td></tr>'}</tbody>
       </table></div>`: `
-      <div class="form-row fg3">
+      <div class="form-row fg5">
         <div class="fi"><label>Date</label><input type="date" id="ld-${i}"></div>
-        <div class="fi"><label>Particulars / Worker</label><input type="text" id="lp-${i}" placeholder="Worker name or work details"></div>
+        <div class="fi"><label>Particulars / Worker</label><input type="text" id="lp-${i}" placeholder="Worker / details"></div>
+        <div class="fi"><label>Voucher No</label><input type="text" id="lvn-${i}" placeholder="Voucher No"></div>
         <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="la-${i}" placeholder="0" min="0"></div>
+        <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addLab(${i},'${esc(cat).replace(/'/g, "&#39;")}')">+ Add</button></div>
       </div>
-      <button class="btn btn-blue" onclick="addLab(${i},'${cat}')">+ Add ${cat} Entry</button>
       <div class="tbl-wrap"><table class="etbl">
-        <thead><tr><th style="width:5%">#</th><th style="width:18%">Date</th><th>Particulars</th><th class="r" style="width:22%">Amount (&#8377;)</th><th style="width:5%"></th></tr></thead>
+        <thead><tr><th style="width:4%">#</th><th style="width:14%">Date</th><th>Particulars</th><th style="width:14%">Voucher No</th><th class="r" style="width:18%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
         <tbody>
-          ${lb.daily.length === 0 ? `<tr class="empty-row"><td colspan="5">No ${cat} entries yet</td></tr>` : ''}
-          ${lb.daily.map((r, j) => `<tr>
-            <td class="muted">${j + 1}</td>
-            <td>${fmtDate(r.date)}</td>
-            <td>${esc(r.part) || '—'}</td>
-            <td class="r">${fmt(r.amt)}</td>
-            <td><button class="del-btn" onclick="delEntry(${i},'lab-${cat}',${j})">&#10005;</button></td>
-          </tr>`).join('')}
-          ${lb.daily.length > 0 ? `<tr class="sub-row"><td colspan="3">Sub Total — ${cat}</td><td class="r">${fmt(sub)}</td><td></td></tr>` : ''}
+          ${(lb.daily || []).length === 0 ? `<tr class="empty-row"><td colspan="6">No ${esc(cat)} entries yet</td></tr>` : ""}
+          ${(lb.daily || []).map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "—"}</td><td class="muted">${esc(r.voucher) || "—"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'lab-${esc(cat).replace(/'/g, "&#39;")}',${j})">&#10005;</button></td></tr>`).join("")}
+          ${(lb.daily || []).length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total — ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td></td></tr>` : ""}
         </tbody>
       </table></div>`}`;
         }
 
         function addLab(i, cat) {
-            const d = document.getElementById('ld-' + i).value;
-            const p = document.getElementById('lp-' + i).value.trim();
-            const a = parseFloat(document.getElementById('la-' + i).value) || 0;
-            if (!a) { notif('Enter an amount'); return; }
-            sites[i].lab[cat].daily.push({ date: d, part: p, amt: a });
-            save(); refreshBody(i, 'lab'); refreshHdr(i); notif(cat + ' entry added');
+            const d = val("ld-" + i), p = val("lp-" + i), vn = val("lvn-" + i), a = num("la-" + i);
+            if (!a) { notif("Enter an amount"); return; }
+            if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
+            sites[i].lab[cat].daily.push({ date: d, part: p, voucher: vn, amt: a });
+            saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); notif(cat + " entry added");
         }
 
         function setMode(i, cat, isSC) {
+            if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
             const lb = sites[i].lab[cat];
             if (isSC) { if (lb.contract === null) lb.contract = 0; }
             else lb.contract = null;
-            save(); refreshBody(i, 'lab');
+            saveData(); openCat["l" + i] = cat; refreshBody(i, "lab");
         }
 
         function saveContract(i, cat) {
+            if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: 0, scName: "", scDesc: "" };
             const lb = sites[i].lab[cat];
-            lb.scName = document.getElementById('scn-' + i).value.trim();
-            lb.contract = parseFloat(document.getElementById('sca-' + i).value) || 0;
-            lb.scDesc = document.getElementById('scd-' + i).value.trim();
-            save(); refreshBody(i, 'lab'); refreshHdr(i); notif('Contract saved');
+            lb.scName = val("scn-" + i);
+            lb.contract = num("sca-" + i);
+            lb.scDesc = val("scd-" + i);
+            saveData(); refreshBody(i, "lab"); refreshHdr(i); notif("Contract saved");
         }
 
-        // ── SUMMARY ───────────────────────────────────────────────────────────────────
+        // ── SUMMARY ──
         function sumHTML(i) {
+            const s = sites[i];
             const { rec, matExp, labExp, exp, prof, bal } = calc(i);
-            const mRows = MAT.map(c => {
-                const s = sites[i].mat[c].reduce((a, r) => a + r.amt, 0);
-                return `<tr><td>${c}</td><td class="r">${fmt(s)}</td><td class="r">${fmt(Math.round(s * (1 + PT)))}</td></tr>`;
-            }).join('');
-            const lRows = LAB.map(c => {
-                const lb = sites[i].lab[c];
+            const mRows = s.matCats.map(c => {
+                const v = (s.mat[c] || []).reduce((a, r) => a + (r.amt || 0), 0);
+                return `<tr><td>${esc(c)}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
+            }).join("");
+            const lRows = s.labCats.map(c => {
+                const lb = s.lab[c] || { daily: [], contract: null };
                 const isSC = lb.contract !== null;
-                const s = isSC ? lb.contract : lb.daily.reduce((a, r) => a + r.amt, 0);
-                return `<tr><td>${c}${isSC ? '<span class="sc-pill">SC</span>' : ''}</td><td class="r">${fmt(s)}</td><td class="r">${fmt(Math.round(s * (1 + PT)))}</td></tr>`;
-            }).join('');
+                const v = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
+                return `<tr><td>${esc(c)}${isSC ? '<span class="sc-pill">SC</span>' : ''}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
+            }).join("");
             return `
+    <div class="print-header"><h2>${esc(s.name)} — Summary</h2><p>Meridian Construction Company</p></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'sum')">&#128424; Print</button>
+    </div>
     <div class="sum-grid">
       <div class="scard sg"><div class="sl">Total Receipts</div><div class="sv">${fmt(rec)}</div></div>
       <div class="scard sr"><div class="sl">Total Expenditure</div><div class="sv">${fmt(exp)}</div></div>
@@ -1338,185 +1570,232 @@
       <div class="scard sb"><div class="sl">Net Balance</div><div class="sv">${fmt(bal)}</div></div>
     </div>
     <div class="tbl-wrap" style="margin-bottom:12px"><table class="etbl">
-      <thead><tr><th>Material</th><th class="r">Base Amount (&#8377;)</th><th class="r">Incl. 15% Profit (&#8377;)</th></tr></thead>
+      <thead><tr><th>Material</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
       <tbody>${mRows}<tr class="sub-row"><td>Total Materials</td><td class="r">${fmt(matExp)}</td><td class="r">${fmt(Math.round(matExp * (1 + PT)))}</td></tr></tbody>
     </table></div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th>Labour Category</th><th class="r">Base Amount (&#8377;)</th><th class="r">Incl. 15% Profit (&#8377;)</th></tr></thead>
+      <thead><tr><th>Labour</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
       <tbody>${lRows}<tr class="sub-row"><td>Total Labour</td><td class="r">${fmt(labExp)}</td><td class="r">${fmt(Math.round(labExp * (1 + PT)))}</td></tr></tbody>
     </table></div>`;
         }
 
-        // ── HELPERS ───────────────────────────────────────────────────────────────────
+        // ── ADD/REMOVE CATEGORIES ──
+        function openAddCat(siteIdx, type) {
+            addCatCtx = { siteIdx, type };
+            document.getElementById("addCatTitle").textContent = "Add New " + (type === "mat" ? "Material" : "Labour") + " Category";
+            document.getElementById("addCatName").value = "";
+            document.getElementById("addCatModal").classList.add("open");
+            setTimeout(() => document.getElementById("addCatName").focus(), 50);
+        }
+
+        function confirmAddCat() {
+            if (!addCatCtx) return;
+            const nm = document.getElementById("addCatName").value.trim();
+            if (!nm) { notif("Enter a name"); return; }
+            const { siteIdx, type } = addCatCtx;
+            const s = sites[siteIdx];
+            if (type === "mat") {
+                if (s.matCats.includes(nm)) { notif("Already exists"); return; }
+                s.matCats.push(nm);
+                if (!s.mat[nm]) s.mat[nm] = [];
+                openCat["m" + siteIdx] = nm;
+                saveData(); closeModal("addCatModal"); refreshBody(siteIdx, "mat"); notif(nm + " added");
+            } else {
+                if (s.labCats.includes(nm)) { notif("Already exists"); return; }
+                s.labCats.push(nm);
+                if (!s.lab[nm]) s.lab[nm] = { daily: [], contract: null, scName: "", scDesc: "" };
+                openCat["l" + siteIdx] = nm;
+                saveData(); closeModal("addCatModal"); refreshBody(siteIdx, "lab"); notif(nm + " added");
+            }
+        }
+
+        function removeCat(siteIdx, type, cat) {
+            const s = sites[siteIdx];
+            if (type === "mat") {
+                const entries = s.mat[cat] || [];
+                if (entries.length > 0 && !confirm(`"${cat}" has ${entries.length} entries. Delete category and all its data?`)) return;
+                if (entries.length === 0 && !confirm(`Remove "${cat}" category?`)) return;
+                s.matCats = s.matCats.filter(c => c !== cat);
+                delete s.mat[cat];
+                if (openCat["m" + siteIdx] === cat) openCat["m" + siteIdx] = s.matCats[0] || "";
+                saveData(); refreshBody(siteIdx, "mat"); refreshHdr(siteIdx); notif(cat + " removed");
+            } else {
+                const lb = s.lab[cat];
+                const hasData = lb && ((lb.daily || []).length > 0 || lb.contract !== null);
+                if (hasData && !confirm(`"${cat}" has data. Delete category?`)) return;
+                if (!hasData && !confirm(`Remove "${cat}" category?`)) return;
+                s.labCats = s.labCats.filter(c => c !== cat);
+                delete s.lab[cat];
+                if (openCat["l" + siteIdx] === cat) openCat["l" + siteIdx] = s.labCats[0] || "";
+                saveData(); refreshBody(siteIdx, "lab"); refreshHdr(siteIdx); notif(cat + " removed");
+            }
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+        // ── PRINT ──
+        function printSec(siteIdx, sec) {
+            openSite = siteIdx; openSec[siteIdx] = sec;
+            renderSites();
+            setTimeout(() => window.print(), 300);
+        }
+
+        // ── HELPERS ──
+        function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
+        function num(id) { const e = document.getElementById(id); return e ? parseFloat(e.value) || 0 : 0; }
+
         function setCat(i, type, cat) {
             openCat[type + i] = cat;
-            refreshBody(i, type === 'm' ? 'mat' : 'lab');
+            refreshBody(i, type === "m" ? "mat" : "lab");
         }
 
         function refreshBody(i, sec) {
-            openSec[i] = sec || openSec[i] || 'cash';
-            const sb = document.getElementById('sb-' + i);
+            openSec[i] = sec || openSec[i] || "cash";
+            const sb = document.getElementById("sb-" + i);
             if (sb) sb.innerHTML = bodyHTML(i);
         }
 
         function refreshHdr(i) {
             const { rec, exp, bal } = calc(i);
-            const card = document.getElementById('sc-' + i);
+            const card = document.getElementById("sc-" + i);
             if (!card) return;
-            const hasSC = LAB.some(lc => sites[i].lab[lc].contract !== null);
-            const bc = bal >= 0 ? 'bal-p' : 'bal-n';
-            const nm = card.querySelector('.sname');
-            const mt = card.querySelector('.smeta');
+            const hasSC = sites[i].labCats.some(lc => sites[i].lab[lc] && sites[i].lab[lc].contract !== null);
+            const bc = bal >= 0 ? "bal-p" : "bal-n";
+            const nm = card.querySelector(".sname");
+            const mt = card.querySelector(".smeta");
             if (nm) nm.innerHTML = esc(sites[i].name) + (hasSC ? '<span class="sc-pill">Subcontract</span>' : '');
             if (mt) mt.innerHTML = `Receipts: ${fmt(rec)} &nbsp;|&nbsp; Expense: ${fmt(exp)} &nbsp;|&nbsp; <span class="${bc}">Balance: ${fmt(bal)}</span>`;
         }
 
         function delEntry(i, type, j) {
-            if (!confirm('Delete this entry?')) return;
-            if (type === 'cash') sites[i].cash.splice(j, 1);
-            else if (type.startsWith('mat-')) { const c = type.slice(4); sites[i].mat[c].splice(j, 1); }
-            else if (type.startsWith('lab-')) { const c = type.slice(4); sites[i].lab[c].daily.splice(j, 1); }
-            save();
-            const sec = type === 'cash' ? 'cash' : type.startsWith('mat') ? 'mat' : 'lab';
+            if (!confirm("Delete this entry?")) return;
+            if (type === "cash") sites[i].cash.splice(j, 1);
+            else if (type.startsWith("mat-")) { const c = type.slice(4); if (sites[i].mat[c]) sites[i].mat[c].splice(j, 1); }
+            else if (type.startsWith("lab-")) { const c = type.slice(4); if (sites[i].lab[c]) sites[i].lab[c].daily.splice(j, 1); }
+            saveData();
+            const sec = type === "cash" ? "cash" : type.startsWith("mat") ? "mat" : "lab";
             refreshBody(i, sec); refreshHdr(i);
         }
 
         function toggleAddSite() {
-            const b = document.getElementById('addSiteBar');
-            b.classList.toggle('open');
-            if (b.classList.contains('open')) document.getElementById('newSiteName').focus();
+            const b = document.getElementById("addSiteBar");
+            b.classList.toggle("open");
+            if (b.classList.contains("open")) document.getElementById("newSiteName").focus();
         }
 
         function addSite() {
-            const nm = document.getElementById('newSiteName').value.trim();
-            if (!nm) { notif('Enter a site name'); return; }
+            const nm = document.getElementById("newSiteName").value.trim();
+            if (!nm) { notif("Enter a site name"); return; }
             sites.push(mkSite(nm));
-            document.getElementById('newSiteName').value = '';
-            document.getElementById('addSiteBar').classList.remove('open');
-            save(); renderSites(); notif(nm + ' added');
+            document.getElementById("newSiteName").value = "";
+            document.getElementById("addSiteBar").classList.remove("open");
+            saveData(); renderSites(); notif(nm + " added");
         }
 
         function renameSite(i) {
-            const nm = prompt('Rename site:', sites[i].name);
-            if (nm && nm.trim()) { sites[i].name = nm.trim(); save(); renderSites(); }
+            const nm = prompt("Rename site:", sites[i].name);
+            if (nm && nm.trim()) { sites[i].name = nm.trim(); saveData(); renderSites(); }
         }
 
         function clearAllData() {
-            if (!confirm('This will DELETE ALL DATA permanently. Are you sure?')) return;
-            if (!confirm('Last chance — all entries will be lost!')) return;
-            localStorage.removeItem(STORE_KEY);
-            sites = [];
-            for (let i = 1; i <= 20; i++) sites.push(mkSite('Site ' + i));
+            if (!confirm("DELETE ALL DATA permanently?")) return;
+            if (!confirm("Last chance — all entries will be lost!")) return;
+            sites = []; for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
             openSite = null; openSec = {}; openCat = {};
-            save(); renderSites(); renderDash(); notif('All data cleared');
-        }
-
-        function esc(s) {
-            if (!s) return '';
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            saveData(); renderSites(); renderDash(); notif("All data cleared");
         }
 
         function notif(msg) {
-            const el = document.getElementById('notif');
-            el.textContent = msg; el.classList.add('show');
+            const el = document.getElementById("notif");
+            el.textContent = msg; el.classList.add("show");
             clearTimeout(notif._t);
-            notif._t = setTimeout(() => el.classList.remove('show'), 2000);
+            notif._t = setTimeout(() => el.classList.remove("show"), 2200);
         }
 
-        // ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
+        // ── EXCEL EXPORT ──
         function exportExcel() {
             const wb = XLSX.utils.book_new();
-            const hStyle = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1A3C5E' } }, alignment: { horizontal: 'center' } };
-            const subStyle = { font: { bold: true }, fill: { fgColor: { rgb: 'D6E4F0' } } };
-            const pftStyle = { fill: { fgColor: { rgb: 'FFFBE6' } } };
-            const gtStyle = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F4E79' } } };
-
-            // Dashboard sheet
-            const dashData = [['MERIDIAN CONSTRUCTION — SITE DASHBOARD'], [''],
-            ['Site', 'Total Receipts (₹)', 'Total Expense (₹)', 'Profit 15% (₹)', 'Balance (₹)']];
+            // Dashboard
+            const dashData = [["MERIDIAN CONSTRUCTION — DASHBOARD"], [""], ["Site", "Receipts (\u20B9)", "Expense (\u20B9)", "Profit 15% (\u20B9)", "Balance (\u20B9)"]];
             let tR = 0, tE = 0, tP = 0, tB = 0;
-            sites.forEach((s, i) => {
-                const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal;
-                dashData.push([s.name, c.rec, c.exp, c.prof, c.bal]);
-            });
-            dashData.push(['GRAND TOTAL', tR, tE, tP, tB]);
+            sites.forEach((s, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; dashData.push([s.name, c.rec, c.exp, c.prof, c.bal]); });
+            dashData.push(["GRAND TOTAL", tR, tE, tP, tB]);
             const ws0 = XLSX.utils.aoa_to_sheet(dashData);
-            ws0['!cols'] = [{ wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
-            XLSX.utils.book_append_sheet(wb, ws0, 'Dashboard');
+            ws0["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+            XLSX.utils.book_append_sheet(wb, ws0, "Dashboard");
 
-            // Per-site sheets
+            // Vendor Summary
+            const vData = [["VENDOR & LABOUR SUMMARY — ALL SITES"], [""], ["Type", "Category", "Site", "Vendor / Worker", "Bill/Voucher", "Amount (\u20B9)"]];
+            sites.forEach(s => {
+                s.matCats.forEach(cat => {
+                    (s.mat[cat] || []).forEach(r => vData.push(["Material", cat, s.name, r.det || "", r.bill || "", r.amt || 0]));
+                });
+                s.labCats.forEach(cat => {
+                    const lb = s.lab[cat] || {};
+                    if (lb.contract !== null) vData.push(["Labour [SC]", cat, s.name, lb.scName || "Subcontractor", "", lb.contract || 0]);
+                    else (lb.daily || []).forEach(r => vData.push(["Labour", cat, s.name, r.part || "", r.voucher || "", r.amt || 0]));
+                });
+            });
+            const wsV = XLSX.utils.aoa_to_sheet(vData);
+            wsV["!cols"] = [{ wch: 14 }, { wch: 20 }, { wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 14 }];
+            XLSX.utils.book_append_sheet(wb, wsV, "Vendor Summary");
+
+            // Per site
             sites.forEach((s, i) => {
-                const { rec, matExp, labExp, exp, prof, bal } = calc(i);
-                const rows = [[s.name.toUpperCase() + ' — INCOME & EXPENDITURE'], ['']];
-
-                // Cash
-                rows.push(['CASH RECEIPTS', '', '']);
-                rows.push(['Date', 'Particulars', 'Amount (₹)']);
-                s.cash.forEach(r => rows.push([r.date || '', r.part || '', r.amt]));
-                rows.push(['Total Receipts', '', rec]);
-                rows.push(['']);
-
-                // Materials
-                rows.push(['MATERIAL PURCHASES', '', '', '', '', '']);
-                MAT.forEach(cat => {
-                    const entries = s.mat[cat];
-                    const sub = entries.reduce((a, r) => a + r.amt, 0);
-                    rows.push([cat, '', '']);
-                    rows.push(['Date', 'Details/Vendor', 'Amount (₹)']);
-                    entries.forEach(r => rows.push([r.date || '', r.det || '', r.amt]));
-                    rows.push(['Sub Total — ' + cat, '', sub]);
-                    rows.push(['']);
+                const { rec, exp, prof, bal } = calc(i);
+                const rows = [[s.name.toUpperCase() + " — INCOME & EXPENDITURE"], [""]];
+                rows.push(["CASH RECEIPTS", "", "", ""]);
+                rows.push(["Date", "Particulars", "Amount (\u20B9)", ""]);
+                s.cash.forEach(r => rows.push([r.date || "", r.part || "", r.amt || 0, ""]));
+                rows.push(["Total Receipts", "", rec, ""]); rows.push([""]);
+                rows.push(["MATERIAL PURCHASES", "", "", ""]);
+                s.matCats.forEach(cat => {
+                    const entries = s.mat[cat] || [];
+                    const sub = entries.reduce((a, r) => a + (r.amt || 0), 0);
+                    rows.push([cat, "", "", ""]);
+                    rows.push(["Date", "Details/Vendor", "Bill No", "Amount (\u20B9)"]);
+                    entries.forEach(r => rows.push([r.date || "", r.det || "", r.bill || "", r.amt || 0]));
+                    rows.push(["Sub Total — " + cat, "", "", sub]); rows.push([""]);
                 });
-
-                // Labour
-                rows.push(['LABOUR COSTS', '', '']);
-                LAB.forEach(cat => {
-                    const lb = s.lab[cat];
+                rows.push(["LABOUR COSTS", "", "", ""]);
+                s.labCats.forEach(cat => {
+                    const lb = s.lab[cat] || {};
                     const isSC = lb.contract !== null;
-                    const sub = isSC ? lb.contract : lb.daily.reduce((a, r) => a + r.amt, 0);
-                    rows.push([cat + (isSC ? ' [SUBCONTRACT]' : ''), '', '']);
-                    if (isSC) {
-                        rows.push(['Subcontractor', lb.scName || '', '']);
-                        rows.push(['Contract Amount', '', lb.contract]);
-                    } else {
-                        rows.push(['Date', 'Particulars', 'Amount (₹)']);
-                        lb.daily.forEach(r => rows.push([r.date || '', r.part || '', r.amt]));
+                    const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    rows.push([cat + (isSC ? " [SUBCONTRACT]" : ""), "", "", ""]);
+                    if (isSC) { rows.push(["Subcontractor", lb.scName || "", "", ""]); rows.push(["Contract Amount", "", "", lb.contract]); }
+                    else {
+                        rows.push(["Date", "Particulars", "Voucher No", "Amount (\u20B9)"]);
+                        (lb.daily || []).forEach(r => rows.push([r.date || "", r.part || "", r.voucher || "", r.amt || 0]));
                     }
-                    rows.push(['Sub Total — ' + cat, '', sub]);
-                    rows.push(['']);
+                    rows.push(["Sub Total — " + cat, "", "", sub]); rows.push([""]);
                 });
-
-                // Summary
-                rows.push(['SUMMARY', '', '']);
-                rows.push(['Total Receipts', '', rec]);
-                rows.push(['Total Expenditure', '', exp]);
-                rows.push(['Profit @ 15%', '', prof]);
-                rows.push(['NET BALANCE', '', bal]);
-
-                const wsn = s.name.replace(/[:\\\/?*\[\]]/g, '').substring(0, 28);
+                rows.push(["SUMMARY", "", "", ""]);
+                rows.push(["Total Receipts", "", "", rec]);
+                rows.push(["Total Expenditure", "", "", exp]);
+                rows.push(["Profit @ 15%", "", "", prof]);
+                rows.push(["NET BALANCE", "", "", bal]);
+                const wsn = (s.name || "Site" + (i + 1)).replace(/[^A-Za-z0-9 _-]/g, "").substring(0, 28) || "Site" + (i + 1);
                 const ws = XLSX.utils.aoa_to_sheet(rows);
-                ws['!cols'] = [{ wch: 28 }, { wch: 28 }, { wch: 18 }];
-                XLSX.utils.book_append_sheet(wb, ws, wsn || (i + 1));
+                ws["!cols"] = [{ wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 14 }];
+                XLSX.utils.book_append_sheet(wb, ws, wsn);
             });
 
             const d = new Date();
-            const ds = d.getDate() + '-' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()] + '-' + d.getFullYear();
-            XLSX.writeFile(wb, 'Meridian_IE_' + ds + '.xlsx');
-            notif('Excel exported!');
+            const ds = d.getDate() + "-" + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()] + "-" + d.getFullYear();
+            XLSX.writeFile(wb, "Meridian_IE_" + ds + ".xlsx");
+            notif("Excel exported!");
         }
 
-        // ── BOOT ──────────────────────────────────────────────────────────────────────
-        // ── BOOT ──────────────────────────────────────────────────────────────────────
-        // Wait for Firebase to be ready before loading
-        window.addEventListener('load', () => {
-            const checkFirebase = setInterval(() => {
-                if (window.db) {
-                    clearInterval(checkFirebase);
-                    load();
-                    showTab('dash');
-                }
-            }, 100);
-        });
+        // ── BOOT ──
+        async function boot() {
+            await loadData();
+            renderDash();
+            showTab("dash");
+        }
+
+        if (window.firebaseReady) { boot(); }
+        else { window.addEventListener("firebaseReady", boot); setTimeout(() => { if (!fbConnected) boot(); }, 3000); }
     </script>
 </body>
 
