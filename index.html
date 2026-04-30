@@ -1106,7 +1106,7 @@
                     <h2>Meridian Construction Company</h2>
                     <p>Vendor &amp; Labour Summary — All Sites</p>
                 </div>
-                <div id="vsummaryContent" style="padding:14px"></div>
+                <div id="vsummaryContent"></div>
             </div>
         </div>
 
@@ -1333,70 +1333,138 @@
         }
 
         // ── VENDOR SUMMARY ──
+        let vsFilters = { site: "", type: "", cat: "" };
+
+        function vsFilter() {
+            ["vs-site", "vs-type", "vs-cat"].forEach((id, k) => {
+                const el = document.getElementById(id);
+                if (el) vsFilters[["site", "type", "cat"][k]] = el.value;
+            });
+            renderVendorSummary();
+        }
+
+        function vsTypeChange() {
+            const el = document.getElementById("vs-type");
+            if (el) vsFilters.type = el.value;
+            vsFilters.cat = "";
+            renderVendorSummary();
+        }
+
+        function clearVsFilters() {
+            vsFilters = { site: "", type: "", cat: "" };
+            renderVendorSummary();
+        }
+
         function renderVendorSummary() {
+            const siteIdx = vsFilters.site !== "" ? parseInt(vsFilters.site) : -1;
+            const typeF = vsFilters.type;
+            const catF = vsFilters.cat;
+
+            // Collect available categories scoped to site filter
+            const scopedMatCats = new Set();
+            const scopedLabCats = new Set();
+            sites.forEach((s, i) => {
+                if (siteIdx >= 0 && siteIdx !== i) return;
+                s.matCats.forEach(c => scopedMatCats.add(c));
+                s.labCats.forEach(c => scopedLabCats.add(c));
+            });
+
+            // Build dropdowns
+            const siteOptions = `<option value="">All Sites</option>` +
+                sites.map((s, i) => `<option value="${i}"${vsFilters.site === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
+
+            let catOptions = `<option value="">All Categories</option>`;
+            if (!typeF || typeF === "mat") scopedMatCats.forEach(c => { catOptions += `<option value="mat:${esc(c)}"${catF === "mat:" + c ? " selected" : ""}>Material: ${esc(c)}</option>`; });
+            if (!typeF || typeF === "lab") scopedLabCats.forEach(c => { catOptions += `<option value="lab:${esc(c)}"${catF === "lab:" + c ? " selected" : ""}>Labour: ${esc(c)}</option>`; });
+
             let html = "";
-            const allMatCats = new Set();
-            sites.forEach(s => s.matCats.forEach(c => allMatCats.add(c)));
+            let grandTotal = 0;
 
-            allMatCats.forEach(cat => {
-                let catTotal = 0;
-                let siteRows = "";
-                sites.forEach((s, i) => {
-                    const entries = s.mat[cat] || [];
-                    if (entries.length === 0) return;
-                    const sub = entries.reduce((a, r) => a + (r.amt || 0), 0);
-                    catTotal += sub;
-                    const vendors = {};
-                    entries.forEach(r => {
-                        const v = r.det || "(No vendor name)";
-                        if (!vendors[v]) vendors[v] = { amt: 0, bills: [] };
-                        vendors[v].amt += (r.amt || 0);
-                        if (r.bill) vendors[v].bills.push(r.bill);
-                    });
-                    Object.entries(vendors).forEach(([v, info]) => {
-                        const billStr = info.bills.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.bills.join(", "))}]</span>` : "";
-                        siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(v)}${billStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
-                    });
-                });
-                if (!siteRows) return;
-                html += `<div class="vsec-hdr">&#129521; Material: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Vendor / Bills</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)} (All Sites)</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
-            });
-
-            const allLabCats = new Set();
-            sites.forEach(s => s.labCats.forEach(c => allLabCats.add(c)));
-
-            allLabCats.forEach(cat => {
-                let catTotal = 0;
-                let siteRows = "";
-                sites.forEach((s, i) => {
-                    const lb = s.lab[cat];
-                    if (!lb) return;
-                    const isSC = lb.contract !== null;
-                    const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    if (!sub) return;
-                    catTotal += sub;
-                    if (isSC) {
-                        siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(lb.scName) || "Subcontractor"} <span class="sc-pill">SC</span></td><td class="r">${fmt(sub)}</td></tr>`;
-                    } else {
-                        const workers = {};
-                        (lb.daily || []).forEach(r => {
-                            const w = r.part || "(No name)";
-                            if (!workers[w]) workers[w] = { amt: 0, vouchers: [] };
-                            workers[w].amt += (r.amt || 0);
-                            if (r.voucher) workers[w].vouchers.push(r.voucher);
+            // Materials
+            if (!typeF || typeF === "mat") {
+                scopedMatCats.forEach(cat => {
+                    if (catF && catF !== "mat:" + cat) return;
+                    let catTotal = 0;
+                    let siteRows = "";
+                    sites.forEach((s, i) => {
+                        if (siteIdx >= 0 && siteIdx !== i) return;
+                        const entries = s.mat[cat] || [];
+                        if (entries.length === 0) return;
+                        const sub = entries.reduce((a, r) => a + (r.amt || 0), 0);
+                        catTotal += sub;
+                        const vendors = {};
+                        entries.forEach(r => {
+                            const v = r.det || "(No vendor name)";
+                            if (!vendors[v]) vendors[v] = { amt: 0, bills: [] };
+                            vendors[v].amt += (r.amt || 0);
+                            if (r.bill) vendors[v].bills.push(r.bill);
                         });
-                        Object.entries(workers).forEach(([w, info]) => {
-                            const vchStr = info.vouchers.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.vouchers.join(", "))}]</span>` : "";
-                            siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(w)}${vchStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
+                        Object.entries(vendors).forEach(([v, info]) => {
+                            const billStr = info.bills.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.bills.join(", "))}]</span>` : "";
+                            siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(v)}${billStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
                         });
-                    }
+                    });
+                    if (!siteRows) return;
+                    grandTotal += catTotal;
+                    html += `<div class="vsec-hdr">&#129521; Material: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Vendor / Bills</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)}</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
                 });
-                if (!siteRows) return;
-                html += `<div class="vsec-hdr">&#128119; Labour: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Worker / Contractor / Vouchers</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)} (All Sites)</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
-            });
+            }
 
-            if (!html) html = '<p style="text-align:center;color:#aaa;padding:40px">No entries yet across any site.</p>';
-            document.getElementById("vsummaryContent").innerHTML = html;
+            // Labour
+            if (!typeF || typeF === "lab") {
+                scopedLabCats.forEach(cat => {
+                    if (catF && catF !== "lab:" + cat) return;
+                    let catTotal = 0;
+                    let siteRows = "";
+                    sites.forEach((s, i) => {
+                        if (siteIdx >= 0 && siteIdx !== i) return;
+                        const lb = s.lab[cat];
+                        if (!lb) return;
+                        const isSC = lb.contract !== null;
+                        const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
+                        if (!sub) return;
+                        catTotal += sub;
+                        if (isSC) {
+                            siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(lb.scName) || "Subcontractor"} <span class="sc-pill">SC</span></td><td class="r">${fmt(sub)}</td></tr>`;
+                        } else {
+                            const workers = {};
+                            (lb.daily || []).forEach(r => {
+                                const w = r.part || "(No name)";
+                                if (!workers[w]) workers[w] = { amt: 0, vouchers: [] };
+                                workers[w].amt += (r.amt || 0);
+                                if (r.voucher) workers[w].vouchers.push(r.voucher);
+                            });
+                            Object.entries(workers).forEach(([w, info]) => {
+                                const vchStr = info.vouchers.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.vouchers.join(", "))}]</span>` : "";
+                                siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(w)}${vchStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
+                            });
+                        }
+                    });
+                    if (!siteRows) return;
+                    grandTotal += catTotal;
+                    html += `<div class="vsec-hdr">&#128119; Labour: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Worker / Contractor / Vouchers</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)}</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
+                });
+            }
+
+            const emptyMsg = '<p style="text-align:center;color:#aaa;padding:40px">No entries found for the selected filters.</p>';
+
+            document.getElementById("vsummaryContent").innerHTML = `
+            <div class="db-filter-bar">
+              <div class="form-row fg3" style="margin-bottom:0">
+                <div class="fi"><label>Site</label><select id="vs-site" onchange="vsFilter()">${siteOptions}</select></div>
+                <div class="fi"><label>Type</label><select id="vs-type" onchange="vsTypeChange()">
+                  <option value=""${!typeF ? " selected" : ""}>All Types</option>
+                  <option value="mat"${typeF === "mat" ? " selected" : ""}>Materials Only</option>
+                  <option value="lab"${typeF === "lab" ? " selected" : ""}>Labour Only</option>
+                </select></div>
+                <div class="fi"><label>Category</label><select id="vs-cat" onchange="vsFilter()">${catOptions}</select></div>
+              </div>
+              <div class="db-stats">
+                <span>Filtered Total: <strong style="color:#185FA5">${fmt(grandTotal)}</strong></span>
+                <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearVsFilters()">Clear Filters</button>
+              </div>
+            </div>
+            <div style="padding:14px">${html || emptyMsg}</div>`;
         }
 
         // ── SITES LIST ──
