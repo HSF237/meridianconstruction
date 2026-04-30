@@ -1030,6 +1030,161 @@
                 display: none
             }
         }
+
+        /* ── Elevation & depth ───────────────────────── */
+        .dcard {
+            box-shadow: 0 1px 4px rgba(0,0,0,.07);
+            transition: box-shadow .18s, transform .18s
+        }
+        .dcard:hover {
+            box-shadow: 0 4px 14px rgba(0,0,0,.11);
+            transform: translateY(-2px)
+        }
+        .site-card {
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            transition: box-shadow .18s
+        }
+        .site-card:hover {
+            box-shadow: 0 3px 12px rgba(0,0,0,.10)
+        }
+        .dash-tbl-wrap {
+            box-shadow: 0 1px 4px rgba(0,0,0,.06)
+        }
+
+        /* ── Topbar gradient accent ──────────────────── */
+        .topbar {
+            background: linear-gradient(135deg, #152F4A 0%, #1A3C5E 60%, #21527F 100%);
+            border-bottom: 2px solid #0D2439
+        }
+
+        /* ── Dashboard stat card left-border accents ─── */
+        .dcard.dv-green-card { border-left: 4px solid #1D9E75 }
+        .dcard.dv-red-card   { border-left: 4px solid #C00000 }
+        .dcard.dv-amber-card { border-left: 4px solid #BA7517 }
+        .dcard.dv-blue-card  { border-left: 4px solid #185FA5 }
+
+        /* ── Button press feedback ───────────────────── */
+        .btn:active { transform: scale(.97); opacity: 1 }
+
+        /* ── Input improvements ──────────────────────── */
+        .fi input,
+        .fi select {
+            transition: border-color .15s, box-shadow .15s
+        }
+        .fi input:hover,
+        .fi select:hover {
+            border-color: #999
+        }
+
+        /* ── Striped table rows ──────────────────────── */
+        .etbl tbody tr:nth-child(even) td {
+            background: #FAFBFD
+        }
+        .etbl tbody tr:nth-child(even):hover td {
+            background: #F0F4FA
+        }
+        .dash-tbl tbody tr:nth-child(even) td {
+            background: #FAFBFD
+        }
+        .dash-tbl tbody tr:nth-child(even):hover td {
+            background: #F0F4FA
+        }
+
+        /* ── Smooth tab underline transition ─────────── */
+        .nav-tab, .sec-tab {
+            transition: color .15s, background .15s, border-bottom-color .15s
+        }
+        .ctab {
+            transition: background .15s, color .15s, border-color .15s, box-shadow .15s
+        }
+        .ctab.on {
+            box-shadow: 0 1px 5px rgba(26,60,94,.25)
+        }
+
+        /* ── Notification animation ──────────────────── */
+        .notif {
+            bottom: 24px;
+            right: 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 18px rgba(0,0,0,.22);
+            transition: opacity .25s, transform .25s
+        }
+        .notif.show {
+            transform: translateY(0)
+        }
+        .notif:not(.show) {
+            transform: translateY(8px)
+        }
+
+        /* ── Cloud-sync pill pulse ───────────────────── */
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1 }
+            50%       { opacity: .4 }
+        }
+        .cloud-syncing::before {
+            content: "";
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #fff;
+            animation: pulse-dot 1s ease-in-out infinite;
+            margin-right: 2px
+        }
+
+        /* ── Modal polish ────────────────────────────── */
+        .modal {
+            box-shadow: 0 8px 32px rgba(0,0,0,.22);
+            animation: modal-in .18s ease
+        }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(.96) translateY(-6px) }
+            to   { opacity: 1; transform: scale(1)  translateY(0) }
+        }
+        .modal-bg { backdrop-filter: blur(2px) }
+
+        /* ── Summary cards ───────────────────────────── */
+        .scard {
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            transition: box-shadow .18s
+        }
+        .scard:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,.10)
+        }
+
+        /* ── Scrollbar (Webkit) ──────────────────────── */
+        ::-webkit-scrollbar { width: 6px; height: 6px }
+        ::-webkit-scrollbar-track { background: #F0F2F5 }
+        ::-webkit-scrollbar-thumb {
+            background: #B0BEC5;
+            border-radius: 99px
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #78909C }
+
+        /* ── Nav tab active indicator dot ────────────── */
+        .nav-tab.on::after {
+            content: "";
+            display: block;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: #1A3C5E;
+            margin: 2px auto 0
+        }
+
+        /* ── Empty-row style ─────────────────────────── */
+        .empty-row td {
+            background: #FAFBFD;
+            border-radius: 6px;
+            color: #aaa;
+            font-size: 12px
+        }
+
+        /* ── Delete button transition ────────────────── */
+        .etbl .del-btn {
+            transition: color .15s, transform .15s
+        }
+        .etbl .del-btn:hover {
+            transform: scale(1.2)
+        }
     </style>
 </head>
 
