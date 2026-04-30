@@ -1185,10 +1185,130 @@
         .etbl .del-btn:hover {
             transform: scale(1.2)
         }
+
+        /* ── Password lock screen ────────────────────── */
+        #lockScreen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0D2439 0%, #1A3C5E 60%, #21527F 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+        #lockScreen.hidden { display: none }
+        .lock-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 36px 32px 28px;
+            width: 340px;
+            max-width: 92vw;
+            box-shadow: 0 16px 48px rgba(0,0,0,.35);
+            text-align: center;
+            animation: modal-in .22s ease
+        }
+        .lock-logo {
+            font-size: 36px;
+            margin-bottom: 8px
+        }
+        .lock-box h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1A3C5E;
+            margin-bottom: 4px
+        }
+        .lock-box p {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 22px
+        }
+        .lock-input-wrap {
+            position: relative;
+            margin-bottom: 14px
+        }
+        #lockInput {
+            width: 100%;
+            padding: 10px 40px 10px 12px;
+            border: 1.5px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            transition: border-color .15s, box-shadow .15s;
+            letter-spacing: 2px
+        }
+        #lockInput:focus {
+            outline: none;
+            border-color: #2E75B6;
+            box-shadow: 0 0 0 3px rgba(46,117,182,.15)
+        }
+        #lockInput.error {
+            border-color: #C00000;
+            box-shadow: 0 0 0 3px rgba(192,0,0,.12);
+            animation: shake .35s ease
+        }
+        .lock-eye {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            color: #aaa;
+            padding: 0 2px;
+            line-height: 1
+        }
+        .lock-eye:hover { color: #555 }
+        #lockBtn {
+            width: 100%;
+            padding: 10px;
+            background: #1A3C5E;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .15s, transform .15s
+        }
+        #lockBtn:hover { background: #21527F }
+        #lockBtn:active { transform: scale(.98) }
+        #lockErr {
+            font-size: 11px;
+            color: #C00000;
+            margin-top: 10px;
+            min-height: 16px;
+            font-weight: 600
+        }
+        @keyframes shake {
+            0%,100% { transform: translateX(0) }
+            20%      { transform: translateX(-7px) }
+            40%      { transform: translateX(7px) }
+            60%      { transform: translateX(-5px) }
+            80%      { transform: translateX(5px) }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Password lock screen -->
+    <div id="lockScreen">
+        <div class="lock-box">
+            <div class="lock-logo">&#127959;</div>
+            <h2>Meridian Construction</h2>
+            <p>Enter your password to continue</p>
+            <div class="lock-input-wrap">
+                <input id="lockInput" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')unlock()">
+                <button class="lock-eye" onclick="toggleLockEye(this)" title="Show/hide">&#128065;</button>
+            </div>
+            <button id="lockBtn" onclick="unlock()">Unlock</button>
+            <div id="lockErr"></div>
+        </div>
+    </div>
+
+    <div id="appWrap" style="display:none">
 
     <div class="topbar">
         <div class="tb-left">
@@ -2245,6 +2365,55 @@
 
         if (window.firebaseReady) { boot(); }
         else { window.addEventListener("firebaseReady", boot); setTimeout(() => { if (!fbConnected) boot(); }, 3000); }
+    </script>
+
+    </div> <!-- /appWrap -->
+
+    <script>
+        (function () {
+            const PASS = "Meridian@A/c #";
+            const SESSION_KEY = "mc_unlocked";
+
+            function unlock() {
+                const val = document.getElementById("lockInput").value;
+                const inp = document.getElementById("lockInput");
+                const err = document.getElementById("lockErr");
+                if (val === PASS) {
+                    sessionStorage.setItem(SESSION_KEY, "1");
+                    document.getElementById("lockScreen").classList.add("hidden");
+                    document.getElementById("appWrap").style.display = "";
+                } else {
+                    inp.classList.remove("error");
+                    void inp.offsetWidth; // restart animation
+                    inp.classList.add("error");
+                    err.textContent = "Incorrect password. Please try again.";
+                    inp.value = "";
+                    inp.focus();
+                }
+            }
+
+            function toggleLockEye(btn) {
+                const inp = document.getElementById("lockInput");
+                if (inp.type === "password") {
+                    inp.type = "text";
+                    btn.innerHTML = "&#128064;";
+                } else {
+                    inp.type = "password";
+                    btn.innerHTML = "&#128065;";
+                }
+            }
+
+            window.unlock = unlock;
+            window.toggleLockEye = toggleLockEye;
+
+            // If already unlocked this session, skip lock screen
+            if (sessionStorage.getItem(SESSION_KEY) === "1") {
+                document.getElementById("lockScreen").classList.add("hidden");
+                document.getElementById("appWrap").style.display = "";
+            } else {
+                setTimeout(() => document.getElementById("lockInput").focus(), 100);
+            }
+        })();
     </script>
 </body>
 
