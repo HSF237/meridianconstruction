@@ -1031,7 +1031,6 @@
             }
         }
 
-        /* ── Elevation & depth ───────────────────────── */
         .dcard {
             box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
             transition: box-shadow .18s, transform .18s
@@ -1055,339 +1054,87 @@
             box-shadow: 0 1px 4px rgba(0, 0, 0, .06)
         }
 
-        /* ── Topbar gradient accent ──────────────────── */
         .topbar {
             background: linear-gradient(135deg, #152F4A 0%, #1A3C5E 60%, #21527F 100%);
             border-bottom: 2px solid #0D2439
         }
 
-        /* ── Dashboard stat card left-border accents ─── */
-        .dcard.dv-green-card {
-            border-left: 4px solid #1D9E75
-        }
+        .dcard.dv-green-card { border-left: 4px solid #1D9E75 }
+        .dcard.dv-red-card   { border-left: 4px solid #C00000 }
+        .dcard.dv-amber-card { border-left: 4px solid #BA7517 }
+        .dcard.dv-blue-card  { border-left: 4px solid #185FA5 }
 
-        .dcard.dv-red-card {
-            border-left: 4px solid #C00000
-        }
+        .btn:active { transform: scale(.97); opacity: 1 }
 
-        .dcard.dv-amber-card {
-            border-left: 4px solid #BA7517
-        }
+        .fi input, .fi select { transition: border-color .15s, box-shadow .15s }
+        .fi input:hover, .fi select:hover { border-color: #999 }
 
-        .dcard.dv-blue-card {
-            border-left: 4px solid #185FA5
-        }
+        .etbl tbody tr:nth-child(even) td { background: #FAFBFD }
+        .etbl tbody tr:nth-child(even):hover td { background: #F0F4FA }
+        .dash-tbl tbody tr:nth-child(even) td { background: #FAFBFD }
+        .dash-tbl tbody tr:nth-child(even):hover td { background: #F0F4FA }
 
-        /* ── Button press feedback ───────────────────── */
-        .btn:active {
-            transform: scale(.97);
-            opacity: 1
-        }
+        .nav-tab, .sec-tab { transition: color .15s, background .15s, border-bottom-color .15s }
+        .ctab { transition: background .15s, color .15s, border-color .15s, box-shadow .15s }
+        .ctab.on { box-shadow: 0 1px 5px rgba(26, 60, 94, .25) }
 
-        /* ── Input improvements ──────────────────────── */
-        .fi input,
-        .fi select {
-            transition: border-color .15s, box-shadow .15s
-        }
+        .notif { bottom: 24px; right: 24px; border-radius: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.22); transition: opacity .25s, transform .25s }
+        .notif.show { transform: translateY(0) }
+        .notif:not(.show) { transform: translateY(8px) }
 
-        .fi input:hover,
-        .fi select:hover {
-            border-color: #999
-        }
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .cloud-syncing::before { content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:#fff; animation:pulse-dot 1s ease-in-out infinite; margin-right:2px }
 
-        /* ── Striped table rows ──────────────────────── */
-        .etbl tbody tr:nth-child(even) td {
-            background: #FAFBFD
-        }
+        .modal { box-shadow: 0 8px 32px rgba(0,0,0,.22); animation: modal-in .18s ease }
+        @keyframes modal-in { from{opacity:0;transform:scale(.96) translateY(-6px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .modal-bg { backdrop-filter: blur(2px) }
 
-        .etbl tbody tr:nth-child(even):hover td {
-            background: #F0F4FA
-        }
+        .scard { box-shadow: 0 1px 4px rgba(0,0,0,.06); transition: box-shadow .18s }
+        .scard:hover { box-shadow: 0 3px 10px rgba(0,0,0,.10) }
 
-        .dash-tbl tbody tr:nth-child(even) td {
-            background: #FAFBFD
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px }
+        ::-webkit-scrollbar-track { background: #F0F2F5 }
+        ::-webkit-scrollbar-thumb { background: #B0BEC5; border-radius: 99px }
+        ::-webkit-scrollbar-thumb:hover { background: #78909C }
 
-        .dash-tbl tbody tr:nth-child(even):hover td {
-            background: #F0F4FA
-        }
+        .nav-tab.on::after { content:""; display:block; width:4px; height:4px; border-radius:50%; background:#1A3C5E; margin:2px auto 0 }
 
-        /* ── Smooth tab underline transition ─────────── */
-        .nav-tab,
-        .sec-tab {
-            transition: color .15s, background .15s, border-bottom-color .15s
-        }
+        .empty-row td { background: #FAFBFD; border-radius: 6px; color: #aaa; font-size: 12px }
 
-        .ctab {
-            transition: background .15s, color .15s, border-color .15s, box-shadow .15s
-        }
+        .etbl .del-btn { transition: color .15s, transform .15s }
+        .etbl .del-btn:hover { transform: scale(1.2) }
 
-        .ctab.on {
-            box-shadow: 0 1px 5px rgba(26, 60, 94, .25)
-        }
-
-        /* ── Notification animation ──────────────────── */
-        .notif {
-            bottom: 24px;
-            right: 24px;
-            border-radius: 10px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, .22);
-            transition: opacity .25s, transform .25s
-        }
-
-        .notif.show {
-            transform: translateY(0)
-        }
-
-        .notif:not(.show) {
-            transform: translateY(8px)
-        }
-
-        /* ── Cloud-sync pill pulse ───────────────────── */
-        @keyframes pulse-dot {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: .4
-            }
-        }
-
-        .cloud-syncing::before {
-            content: "";
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #fff;
-            animation: pulse-dot 1s ease-in-out infinite;
-            margin-right: 2px
-        }
-
-        /* ── Modal polish ────────────────────────────── */
-        .modal {
-            box-shadow: 0 8px 32px rgba(0, 0, 0, .22);
-            animation: modal-in .18s ease
-        }
-
-        @keyframes modal-in {
-            from {
-                opacity: 0;
-                transform: scale(.96) translateY(-6px)
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0)
-            }
-        }
-
-        .modal-bg {
-            backdrop-filter: blur(2px)
-        }
-
-        /* ── Summary cards ───────────────────────────── */
-        .scard {
-            box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
-            transition: box-shadow .18s
-        }
-
-        .scard:hover {
-            box-shadow: 0 3px 10px rgba(0, 0, 0, .10)
-        }
-
-        /* ── Scrollbar (Webkit) ──────────────────────── */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #F0F2F5
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #B0BEC5;
-            border-radius: 99px
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #78909C
-        }
-
-        /* ── Nav tab active indicator dot ────────────── */
-        .nav-tab.on::after {
-            content: "";
-            display: block;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: #1A3C5E;
-            margin: 2px auto 0
-        }
-
-        /* ── Empty-row style ─────────────────────────── */
-        .empty-row td {
-            background: #FAFBFD;
-            border-radius: 6px;
-            color: #aaa;
-            font-size: 12px
-        }
-
-        /* ── Delete button transition ────────────────── */
-        .etbl .del-btn {
-            transition: color .15s, transform .15s
-        }
-
-        .etbl .del-btn:hover {
-            transform: scale(1.2)
-        }
-
-        /* ── Password lock screen ────────────────────── */
         #lockScreen {
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background: linear-gradient(135deg, #0D2439 0%, #1A3C5E 60%, #21527F 100%);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center
+            z-index: 9999; display: flex; align-items: center; justify-content: center
         }
-
-        #lockScreen.hidden {
-            display: none
-        }
-
+        #lockScreen.hidden { display: none }
         .lock-box {
-            background: #fff;
-            border-radius: 14px;
-            padding: 36px 32px 28px;
-            width: 340px;
-            max-width: 92vw;
-            box-shadow: 0 16px 48px rgba(0, 0, 0, .35);
-            text-align: center;
-            animation: modal-in .22s ease
+            background: #fff; border-radius: 14px; padding: 36px 32px 28px;
+            width: 340px; max-width: 92vw;
+            box-shadow: 0 16px 48px rgba(0,0,0,.35);
+            text-align: center; animation: modal-in .22s ease
         }
-
-        .lock-logo {
-            font-size: 36px;
-            margin-bottom: 8px
-        }
-
-        .lock-box h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1A3C5E;
-            margin-bottom: 4px
-        }
-
-        .lock-box p {
-            font-size: 11px;
-            color: #888;
-            margin-bottom: 22px
-        }
-
-        .lock-input-wrap {
-            position: relative;
-            margin-bottom: 14px
-        }
-
+        .lock-logo { font-size: 36px; margin-bottom: 8px }
+        .lock-box h2 { font-size: 16px; font-weight: 700; color: #1A3C5E; margin-bottom: 4px }
+        .lock-box p { font-size: 11px; color: #888; margin-bottom: 22px }
+        .lock-input-wrap { position: relative; margin-bottom: 14px }
         #lockInput {
-            width: 100%;
-            padding: 10px 40px 10px 12px;
-            border: 1.5px solid #ccc;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: Arial, sans-serif;
-            transition: border-color .15s, box-shadow .15s;
-            letter-spacing: 2px
+            width: 100%; padding: 10px 40px 10px 12px;
+            border: 1.5px solid #ccc; border-radius: 8px;
+            font-size: 14px; font-family: Arial, sans-serif;
+            transition: border-color .15s, box-shadow .15s; letter-spacing: 2px
         }
-
-        #lockInput:focus {
-            outline: none;
-            border-color: #2E75B6;
-            box-shadow: 0 0 0 3px rgba(46, 117, 182, .15)
-        }
-
-        #lockInput.error {
-            border-color: #C00000;
-            box-shadow: 0 0 0 3px rgba(192, 0, 0, .12);
-            animation: shake .35s ease
-        }
-
-        .lock-eye {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            color: #aaa;
-            padding: 0 2px;
-            line-height: 1
-        }
-
-        .lock-eye:hover {
-            color: #555
-        }
-
-        #lockBtn {
-            width: 100%;
-            padding: 10px;
-            background: #1A3C5E;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background .15s, transform .15s
-        }
-
-        #lockBtn:hover {
-            background: #21527F
-        }
-
-        #lockBtn:active {
-            transform: scale(.98)
-        }
-
-        #lockErr {
-            font-size: 11px;
-            color: #C00000;
-            margin-top: 10px;
-            min-height: 16px;
-            font-weight: 600
-        }
-
-        @keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0)
-            }
-
-            20% {
-                transform: translateX(-7px)
-            }
-
-            40% {
-                transform: translateX(7px)
-            }
-
-            60% {
-                transform: translateX(-5px)
-            }
-
-            80% {
-                transform: translateX(5px)
-            }
-        }
+        #lockInput:focus { outline: none; border-color: #2E75B6; box-shadow: 0 0 0 3px rgba(46,117,182,.15) }
+        #lockInput.error { border-color: #C00000; box-shadow: 0 0 0 3px rgba(192,0,0,.12); animation: shake .35s ease }
+        .lock-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; color: #aaa; padding: 0 2px; line-height: 1 }
+        .lock-eye:hover { color: #555 }
+        #lockBtn { width: 100%; padding: 10px; background: #1A3C5E; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s, transform .15s }
+        #lockBtn:hover { background: #21527F }
+        #lockBtn:active { transform: scale(.98) }
+        #lockErr { font-size: 11px; color: #C00000; margin-top: 10px; min-height: 16px; font-weight: 600 }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
     </style>
 </head>
 
@@ -1419,15 +1166,17 @@
             <div class="tb-right">
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
                 <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
+                <button class="btn btn-purple" onclick="triggerImport()">&#128228; Import Excel</button>
                 <button class="btn btn-amber" onclick="exportExcel()">&#8595; Export Excel</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
+                <input type="file" id="importFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(this)">
             </div>
         </div>
 
         <div class="nav-tabs">
             <div class="nav-tab on" id="nt-dash" onclick="showTab('dash')">&#9632; Dashboard</div>
             <div class="nav-tab" id="nt-sites" onclick="showTab('sites')">&#9776; All Sites</div>
-            <div class="nav-tab" id="nt-vsummary" onclick="showTab('vsummary')">&#128200; Vendor & Labour Summary</div>
+            <div class="nav-tab" id="nt-vsummary" onclick="showTab('vsummary')">&#128200; Vendor &amp; Labour Summary</div>
             <div class="nav-tab" id="nt-daybook" onclick="showTab('daybook')">&#128218; Day Book</div>
         </div>
 
@@ -1438,6 +1187,25 @@
                         onkeydown="if(event.key==='Enter')addSite()"></div>
                 <button class="btn btn-green" onclick="addSite()">Add</button>
                 <button class="btn btn-grey" onclick="toggleAddSite()">Cancel</button>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div id="dropZone" style="display:none;border:2px dashed #534AB7;border-radius:10px;background:#F3F2FE;padding:28px;text-align:center;margin-bottom:12px;cursor:pointer;transition:background .2s" onclick="triggerImport()" ondragover="event.preventDefault();document.getElementById('dropZone').style.background='#E3E1FC'" ondragleave="document.getElementById('dropZone').style.background='#F3F2FE'" ondrop="handleDrop(event)">
+                <div style="font-size:28px;margin-bottom:6px">&#128228;</div>
+                <div style="font-size:13px;font-weight:700;color:#534AB7">Drop your Excel file here</div>
+                <div style="font-size:11px;color:#888;margin-top:4px">or click to browse &nbsp;·&nbsp; .xlsx files only &nbsp;·&nbsp; Same structure as Habeeb Athooty format</div>
+            </div>
+
+            <!-- Import Preview Modal -->
+            <div class="modal-bg" id="importModal">
+                <div class="modal" style="width:520px;max-width:96vw;max-height:90vh;overflow-y:auto">
+                    <h3 id="importModalTitle">&#128228; Import Excel — Preview</h3>
+                    <div id="importPreviewBody"></div>
+                    <div style="display:flex;gap:8px;margin-top:16px">
+                        <button class="btn btn-purple" style="flex:1" id="importConfirmBtn" onclick="confirmImport()">&#10003; Import Site</button>
+                        <button class="btn btn-grey" onclick="closeModal('importModal')">Cancel</button>
+                    </div>
+                </div>
             </div>
 
             <div id="view-dash">
@@ -1531,7 +1299,6 @@
             let fbConnected = false;
             let saveTimer = null;
 
-            // ── SITE FACTORY ──
             function mkSite(name) {
                 return {
                     name,
@@ -1558,16 +1325,13 @@
                 return s;
             }
 
-            // ── CLOUD STATUS ──
             function setCloudStatus(state, text) {
                 const el = document.getElementById("cloudStatus");
                 el.className = "cloud-status cloud-" + state;
                 el.innerHTML = text;
             }
 
-            // ── LOAD ──
             async function loadData() {
-                // Try Firebase first
                 if (window.firebaseReady && window.db) {
                     try {
                         setCloudStatus("syncing", "&#9881; Loading from cloud...");
@@ -1579,12 +1343,10 @@
                                 sites = d.sites.map(migrateSite);
                                 fbConnected = true;
                                 setCloudStatus("synced", "&#9728; Cloud Synced");
-                                // Also save to localStorage as backup
                                 localStorage.setItem(STORE_KEY, JSON.stringify({ sites }));
                                 return;
                             }
                         }
-                        // No cloud data yet — load local or default, then push to cloud
                         loadLocal();
                         fbConnected = true;
                         saveData();
@@ -1616,12 +1378,8 @@
                 }
             }
 
-            // ── SAVE (local instant + cloud debounced) ──
             function saveData() {
-                // Always save locally instantly
                 try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites })); } catch (e) { }
-
-                // Debounce cloud save
                 if (saveTimer) clearTimeout(saveTimer);
                 saveTimer = setTimeout(async () => {
                     if (!window.firebaseReady || !window.db || !fbConnected) {
@@ -1640,12 +1398,11 @@
                 }, 800);
             }
 
-            // ── CALC ──
             function calc(i) {
                 const s = sites[i];
                 const rec = s.cash.reduce((a, r) => a + (r.amt || 0), 0);
                 let matExp = 0;
-                s.matCats.forEach(c => { matExp += (s.mat[c] || []).reduce((a, r) => a + (r.amt || 0), 0); });
+                s.matCats.forEach(c => { matExp += (s.mat[c] || []).reduce((a, r) => a + (r.totalAmt !== undefined ? r.totalAmt : (r.amt || 0)), 0); });
                 let labExp = 0;
                 s.labCats.forEach(c => {
                     const lb = s.lab[c] || { daily: [], contract: null };
@@ -1671,7 +1428,6 @@
                 return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\\/g, "&#92;").replace(/'/g, "&#39;");
             }
 
-            // ── NAVIGATION ──
             function showTab(t) {
                 ["dash", "sites", "vsummary", "daybook"].forEach(v => {
                     document.getElementById("view-" + v).style.display = t === v ? "block" : "none";
@@ -1683,7 +1439,6 @@
                 if (t === "daybook") renderDayBook();
             }
 
-            // ── DASHBOARD ──
             function renderDash() {
                 let tR = 0, tE = 0, tP = 0, tB = 0;
                 sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; });
@@ -1708,7 +1463,6 @@
                 setTimeout(() => { const el = document.getElementById("sc-" + i); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 80);
             }
 
-            // ── VENDOR SUMMARY ──
             let vsFilters = { site: "", type: "", cat: "" };
 
             function vsFilter() {
@@ -1735,8 +1489,6 @@
                 const siteIdx = vsFilters.site !== "" ? parseInt(vsFilters.site) : -1;
                 const typeF = vsFilters.type;
                 const catF = vsFilters.cat;
-
-                // Collect available categories scoped to site filter
                 const scopedMatCats = new Set();
                 const scopedLabCats = new Set();
                 sites.forEach((s, i) => {
@@ -1744,49 +1496,46 @@
                     s.matCats.forEach(c => scopedMatCats.add(c));
                     s.labCats.forEach(c => scopedLabCats.add(c));
                 });
-
-                // Build dropdowns
                 const siteOptions = `<option value="">All Sites</option>` +
                     sites.map((s, i) => `<option value="${i}"${vsFilters.site === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
-
                 let catOptions = `<option value="">All Categories</option>`;
                 if (!typeF || typeF === "mat") scopedMatCats.forEach(c => { catOptions += `<option value="mat:${esc(c)}"${catF === "mat:" + c ? " selected" : ""}>Material: ${esc(c)}</option>`; });
                 if (!typeF || typeF === "lab") scopedLabCats.forEach(c => { catOptions += `<option value="lab:${esc(c)}"${catF === "lab:" + c ? " selected" : ""}>Labour: ${esc(c)}</option>`; });
-
                 let html = "";
                 let grandTotal = 0;
-
-                // Materials
                 if (!typeF || typeF === "mat") {
                     scopedMatCats.forEach(cat => {
                         if (catF && catF !== "mat:" + cat) return;
-                        let catTotal = 0;
+                        let catTotal = 0, catPaid = 0;
                         let siteRows = "";
                         sites.forEach((s, i) => {
                             if (siteIdx >= 0 && siteIdx !== i) return;
                             const entries = s.mat[cat] || [];
                             if (entries.length === 0) return;
-                            const sub = entries.reduce((a, r) => a + (r.amt || 0), 0);
-                            catTotal += sub;
+                            const sub  = entries.reduce((a, r) => a + (r.totalAmt !== undefined ? r.totalAmt : (r.amt||0)), 0);
+                            const paid = entries.reduce((a, r) => a + (r.paid !== undefined ? r.paid : (r.totalAmt !== undefined ? r.totalAmt : (r.amt||0))), 0);
+                            catTotal += sub; catPaid += paid;
                             const vendors = {};
                             entries.forEach(r => {
                                 const v = r.det || "(No vendor name)";
-                                if (!vendors[v]) vendors[v] = { amt: 0, bills: [] };
-                                vendors[v].amt += (r.amt || 0);
+                                if (!vendors[v]) vendors[v] = { total: 0, paid: 0, bills: [] };
+                                vendors[v].total += (r.totalAmt !== undefined ? r.totalAmt : (r.amt||0));
+                                vendors[v].paid  += (r.paid !== undefined ? r.paid : vendors[v].total);
                                 if (r.bill) vendors[v].bills.push(r.bill);
                             });
                             Object.entries(vendors).forEach(([v, info]) => {
+                                const rem = info.total - info.paid;
                                 const billStr = info.bills.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.bills.join(", "))}]</span>` : "";
-                                siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(v)}${billStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
+                                const remCell = rem > 0 ? `<span style="color:#C00000;font-weight:700">${fmt(rem)} due</span>` : `<span style="color:#1D9E75">✓</span>`;
+                                siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(v)}${billStr}</td><td class="r">${fmt(info.total)}</td><td class="r">${fmt(info.paid)}</td><td class="r">${remCell}</td></tr>`;
                             });
                         });
                         if (!siteRows) return;
+                        const catRem = catTotal - catPaid;
                         grandTotal += catTotal;
-                        html += `<div class="vsec-hdr">&#129521; Material: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Vendor / Bills</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)}</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
+                        html += `<div class="vsec-hdr">&#129521; Material: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:28%">Site</th><th>Vendor / Bills</th><th class="r" style="width:16%">Total (&#8377;)</th><th class="r" style="width:14%">Paid (&#8377;)</th><th class="r" style="width:14%">Remaining</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)}</td><td class="r">${fmt(catTotal)}</td><td class="r">${fmt(catPaid)}</td><td class="r" style="color:${catRem>0?'#C00000':'#1D9E75'}">${catRem>0?fmt(catRem)+' due':'✓ Cleared'}</td></tr></tbody></table>`;
                     });
                 }
-
-                // Labour
                 if (!typeF || typeF === "lab") {
                     scopedLabCats.forEach(cat => {
                         if (catF && catF !== "lab:" + cat) return;
@@ -1821,9 +1570,7 @@
                         html += `<div class="vsec-hdr">&#128119; Labour: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Worker / Contractor / Vouchers</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)}</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
                     });
                 }
-
                 const emptyMsg = '<p style="text-align:center;color:#aaa;padding:40px">No entries found for the selected filters.</p>';
-
                 document.getElementById("vsummaryContent").innerHTML = `
             <div class="db-filter-bar">
               <div class="form-row fg3" style="margin-bottom:0">
@@ -1843,7 +1590,6 @@
             <div style="padding:14px">${html || emptyMsg}</div>`;
             }
 
-            // ── SITES LIST ──
             function renderSites() {
                 const wrap = document.getElementById("sitesList");
                 wrap.innerHTML = "";
@@ -1876,7 +1622,6 @@
                 renderSites();
             }
 
-            // ── BODY ──
             function bodyHTML(i) {
                 const sec = openSec[i] || "cash";
                 return `
@@ -1894,7 +1639,6 @@
                 document.getElementById("sb-" + i).innerHTML = bodyHTML(i);
             }
 
-            // ── CASH ──
             function cashHTML(i) {
                 const rows = sites[i].cash;
                 const tot = rows.reduce((a, r) => a + (r.amt || 0), 0);
@@ -1927,7 +1671,6 @@
                 saveData(); refreshBody(i, "cash"); refreshHdr(i); notif("Receipt added");
             }
 
-            // ── MATERIALS ──
             function matHTML(i) {
                 const s = sites[i];
                 const cat = openCat["m" + i] || s.matCats[0] || "";
@@ -1937,7 +1680,9 @@
     </div>
     <p style="color:#aaa;padding:20px;text-align:center">No material categories. Add one above.</p>`;
                 const rows = s.mat[cat] || [];
-                const sub = rows.reduce((a, r) => a + (r.amt || 0), 0);
+                const totalAmt  = rows.reduce((a, r) => a + (r.totalAmt !== undefined ? r.totalAmt : (r.amt || 0)), 0);
+                const totalPaid = rows.reduce((a, r) => a + (r.paid   !== undefined ? r.paid   : (r.totalAmt !== undefined ? r.totalAmt : (r.amt || 0))), 0);
+                const totalRem  = totalAmt - totalPaid;
                 return `
     <div class="print-header"><h2>${esc(s.name)} — Materials: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
     <div class="sec-toolbar">
@@ -1947,32 +1692,65 @@
       </div>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'mat')">&#128424; Print</button>
     </div>
-    <div class="form-row fg5">
+    <div class="form-row" style="grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;align-items:end">
       <div class="fi"><label>Date</label><input type="date" id="md-${i}"></div>
-      <div class="fi"><label>Details / Vendor</label><input type="text" id="mdt-${i}" placeholder="Vendor name"></div>
-      <div class="fi"><label>Bill No</label><input type="text" id="mbn-${i}" placeholder="Bill / Invoice"></div>
-      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ma-${i}" placeholder="0" min="0"></div>
+      <div class="fi"><label>Vendor / Details</label><input type="text" id="mdt-${i}" placeholder="Vendor name"></div>
+      <div class="fi"><label>Quantity</label><input type="text" id="mqty-${i}" placeholder="e.g. 10 bags"></div>
+      <div class="fi"><label>Total Amount (&#8377;)</label><input type="number" id="mta-${i}" placeholder="0" min="0"></div>
+      <div class="fi"><label>Amount Paid (&#8377;)</label><input type="number" id="mpd-${i}" placeholder="0" min="0"></div>
       <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addMat(${i},'${esc(cat).replace(/'/g, "&#39;")}')">+ Add</button></div>
     </div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th style="width:4%">#</th><th style="width:14%">Date</th><th>Details / Vendor</th><th style="width:14%">Bill No</th><th class="r" style="width:18%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
+      <thead><tr>
+        <th style="width:3%">#</th>
+        <th style="width:11%">Date</th>
+        <th>Vendor / Details</th>
+        <th style="width:10%">Qty</th>
+        <th class="r" style="width:13%">Total (&#8377;)</th>
+        <th class="r" style="width:13%">Paid (&#8377;)</th>
+        <th class="r" style="width:13%">Remaining (&#8377;)</th>
+        <th style="width:3%"></th>
+      </tr></thead>
       <tbody>
-        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="6">No ${esc(cat)} entries yet</td></tr>` : ""}
-        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "—"}</td><td class="muted">${esc(r.bill) || "—"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'mat-${esc(cat).replace(/'/g, "&#39;")}',${j})">&#10005;</button></td></tr>`).join("")}
-        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total — ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td></td></tr>` : ""}
+        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="8">No ${esc(cat)} entries yet</td></tr>` : ""}
+        ${rows.map((r, j) => {
+          const rTotal = r.totalAmt !== undefined ? r.totalAmt : (r.amt || 0);
+          const rPaid  = r.paid    !== undefined ? r.paid    : rTotal;
+          const rRem   = rTotal - rPaid;
+          const remCls = rRem > 0 ? "style='color:#C00000;font-weight:700'" : "style='color:#1D9E75;font-weight:700'";
+          return `<tr>
+            <td class="muted">${j + 1}</td>
+            <td>${fmtDate(r.date)}</td>
+            <td>${esc(r.det) || "—"}</td>
+            <td class="muted">${esc(r.qty) || "—"}</td>
+            <td class="r">${fmt(rTotal)}</td>
+            <td class="r">${fmt(rPaid)}</td>
+            <td class="r" ${remCls}>${rRem > 0 ? fmt(rRem) : "✓ Cleared"}</td>
+            <td><button class="del-btn" onclick="delEntry(${i},'mat-${esc(cat).replace(/'/g, "&#39;")}',${j})">&#10005;</button></td>
+          </tr>`;
+        }).join("")}
+        ${rows.length > 0 ? `
+        <tr class="sub-row">
+          <td colspan="4">Sub Total — ${esc(cat)}</td>
+          <td class="r">${fmt(totalAmt)}</td>
+          <td class="r">${fmt(totalPaid)}</td>
+          <td class="r" style="color:${totalRem > 0 ? '#C00000' : '#1D9E75'}">${totalRem > 0 ? fmt(totalRem) + ' due' : '✓ Fully Paid'}</td>
+          <td></td>
+        </tr>` : ""}
       </tbody>
     </table></div>`;
             }
 
             function addMat(i, cat) {
-                const d = val("md-" + i), dt = val("mdt-" + i), bn = val("mbn-" + i), a = num("ma-" + i);
-                if (!a) { notif("Enter an amount"); return; }
+                const d = val("md-" + i), dt = val("mdt-" + i), qty = val("mqty-" + i);
+                const ta = num("mta-" + i), pd = num("mpd-" + i);
+                if (!ta) { notif("Enter a Total Amount"); return; }
+                if (pd > ta) { notif("Paid cannot exceed Total Amount"); return; }
                 if (!sites[i].mat[cat]) sites[i].mat[cat] = [];
-                sites[i].mat[cat].push({ date: d, det: dt, bill: bn, amt: a });
+                sites[i].mat[cat].push({ date: d, det: dt, qty, totalAmt: ta, paid: pd, amt: ta });
                 saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); notif(cat + " entry added");
             }
 
-            // ── LABOUR ──
             function labHTML(i) {
                 const s = sites[i];
                 const cat = openCat["l" + i] || s.labCats[0] || "";
@@ -2054,13 +1832,15 @@
                 saveData(); refreshBody(i, "lab"); refreshHdr(i); notif("Contract saved");
             }
 
-            // ── SUMMARY ──
             function sumHTML(i) {
                 const s = sites[i];
                 const { rec, matExp, labExp, exp, prof, bal } = calc(i);
                 const mRows = s.matCats.map(c => {
-                    const v = (s.mat[c] || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    return `<tr><td>${esc(c)}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
+                    const entries = s.mat[c] || [];
+                    const vTotal = entries.reduce((a, r) => a + (r.totalAmt !== undefined ? r.totalAmt : (r.amt || 0)), 0);
+                    const vPaid  = entries.reduce((a, r) => a + (r.paid !== undefined ? r.paid : (r.totalAmt !== undefined ? r.totalAmt : (r.amt || 0))), 0);
+                    const vRem   = vTotal - vPaid;
+                    return `<tr><td>${esc(c)}</td><td class="r">${fmt(vTotal)}</td><td class="r" style="color:${vRem>0?'#C00000':'#1D9E75'}">${vRem>0?fmt(vRem)+' due':'✓ Paid'}</td><td class="r">${fmt(Math.round(vTotal*(1+PT)))}</td></tr>`;
                 }).join("");
                 const lRows = s.labCats.map(c => {
                     const lb = s.lab[c] || { daily: [], contract: null };
@@ -2073,15 +1853,24 @@
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'sum')">&#128424; Print</button>
     </div>
-    <div class="sum-grid">
+    <div class="sum-grid" style="grid-template-columns:repeat(2,1fr)">
       <div class="scard sg"><div class="sl">Total Receipts</div><div class="sv">${fmt(rec)}</div></div>
-      <div class="scard sr"><div class="sl">Total Expenditure</div><div class="sv">${fmt(exp)}</div></div>
+      <div class="scard sr"><div class="sl">Total Expenditure (Liability)</div><div class="sv">${fmt(exp)}</div></div>
       <div class="scard sa"><div class="sl">Profit @ 15%</div><div class="sv">${fmt(prof)}</div></div>
       <div class="scard sb"><div class="sl">Net Balance</div><div class="sv">${fmt(bal)}</div></div>
     </div>
+    ${(() => {
+      const totalDue = s.matCats.reduce((a, c) => {
+        const entries = s.mat[c] || [];
+        const t = entries.reduce((x, r) => x + (r.totalAmt !== undefined ? r.totalAmt : (r.amt||0)), 0);
+        const p = entries.reduce((x, r) => x + (r.paid !== undefined ? r.paid : (r.totalAmt !== undefined ? r.totalAmt : (r.amt||0))), 0);
+        return a + (t - p);
+      }, 0);
+      return totalDue > 0 ? `<div class="sc-box" style="margin-bottom:14px"><div class="sc-box-title" style="color:#C00000">&#9888; Material Payment Due: ${fmt(totalDue)}</div><div class="sc-note" style="color:#A32D2D">Some material entries have unpaid balances. See the Materials tab for details.</div></div>` : `<div style="background:#EAF3DE;border:1px solid #C0DD97;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#3B6D11;font-weight:600">&#10003; All material payments cleared</div>`;
+    })()}
     <div class="tbl-wrap" style="margin-bottom:12px"><table class="etbl">
-      <thead><tr><th>Material</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
-      <tbody>${mRows}<tr class="sub-row"><td>Total Materials</td><td class="r">${fmt(matExp)}</td><td class="r">${fmt(Math.round(matExp * (1 + PT)))}</td></tr></tbody>
+      <thead><tr><th>Material</th><th class="r">Total Amount (&#8377;)</th><th class="r">Remaining Due (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
+      <tbody>${mRows}<tr class="sub-row"><td>Total Materials</td><td class="r">${fmt(matExp)}</td><td class="r"></td><td class="r">${fmt(Math.round(matExp * (1 + PT)))}</td></tr></tbody>
     </table></div>
     <div class="tbl-wrap"><table class="etbl">
       <thead><tr><th>Labour</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
@@ -2089,7 +1878,6 @@
     </table></div>`;
             }
 
-            // ── ADD/REMOVE CATEGORIES ──
             function openAddCat(siteIdx, type) {
                 addCatCtx = { siteIdx, type };
                 document.getElementById("addCatTitle").textContent = "Add New " + (type === "mat" ? "Material" : "Labour") + " Category";
@@ -2143,14 +1931,12 @@
 
             function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-            // ── PRINT ──
             function printSec(siteIdx, sec) {
                 openSite = siteIdx; openSec[siteIdx] = sec;
                 renderSites();
                 setTimeout(() => window.print(), 300);
             }
 
-            // ── HELPERS ──
             function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
             function num(id) { const e = document.getElementById(id); return e ? parseFloat(e.value) || 0 : 0; }
 
@@ -2212,6 +1998,8 @@
                 if (!confirm("Last chance — all entries will be lost!")) return;
                 sites = []; for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                 openSite = null; openSec = {}; openCat = {};
+                // Clear seed flag so it can re-seed if needed
+                localStorage.removeItem("habeeb_athooty_seeded_v1");
                 saveData(); renderSites(); renderDash(); notif("All data cleared");
             }
 
@@ -2222,10 +2010,8 @@
                 notif._t = setTimeout(() => el.classList.remove("show"), 2200);
             }
 
-            // ── EXCEL EXPORT ──
             function exportExcel() {
                 const wb = XLSX.utils.book_new();
-                // Dashboard
                 const dashData = [["MERIDIAN CONSTRUCTION — DASHBOARD"], [""], ["Site", "Receipts (\u20B9)", "Expense (\u20B9)", "Profit 15% (\u20B9)", "Balance (\u20B9)"]];
                 let tR = 0, tE = 0, tP = 0, tB = 0;
                 sites.forEach((s, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; dashData.push([s.name, c.rec, c.exp, c.prof, c.bal]); });
@@ -2233,24 +2019,24 @@
                 const ws0 = XLSX.utils.aoa_to_sheet(dashData);
                 ws0["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
                 XLSX.utils.book_append_sheet(wb, ws0, "Dashboard");
-
-                // Vendor Summary
-                const vData = [["VENDOR & LABOUR SUMMARY — ALL SITES"], [""], ["Type", "Category", "Site", "Vendor / Worker", "Bill/Voucher", "Amount (\u20B9)"]];
+                const vData = [["VENDOR & LABOUR SUMMARY — ALL SITES"], [""], ["Type", "Category", "Site", "Vendor / Worker", "Quantity", "Total (\u20B9)", "Paid (\u20B9)", "Remaining (\u20B9)"]];
                 sites.forEach(s => {
                     s.matCats.forEach(cat => {
-                        (s.mat[cat] || []).forEach(r => vData.push(["Material", cat, s.name, r.det || "", r.bill || "", r.amt || 0]));
+                        (s.mat[cat] || []).forEach(r => {
+                            const rT = r.totalAmt!==undefined?r.totalAmt:(r.amt||0);
+                            const rP = r.paid!==undefined?r.paid:rT;
+                            vData.push(["Material", cat, s.name, r.det||"", r.qty||"", rT, rP, rT-rP]);
+                        });
                     });
                     s.labCats.forEach(cat => {
                         const lb = s.lab[cat] || {};
-                        if (lb.contract !== null) vData.push(["Labour [SC]", cat, s.name, lb.scName || "Subcontractor", "", lb.contract || 0]);
-                        else (lb.daily || []).forEach(r => vData.push(["Labour", cat, s.name, r.part || "", r.voucher || "", r.amt || 0]));
+                        if (lb.contract !== null) vData.push(["Labour [SC]", cat, s.name, lb.scName || "Subcontractor", "", "", lb.contract || 0, 0]);
+                        else (lb.daily || []).forEach(r => vData.push(["Labour", cat, s.name, r.part || "", "", "", r.amt || 0, 0]));
                     });
                 });
                 const wsV = XLSX.utils.aoa_to_sheet(vData);
-                wsV["!cols"] = [{ wch: 14 }, { wch: 20 }, { wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 14 }];
+                wsV["!cols"] = [{ wch: 14 }, { wch: 20 }, { wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
                 XLSX.utils.book_append_sheet(wb, wsV, "Vendor Summary");
-
-                // Per site
                 sites.forEach((s, i) => {
                     const { rec, exp, prof, bal } = calc(i);
                     const rows = [[s.name.toUpperCase() + " — INCOME & EXPENDITURE"], [""]];
@@ -2261,11 +2047,16 @@
                     rows.push(["MATERIAL PURCHASES", "", "", ""]);
                     s.matCats.forEach(cat => {
                         const entries = s.mat[cat] || [];
-                        const sub = entries.reduce((a, r) => a + (r.amt || 0), 0);
-                        rows.push([cat, "", "", ""]);
-                        rows.push(["Date", "Details/Vendor", "Bill No", "Amount (\u20B9)"]);
-                        entries.forEach(r => rows.push([r.date || "", r.det || "", r.bill || "", r.amt || 0]));
-                        rows.push(["Sub Total — " + cat, "", "", sub]); rows.push([""]);
+                        const subTotal = entries.reduce((a,r)=>a+(r.totalAmt!==undefined?r.totalAmt:(r.amt||0)),0);
+                        const subPaid  = entries.reduce((a,r)=>a+(r.paid!==undefined?r.paid:(r.totalAmt!==undefined?r.totalAmt:(r.amt||0))),0);
+                        rows.push([cat, "", "", "", "", ""]);
+                        rows.push(["Date", "Vendor/Details", "Quantity", "Total Amount (\u20B9)", "Paid (\u20B9)", "Remaining (\u20B9)"]);
+                        entries.forEach(r => {
+                            const rT = r.totalAmt!==undefined?r.totalAmt:(r.amt||0);
+                            const rP = r.paid!==undefined?r.paid:rT;
+                            rows.push([r.date||"", r.det||"", r.qty||"", rT, rP, rT-rP]);
+                        });
+                        rows.push(["Sub Total — "+cat, "", "", subTotal, subPaid, subTotal-subPaid]); rows.push([""]);
                     });
                     rows.push(["LABOUR COSTS", "", "", ""]);
                     s.labCats.forEach(cat => {
@@ -2290,14 +2081,12 @@
                     ws["!cols"] = [{ wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 14 }];
                     XLSX.utils.book_append_sheet(wb, ws, wsn);
                 });
-
                 const d = new Date();
                 const ds = d.getDate() + "-" + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()] + "-" + d.getFullYear();
                 XLSX.writeFile(wb, "Meridian_IE_" + ds + ".xlsx");
                 notif("Excel exported!");
             }
 
-            // ── DAY BOOK ──
             let dbFilters = { from: "", to: "", site: "", type: "" };
 
             function inDbRange(date) {
@@ -2324,25 +2113,20 @@
             function renderDayBook() {
                 const siteOptions = `<option value="">All Sites</option>` +
                     sites.map((s, i) => `<option value="${i}"${dbFilters.site === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
-
                 const entries = [];
                 const siteIdx = dbFilters.site !== "" ? parseInt(dbFilters.site) : -1;
-
                 sites.forEach((s, idx) => {
                     if (siteIdx >= 0 && siteIdx !== idx) return;
-
                     s.cash.forEach(r => {
                         if (!inDbRange(r.date)) return;
                         entries.push({ date: r.date || "", site: s.name, type: "Receipt", typeKey: "receipt", part: r.part || "", ref: "", dr: 0, cr: r.amt || 0 });
                     });
-
                     s.matCats.forEach(cat => {
                         (s.mat[cat] || []).forEach(r => {
                             if (!inDbRange(r.date)) return;
                             entries.push({ date: r.date || "", site: s.name, type: "Material — " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0 });
                         });
                     });
-
                     s.labCats.forEach(cat => {
                         const lb = s.lab[cat];
                         if (!lb) return;
@@ -2357,17 +2141,14 @@
                         }
                     });
                 });
-
                 const tf = dbFilters.type;
                 const filtered = entries.filter(e => !tf || e.typeKey === tf);
-
                 filtered.sort((a, b) => {
                     if (!a.date && !b.date) return 0;
                     if (!a.date) return 1;
                     if (!b.date) return -1;
                     return a.date.localeCompare(b.date);
                 });
-
                 const groups = {};
                 const groupOrder = [];
                 filtered.forEach(e => {
@@ -2375,17 +2156,14 @@
                     if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
                     groups[key].push(e);
                 });
-
                 let totalDr = 0, totalCr = 0;
                 let tableRows = "";
-
                 if (filtered.length === 0) {
                     tableRows = '<tr class="empty-row"><td colspan="7">No entries found for the selected filters.</td></tr>';
                 } else {
                     groupOrder.forEach(dateKey => {
                         const grp = groups[dateKey];
                         let grpDr = 0, grpCr = 0;
-
                         grp.forEach((e, j) => {
                             grpDr += e.dr; grpCr += e.cr;
                             const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : "db-type-lab";
@@ -2399,28 +2177,17 @@
                             <td class="r" style="color:#1D9E75">${e.cr > 0 ? fmt(e.cr) : "<span style='color:#ddd'>—</span>"}</td>
                         </tr>`;
                         });
-
                         totalDr += grpDr; totalCr += grpCr;
-
                         tableRows += `<tr class="sub-row">
                         <td colspan="5" style="text-align:right">${dateKey === "—" ? "Subtotal (No Date)" : fmtDate(dateKey) + " — Daily Total"}</td>
                         <td class="r">${grpDr > 0 ? fmt(grpDr) : "—"}</td>
                         <td class="r">${grpCr > 0 ? fmt(grpCr) : "—"}</td>
                     </tr>`;
                     });
-
                     const net = totalCr - totalDr;
-                    tableRows += `<tr class="db-total-row">
-                    <td colspan="5">PERIOD TOTAL</td>
-                    <td class="r">${fmt(totalDr)}</td>
-                    <td class="r">${fmt(totalCr)}</td>
-                </tr>`;
-                    tableRows += `<tr class="db-net-row">
-                    <td colspan="5" style="text-align:right;color:#1A3C5E">Net Balance (Receipts − Expenses)</td>
-                    <td colspan="2" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td>
-                </tr>`;
+                    tableRows += `<tr class="db-total-row"><td colspan="5">PERIOD TOTAL</td><td class="r">${fmt(totalDr)}</td><td class="r">${fmt(totalCr)}</td></tr>`;
+                    tableRows += `<tr class="db-net-row"><td colspan="5" style="text-align:right;color:#1A3C5E">Net Balance (Receipts − Expenses)</td><td colspan="2" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td></tr>`;
                 }
-
                 document.getElementById("daybookContent").innerHTML = `
             <div class="db-filter-bar">
               <div class="form-row fg4" style="margin-bottom:0">
@@ -2457,9 +2224,339 @@
             </div>`;
             }
 
+
+            // ── EXCEL IMPORT ENGINE ──
+            // Sheet name → {type, category}  mapping (matches Habeeb Athooty format)
+            const SHEET_MAP = {
+                // CASH / INCOME
+                "cash":                              { type: "cash" },
+                "income":                            { type: "cash" },
+                // MATERIALS
+                "wood":                              { type: "mat", cat: "Wood" },
+                "electrical & plumbing meterials":   { type: "mat", cat: "Electrical & Plumbing" },
+                "electrical & plumbing materials":   { type: "mat", cat: "Electrical & Plumbing" },
+                "electrical & plumbing":             { type: "mat", cat: "Electrical & Plumbing" },
+                "electrical":                        { type: "mat", cat: "Electrical & Plumbing" },
+                "cement":                            { type: "mat", cat: "Cement" },
+                "other expense":                     { type: "mat", cat: "Other Expense" },
+                "other expenses":                    { type: "mat", cat: "Other Expense" },
+                // LABOUR
+                "carpenter":                         { type: "lab", cat: "Carpenter" },
+                "carpentry":                         { type: "lab", cat: "Carpenter" },
+                "electrician":                       { type: "lab", cat: "Electrician" },
+                "gypsum":                            { type: "lab", cat: "Gypsum Ceiling" },
+                "gypsum ":                           { type: "lab", cat: "Gypsum Ceiling" },
+                "gypsum ceiling":                    { type: "lab", cat: "Gypsum Ceiling" },
+                "water proof":                       { type: "lab", cat: "Water Proof Work" },
+                "water proof work":                  { type: "lab", cat: "Water Proof Work" },
+                "waterproof":                        { type: "lab", cat: "Water Proof Work" },
+                // SKIP
+                "sheet2":                            { type: "summary" },
+                "summary":                           { type: "summary" },
+            };
+
+            let importParsed = null; // holds parsed site object before confirm
+
+            function triggerImport() {
+                // Toggle drop zone visibility
+                const dz = document.getElementById("dropZone");
+                dz.style.display = dz.style.display === "none" ? "block" : "none";
+                if (dz.style.display === "block") {
+                    document.getElementById("importFileInput").click();
+                }
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                document.getElementById("dropZone").style.background = "#F3F2FE";
+                const file = e.dataTransfer.files[0];
+                if (file) processImportFile(file);
+            }
+
+            function handleImportFile(input) {
+                const file = input.files[0];
+                if (file) processImportFile(file);
+                input.value = ""; // reset so same file can be re-selected
+            }
+
+            function processImportFile(file) {
+                if (!file.name.match(/\.xlsx?$/i)) { notif("Please select an .xlsx file"); return; }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const wb = XLSX.read(e.target.result, { type: "array", cellDates: true });
+                        const parsed = parseWorkbook(wb, file.name);
+                        if (!parsed) return;
+                        importParsed = parsed;
+                        showImportPreview(parsed);
+                    } catch(err) {
+                        notif("Error reading file: " + err.message);
+                        console.error(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            function excelDateToStr(val) {
+                if (!val) return "";
+                if (val instanceof Date) {
+                    const y = val.getFullYear();
+                    const m = String(val.getMonth()+1).padStart(2,"0");
+                    const d = String(val.getDate()).padStart(2,"0");
+                    return y + "-" + m + "-" + d;
+                }
+                if (typeof val === "number") {
+                    // Excel serial date
+                    const dt = new Date(Math.round((val - 25569)*86400*1000));
+                    const y = dt.getUTCFullYear();
+                    const m = String(dt.getUTCMonth()+1).padStart(2,"0");
+                    const d = String(dt.getUTCDate()).padStart(2,"0");
+                    return y + "-" + m + "-" + d;
+                }
+                return String(val);
+            }
+
+            function parseWorkbook(wb, filename) {
+                // --- Determine site name from Sheet2/summary or filename ---
+                let siteName = filename.replace(/\.xlsx?$/i,"").replace(/_/g," ").trim();
+                const summarySheet = wb.SheetNames.find(n => n.toLowerCase() === "sheet2" || n.toLowerCase() === "summary");
+                if (summarySheet) {
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[summarySheet], { header:1, defval:"" });
+                    // Row 0, col 1 has the site name in Habeeb's format
+                    if (rows[0] && rows[0][1] && String(rows[0][1]).trim()) {
+                        siteName = String(rows[0][1]).trim();
+                    }
+                }
+
+                const site = mkSite(siteName);
+                // Clear default categories — we build from sheets
+                site.matCats = [];
+                site.mat = {};
+                site.labCats = [];
+                site.lab = {};
+                site.cash = [];
+
+                let warnings = [];
+                let totalSheets = 0;
+
+                wb.SheetNames.forEach(sheetName => {
+                    const key = sheetName.trim().toLowerCase();
+                    const mapping = SHEET_MAP[key];
+
+                    if (!mapping || mapping.type === "summary") return; // skip unknown & summary
+
+                    const rawRows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header:1, defval:"", raw:false });
+                    if (!rawRows || rawRows.length < 2) return;
+
+                    // Find header row (row with DATE in col0)
+                    let dataStart = 0;
+                    for (let i = 0; i < Math.min(5, rawRows.length); i++) {
+                        const c0 = String(rawRows[i][0]||"").trim().toUpperCase();
+                        if (c0 === "DATE") { dataStart = i + 1; break; }
+                    }
+
+                    // Collect valid data rows — stop at subtotal rows (last 3 non-empty at bottom)
+                    // Strategy: find last row with a numeric amount in col2, back up 3 for totals
+                    const rawData = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header:1, defval:"", raw:true });
+                    let lastDataRow = rawRows.length - 1;
+                    // The last 3 populated rows in col2 are: subtotal, GST, total — skip them
+                    let numericTail = 0;
+                    for (let i = rawData.length - 1; i >= dataStart; i--) {
+                        const c2 = rawData[i][2];
+                        if (c2 !== "" && c2 !== null && c2 !== undefined && !isNaN(Number(c2))) {
+                            numericTail++;
+                            if (numericTail === 3) { lastDataRow = i - 1; break; }
+                        }
+                    }
+
+                    // Find sheet grand total = last numeric value in col2 (includes GST)
+                    let sheetGrandTotal = 0;
+                    for (let i = rawData.length - 1; i >= dataStart; i--) {
+                        const v = Number(rawData[i][2]);
+                        if (!isNaN(v) && v > 0) { sheetGrandTotal = v; break; }
+                    }
+
+                    // Parse actual data rows (entries only, no summary rows)
+                    let lastDate = "";
+                    const entries = [];
+                    for (let i = dataStart; i <= lastDataRow; i++) {
+                        const row = rawRows[i];
+                        const rawRowFull = rawData[i];
+                        const col0 = row[0] ? String(row[0]).trim() : "";
+                        const col1 = row[1] ? String(row[1]).trim() : "";
+                        const col2Raw = rawRowFull[2];
+                        if (col2Raw === "" || col2Raw === null || col2Raw === undefined) continue;
+                        const amt = Number(col2Raw);
+                        if (isNaN(amt) || amt === 0) continue;
+
+                        // Date: use current col0 if it looks like a date, else carry forward lastDate
+                        let dateStr = "";
+                        if (col0 && col0 !== "NaN" && col0 !== "") {
+                            const tryDate = new Date(col0);
+                            if (!isNaN(tryDate.getTime())) {
+                                dateStr = col0.split("T")[0].split(" ")[0];
+                                lastDate = dateStr;
+                            } else {
+                                dateStr = lastDate;
+                            }
+                        } else {
+                            dateStr = lastDate;
+                        }
+
+                        entries.push({ date: dateStr, desc: col1 || "", amt });
+                    }
+
+                    if (entries.length === 0) return;
+                    totalSheets++;
+
+                    // Calculate GST as difference: sheetGrandTotal - sum of data entries
+                    const entriesSum = entries.reduce((a, e) => a + e.amt, 0);
+                    const gstAmt = Math.round((sheetGrandTotal - entriesSum) * 100) / 100;
+
+                    if (mapping.type === "cash") {
+                        entries.forEach(e => site.cash.push({ date: e.date, part: e.desc || "Cash Receipt", amt: e.amt }));
+
+                    } else if (mapping.type === "mat") {
+                        const cat = mapping.cat;
+                        if (!site.matCats.includes(cat)) { site.matCats.push(cat); site.mat[cat] = []; }
+                        entries.forEach(e => {
+                            site.mat[cat].push({ date: e.date, det: e.desc || "", bill: "", qty: "", totalAmt: e.amt, paid: e.amt, amt: e.amt });
+                        });
+                        // Add GST line if applicable
+                        if (gstAmt > 0) {
+                            site.mat[cat].push({ date: "", det: "GST / Tax", bill: "GST", qty: "", totalAmt: gstAmt, paid: gstAmt, amt: gstAmt });
+                        }
+
+                    } else if (mapping.type === "lab") {
+                        const cat = mapping.cat;
+                        if (!site.labCats.includes(cat)) {
+                            site.labCats.push(cat);
+                            site.lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
+                        }
+                        entries.forEach(e => {
+                            site.lab[cat].daily.push({ date: e.date, part: e.desc || "Labour", voucher: "", amt: e.amt });
+                        });
+                        // Add GST line if applicable
+                        if (gstAmt > 0) {
+                            site.lab[cat].daily.push({ date: "", part: "GST / Tax", voucher: "GST", amt: gstAmt });
+                        }
+                    }
+                });
+
+                if (totalSheets === 0) {
+                    notif("No recognisable sheets found in this file.");
+                    return null;
+                }
+
+                site._warnings = warnings;
+                return site;
+            }
+
+            function showImportPreview(site) {
+                document.getElementById("dropZone").style.display = "none";
+                // Build preview HTML
+                const cashTotal = site.cash.reduce((a,r)=>a+(r.amt||0),0);
+                let matTotal = 0;
+                site.matCats.forEach(c => { matTotal += (site.mat[c]||[]).reduce((a,r)=>a+(r.totalAmt||r.amt||0),0); });
+                let labTotal = 0;
+                site.labCats.forEach(c => { const lb=site.lab[c]||{}; labTotal += lb.contract!==null&&lb.contract!==undefined?lb.contract:(lb.daily||[]).reduce((a,r)=>a+(r.amt||0),0); });
+
+                let rows = "";
+                rows += `<tr><td>&#128176; Cash Receipts</td><td style="text-align:right;font-family:monospace">${fmt(cashTotal)}</td><td style="text-align:right">${site.cash.length} entries</td></tr>`;
+                site.matCats.forEach(c => {
+                    const sub = (site.mat[c]||[]).reduce((a,r)=>a+(r.totalAmt||r.amt||0),0);
+                    rows += `<tr><td>&#129521; ${esc(c)}</td><td style="text-align:right;font-family:monospace">${fmt(sub)}</td><td style="text-align:right">${(site.mat[c]||[]).length} entries</td></tr>`;
+                });
+                site.labCats.forEach(c => {
+                    const lb = site.lab[c]||{};
+                    const sub = lb.contract!==null&&lb.contract!==undefined?lb.contract:(lb.daily||[]).reduce((a,r)=>a+(r.amt||0),0);
+                    rows += `<tr><td>&#128119; ${esc(c)}</td><td style="text-align:right;font-family:monospace">${fmt(sub)}</td><td style="text-align:right">${(lb.daily||[]).length} entries</td></tr>`;
+                });
+
+                const warnHtml = (site._warnings||[]).length > 0
+                    ? `<div style="background:#FAEEDA;border:1px solid #FAC775;border-radius:6px;padding:8px 10px;margin-top:10px;font-size:11px;color:#854F0B">${site._warnings.map(w=>"⚠ "+esc(w)).join("<br>")}</div>`
+                    : "";
+
+                const alreadyExists = sites.some(s => s.name === site.name);
+
+                document.getElementById("importPreviewBody").innerHTML = `
+                    <div style="background:#F5F7FA;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+                        <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Site Name</div>
+                        <input type="text" id="importSiteName" value="${esc(site.name)}" style="width:100%;padding:7px 9px;border:1.5px solid #2E75B6;border-radius:6px;font-size:13px;font-weight:700;color:#1A3C5E">
+                    </div>
+                    ${alreadyExists ? `<div style="background:#FCEBEB;border:1px solid #F7C1C1;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#A32D2D;font-weight:600">⚠ A site named "<b>${esc(site.name)}</b>" already exists. Rename above or it will be added as a duplicate.</div>` : ""}
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px">
+                        <thead><tr style="background:#1A3C5E;color:#fff">
+                            <th style="padding:7px 10px;text-align:left">Sheet / Category</th>
+                            <th style="padding:7px 10px;text-align:right">Amount</th>
+                            <th style="padding:7px 10px;text-align:right">Entries</th>
+                        </tr></thead>
+                        <tbody>${rows}</tbody>
+                        <tfoot><tr style="background:#EEF3FA;font-weight:700">
+                            <td style="padding:7px 10px">Total Expense (Liability)</td>
+                            <td style="padding:7px 10px;text-align:right;font-family:monospace">${fmt(matTotal+labTotal)}</td>
+                            <td></td>
+                        </tr></tfoot>
+                    </table>
+                    ${warnHtml}
+                `;
+
+                document.getElementById("importModal").classList.add("open");
+            }
+
+            function confirmImport() {
+                if (!importParsed) return;
+                // Apply any name edit
+                const nameInput = document.getElementById("importSiteName");
+                if (nameInput) importParsed.name = nameInput.value.trim() || importParsed.name;
+                delete importParsed._warnings;
+                sites.push(importParsed);
+                saveData();
+                closeModal("importModal");
+                importParsed = null;
+                showTab("sites");
+                renderSites();
+                notif("\u2713 Site imported successfully!");
+            }
+
+            // Global drag-drop on body
+            document.addEventListener("dragover", function(e) {
+                e.preventDefault();
+                document.getElementById("dropZone").style.display = "block";
+            });
+            document.addEventListener("dragleave", function(e) {
+                if (e.relatedTarget === null) document.getElementById("dropZone").style.display = "none";
+            });
+            document.addEventListener("drop", function(e) {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.match(/\.xlsx?$/i)) {
+                    processImportFile(file);
+                } else {
+                    document.getElementById("dropZone").style.display = "none";
+                }
+            });
+
+            // ── HABEEB ATHOOTY DATA SEED ──
+            async function seedHabeebAthooty() {
+                const SEED_FLAG = "habeeb_athooty_seeded_v1";
+                if (localStorage.getItem(SEED_FLAG)) return;
+                if (sites.some(s => s.name === "Habeeb Athooty")) {
+                    localStorage.setItem(SEED_FLAG, "1");
+                    return;
+                }
+                const habeebSite = {"name":"Habeeb Athooty","cash":[{"date":"2025-03-19","part":"Cash Receipt","amt":500000},{"date":"2025-04-05","part":"Cash Receipt","amt":400000},{"date":"2025-06-16","part":"Cash Receipt","amt":100000},{"date":"2025-06-20","part":"Cash Receipt","amt":400000},{"date":"2025-12-10","part":"Cash Receipt","amt":100000},{"date":"2026-01-31","part":"Cash Receipt","amt":300000},{"date":"2026-03-24","part":"Cash Receipt","amt":300000},{"date":"2026-04-18","part":"Cash Receipt","amt":300000},{"date":"2026-04-27","part":"Cash Receipt","amt":300000}],"matCats":["Wood","Electrical & Plumbing","Cement","Other Expense"],"mat":{"Wood":[{"date":"2025-04-01","det":"KLA","bill":"","amt":647500},{"date":"2025-04-01","det":"Saw Mill TA","bill":"","amt":1000},{"date":"2025-04-01","det":"Loading & Unloading","bill":"","amt":4500},{"date":"2025-04-01","det":"Pilavu Loading & Unloading","bill":"","amt":1200},{"date":"2025-04-01","det":"Carpentry Wages (Wood)","bill":"","amt":2000},{"date":"2025-07-07","det":"Plainer Machine","bill":"","amt":3800},{"date":"2025-08-16","det":"Plainer Machine","bill":"","amt":7000},{"date":"","det":"GST @ 15%","bill":"GST","amt":100050}],"Electrical & Plumbing":[{"date":"","det":"Material Batch 1","bill":"","amt":75054},{"date":"","det":"Material Batch 2","bill":"","amt":80104},{"date":"","det":"Material Batch 3","bill":"","amt":130375},{"date":"","det":"Material Batch 4","bill":"","amt":120093},{"date":"","det":"Material Batch 5","bill":"","amt":2145},{"date":"","det":"Material Batch 6","bill":"","amt":30420},{"date":"2025-05-26","det":"Freight","bill":"","amt":2400},{"date":"2025-08-16","det":"Freight","bill":"","amt":1200},{"date":"2025-08-19","det":"Local","bill":"","amt":870},{"date":"2025-02-27","det":"Freight","bill":"","amt":500},{"date":"2026-03-09","det":"HDMI Cable","bill":"","amt":1200},{"date":"2026-03-27","det":"Rainbow","bill":"","amt":3960},{"date":"2026-04-11","det":"Fan Hook","bill":"","amt":6000},{"date":"2026-04-11","det":"Local","bill":"","amt":2012},{"date":"","det":"GST @ 15%","bill":"GST","amt":68449.95}],"Cement":[{"date":"2025-05-13","det":"Cement Purchase","bill":"","amt":910},{"date":"2025-05-24","det":"Cement Purchase","bill":"","amt":820},{"date":"","det":"GST @ 15%","bill":"GST","amt":259.5}],"Other Expense":[{"date":"2025-03-20","det":"Interior Designing Charge","bill":"","amt":7000},{"date":"2025-04-05","det":"Temporary Door Material","bill":"","amt":637},{"date":"2025-04-05","det":"Water For Wood Unloading Labours","bill":"","amt":85},{"date":"2025-03-26","det":"Interior Designing Charge","bill":"","amt":7000},{"date":"2025-03-29","det":"Interior Designing Charge","bill":"","amt":7000},{"date":"2025-04-10","det":"Interior Designing Charge","bill":"","amt":7000},{"date":"2025-11-28","det":"Electricity Charge","bill":"","amt":434},{"date":"2026-02-10","det":"Electricity Charge","bill":"","amt":486},{"date":"2026-06-21","det":"Compressor Charge","bill":"","amt":17600},{"date":"2026-04-04","det":"Compressor Charge","bill":"","amt":5000},{"date":"2026-04-17","det":"Electricity Charge","bill":"","amt":738},{"date":"","det":"GST @ 15%","bill":"GST","amt":7947}]},"labCats":["Carpenter","Electrician","Gypsum Ceiling","Water Proof Work"],"lab":{"Carpenter":{"daily":[{"date":"2025-04-05","part":"Shaji Wood Shifting","voucher":"","amt":5000},{"date":"2025-04-12","part":"Shaji Wood Shifting","voucher":"","amt":2500},{"date":"2025-07-05","part":"Carpenter Wages","voucher":"","amt":5000},{"date":"2025-07-12","part":"Carpenter Wages","voucher":"","amt":6500},{"date":"2025-07-19","part":"Carpenter Wages","voucher":"","amt":18500},{"date":"2025-07-26","part":"Carpenter Wages","voucher":"","amt":10560},{"date":"2025-08-02","part":"Carpenter Wages","voucher":"","amt":15000},{"date":"2025-08-09","part":"Carpenter Wages","voucher":"","amt":10000},{"date":"2025-08-16","part":"Carpenter Wages","voucher":"","amt":11000},{"date":"2025-08-23","part":"Carpenter Wages","voucher":"","amt":6000},{"date":"","part":"GST @ 15%","voucher":"GST","amt":13509}],"contract":null,"scName":"","scDesc":""},"Electrician":{"daily":[{"date":"2025-02-21","part":"Electrician Wages","voucher":"","amt":10000},{"date":"2025-05-03","part":"Electrician Wages","voucher":"","amt":18750},{"date":"2025-05-10","part":"Electrician Wages","voucher":"","amt":10000},{"date":"2025-05-17","part":"Electrician Wages","voucher":"","amt":12500},{"date":"2025-05-24","part":"Electrician Wages","voucher":"","amt":12500},{"date":"2025-08-16","part":"Electrician Wages","voucher":"","amt":7500},{"date":"2025-08-23","part":"Electrician Wages","voucher":"","amt":15000},{"date":"2026-02-28","part":"Electrician Wages","voucher":"","amt":15000},{"date":"2026-03-07","part":"Electrician Wages","voucher":"","amt":15000},{"date":"2026-03-14","part":"Electrician Wages","voucher":"","amt":15000},{"date":"2026-03-21","part":"Electrician Wages","voucher":"","amt":12500},{"date":"2026-03-28","part":"Electrician Wages","voucher":"","amt":15000},{"date":"2026-04-04","part":"Electrician Wages","voucher":"","amt":15000},{"date":"2026-04-11","part":"Electrician Wages","voucher":"","amt":12500},{"date":"2026-04-18","part":"Electrician Wages","voucher":"","amt":12500},{"date":"2026-04-25","part":"Electrician Wages","voucher":"","amt":7500},{"date":"","part":"GST @ 15%","voucher":"GST","amt":30937.5}],"contract":null,"scName":"","scDesc":""},"Gypsum Ceiling":{"daily":[{"date":"2025-07-16","part":"Gypsum Ceiling Work","voucher":"","amt":50000},{"date":"2025-07-26","part":"Gypsum Ceiling Work","voucher":"","amt":30000},{"date":"2026-04-22","part":"Gypsum Ceiling Work","voucher":"","amt":50000},{"date":"2026-04-25","part":"Gypsum Ceiling Work","voucher":"","amt":40000},{"date":"","part":"GST @ 15%","voucher":"GST","amt":25500}],"contract":null,"scName":"","scDesc":""},"Water Proof Work":{"daily":[{"date":"2025-12-08","part":"Water Proof Work","voucher":"","amt":25000},{"date":"2025-12-16","part":"Water Proof Work","voucher":"","amt":30000},{"date":"2025-12-27","part":"Water Proof Work","voucher":"","amt":30000},{"date":"2026-01-07","part":"Water Proof Work","voucher":"","amt":30000},{"date":"2026-01-17","part":"Water Proof Work","voucher":"","amt":25000},{"date":"","part":"GST @ 15%","voucher":"GST","amt":21000}],"contract":null,"scName":"","scDesc":""}}};
+                sites.push(habeebSite);
+                localStorage.setItem(SEED_FLAG, "1");
+                await saveData();
+                notif("\u2713 Habeeb Athooty data loaded!");
+                renderDash();
+            }
+
             // ── BOOT ──
             async function boot() {
                 await loadData();
+                await seedHabeebAthooty();
                 renderDash();
                 showTab("dash");
             }
@@ -2485,7 +2582,7 @@
                     document.getElementById("appWrap").style.display = "";
                 } else {
                     inp.classList.remove("error");
-                    void inp.offsetWidth; // restart animation
+                    void inp.offsetWidth;
                     inp.classList.add("error");
                     err.textContent = "Incorrect password. Please try again.";
                     inp.value = "";
@@ -2507,7 +2604,6 @@
             window.unlock = unlock;
             window.toggleLockEye = toggleLockEye;
 
-            // If already unlocked this session, skip lock screen
             if (sessionStorage.getItem(SESSION_KEY) === "1") {
                 document.getElementById("lockScreen").classList.add("hidden");
                 document.getElementById("appWrap").style.display = "";
