@@ -35,47 +35,10 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
-
-        :root {
-            --navy:      #0D2035;
-            --navy2:     #1A3C5E;
-            --blue:      #2E75B6;
-            --blue-lt:   #4A9FDE;
-            --green:     #0EA271;
-            --red:       #D93025;
-            --amber:     #C07A10;
-            --purple:    #6759D4;
-            --bg:        #EEF2F8;
-            --card:      #ffffff;
-            --border:    #E0E8F0;
-            --text:      #1A2535;
-            --muted:     #7A8CA0;
-            --shadow-sm: 0 2px 8px rgba(13,32,53,.08);
-            --shadow-md: 0 4px 20px rgba(13,32,53,.12);
-            --shadow-lg: 0 8px 40px rgba(13,32,53,.18);
-            --radius:    14px;
-            --radius-sm: 8px;
-        }
-
-        [data-theme="dark"] {
-            --bg:     #0D1B2A;
-            --card:   #132233;
-            --border: #1E3550;
-            --text:   #E0ECF8;
-            --muted:  #5A7A9A;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,.3);
-            --shadow-md: 0 4px 20px rgba(0,0,0,.4);
-            --shadow-lg: 0 8px 40px rgba(0,0,0,.5);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0 }
-        body {
-            font-family: 'Inter', 'Poppins', Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 13px;
-            transition: background .3s, color .3s;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
         }
 
         body {
@@ -1007,7 +970,6 @@
 
         @media print {
 
-            /* ── Hide ALL UI chrome ── */
             .topbar,
             .nav-tabs,
             .sec-tabs,
@@ -1022,50 +984,24 @@
             .add-cat-btn,
             .del-btn,
             .mode-toggle,
-            .cloud-status,
-            .site-search-bar,
-            #dropZone,
-            #importModal,
-            #addCatModal,
-            .dash-ring-wrap,
-            .dash-cards {
+            .cloud-status {
                 display: none !important
             }
 
-            /* ── Force ALL view panels visible (browser needs them visible to print) ── */
-            #view-dash,
-            #view-sites,
-            #view-vsummary,
-            #view-daybook {
-                display: block !important
-            }
-
-            /* ── But only show the one with data ── */
-            /* Hide empty dash rows */
-            .dash-empty-row { display: none !important }
-
-            /* ── Site cards ── */
             .site-card {
-                border: 1px solid #ddd !important;
-                box-shadow: none !important;
-                break-inside: avoid;
-                margin-bottom: 10px;
-            }
-
-            /* Hide empty sites */
-            .site-card.print-empty {
-                display: none !important
+                border: none;
+                box-shadow: none;
+                break-inside: avoid
             }
 
             .site-hdr {
-                background: #f0f0f0 !important;
-                color: #000 !important;
-                padding: 8px 12px !important;
-                border-bottom: 1px solid #ccc;
+                background: none !important;
+                color: #000 !important
             }
 
-            .site-hdr .sname { color: #1A3C5E !important }
-            .site-hdr .smeta { color: #444 !important }
+            .site-hdr .sname {
+                color: #000 !important
+            }
 
             .site-body {
                 display: block !important;
@@ -1077,9 +1013,8 @@
             }
 
             body {
-                background: #fff !important;
-                font-size: 11px;
-                color: #000;
+                background: #fff;
+                font-size: 11px
             }
 
             .main {
@@ -1091,47 +1026,8 @@
                 display: block !important
             }
 
-            .ctab .rm { display: none }
-
-            /* ── Table print styles ── */
-            .etbl th { background: #1A3C5E !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact }
-            .sub-row td { background: #EEF3FA !important; -webkit-print-color-adjust: exact; print-color-adjust: exact }
-            .dash-tbl th { background: #2E75B6 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact }
-
-            /* ── Print header ── */
-            @page { margin: 1cm; size: A4 portrait }
-
-            /* Hide empty sites (no receipts AND no expenses) on print */
-            .site-card.print-empty {
-                display: none !important
-            }
-
-            /* Hide site-search bar on print */
-            .site-search-bar {
-                display: none !important
-            }
-
-            /* Hide empty dashboard table rows (no receipts, no expenses) */
-            .dash-empty-row {
-                display: none !important
-            }
-
-            /* Hide donut chart on print */
-            .dash-ring-wrap {
-                display: none !important
-            }
-
-            /* Compact site header for print */
-            .site-hdr {
-                padding: 6px 12px !important;
-                border-bottom: 1px solid #ccc;
-            }
-
-            /* Page break between sites */
-            .site-card {
-                page-break-inside: avoid;
-                break-inside: avoid;
-                margin-bottom: 12px;
+            .ctab .rm {
+                display: none
             }
         }
 
@@ -1239,792 +1135,6 @@
         #lockBtn:active { transform: scale(.98) }
         #lockErr { font-size: 11px; color: #C00000; margin-top: 10px; min-height: 16px; font-weight: 600 }
         @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
-
-        /* ══════════════════════════════════════════════
-           MERIDIAN — VISUAL UPGRADE CSS
-        ══════════════════════════════════════════════ */
-
-        /* Google-style font import */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-        * { font-family: 'Inter', Arial, sans-serif }
-
-        body {
-            background: linear-gradient(160deg, #EEF2F7 0%, #E8EDF5 100%);
-            min-height: 100vh;
-        }
-
-        /* ── TOPBAR ── */
-        .topbar {
-            background: linear-gradient(100deg, #0D2035 0%, #1A3C5E 45%, #1E4D78 100%);
-            border-bottom: none;
-            padding: 12px 24px;
-            box-shadow: 0 4px 24px rgba(13,32,53,.45);
-        }
-        .tb-left h1 {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: -.3px;
-            background: linear-gradient(90deg,#fff 60%,#7EB4D8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .tb-left p { color: #6BAFD4; font-size: 11px; font-weight: 500; margin-top: 2px }
-
-        /* ── BUTTONS ── */
-        .btn {
-            padding: 7px 15px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: .2px;
-            transition: all .18s;
-            box-shadow: 0 2px 6px rgba(0,0,0,.18);
-        }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.22); opacity:1 }
-        .btn:active { transform: scale(.96) translateY(0); box-shadow: none }
-
-        .btn-green  { background: linear-gradient(135deg,#1DB87F,#159962); }
-        .btn-blue   { background: linear-gradient(135deg,#3585CC,#1E5FA0); }
-        .btn-amber  { background: linear-gradient(135deg,#D48B1A,#B06A10); }
-        .btn-red    { background: linear-gradient(135deg,#D93025,#A51B12); }
-        .btn-grey   { background: linear-gradient(135deg,#6B6B6B,#4A4A4A); }
-        .btn-purple { background: linear-gradient(135deg,#6759D4,#4237A8); }
-        .btn-outline {
-            background: rgba(255,255,255,.12);
-            color: #1A3C5E;
-            border: 1.5px solid rgba(26,60,94,.3);
-            box-shadow: none;
-        }
-        .btn-outline:hover { background: rgba(26,60,94,.08) }
-
-        /* ── CLOUD STATUS ── */
-        .cloud-status {
-            font-size: 11px; font-weight: 700;
-            padding: 5px 11px; border-radius: 99px;
-            box-shadow: 0 1px 6px rgba(0,0,0,.18);
-            letter-spacing: .2px;
-        }
-        .cloud-synced  { background: linear-gradient(135deg,#1DB87F,#148F61) }
-        .cloud-syncing { background: linear-gradient(135deg,#D48B1A,#A86A10) }
-        .cloud-offline { background: #666 }
-        .cloud-error   { background: linear-gradient(135deg,#D93025,#A51B12) }
-
-        /* ── NAV TABS ── */
-        .nav-tabs {
-            background: #fff;
-            border-bottom: 1px solid #E0E6EE;
-            padding: 0 24px;
-            box-shadow: 0 2px 8px rgba(26,60,94,.07);
-            position: sticky; top: 54px; z-index: 99;
-        }
-        .nav-tab {
-            padding: 13px 18px;
-            font-size: 12px; font-weight: 600;
-            color: #7A8CA0;
-            border-bottom: 3px solid transparent;
-            letter-spacing: .1px;
-        }
-        .nav-tab:hover { color: #1A3C5E; background: #F5F8FC }
-        .nav-tab.on { color: #1A3C5E; border-bottom-color: #2E75B6; font-weight: 700 }
-        .nav-tab.on::after { display:none } /* remove old dot */
-
-        /* ── MAIN ── */
-        .main { padding: 20px 24px; max-width: 1240px }
-
-        /* ── DASH CARDS ── */
-        .dcard {
-            background: #fff;
-            border-radius: 14px;
-            padding: 18px 20px;
-            border: none;
-            box-shadow: 0 2px 12px rgba(26,60,94,.08);
-            transition: box-shadow .2s, transform .2s;
-            position: relative; overflow: hidden;
-        }
-        .dcard::before {
-            content:''; position:absolute; top:0; right:0;
-            width:64px; height:64px; border-radius:0 14px 0 64px;
-            opacity:.07;
-        }
-        .dcard:hover { box-shadow: 0 6px 24px rgba(26,60,94,.14); transform: translateY(-3px) }
-        .dcard .dl {
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: .7px; color: #94A3B8; margin-bottom: 8px
-        }
-        .dcard .dv { font-size: 22px; font-weight: 800; letter-spacing: -.5px }
-        .dv-green { color: #0EA271 }
-        .dv-red   { color: #C93020 }
-        .dv-amber { color: #C07A10 }
-        .dv-blue  { color: #1A5FA5 }
-
-        .dcard.dv-green-card { border-left: 4px solid #0EA271 }
-        .dcard.dv-red-card   { border-left: 4px solid #C93020 }
-        .dcard.dv-amber-card { border-left: 4px solid #C07A10 }
-        .dcard.dv-blue-card  { border-left: 4px solid #1A5FA5 }
-
-        /* ── DASHBOARD TABLE WRAPPER ── */
-        .dash-tbl-wrap {
-            border-radius: 14px;
-            border: none;
-            box-shadow: 0 2px 16px rgba(26,60,94,.09);
-            overflow: hidden;
-        }
-        .dash-tbl-hdr {
-            background: linear-gradient(100deg,#122840,#1A3C5E);
-            padding: 13px 18px;
-            font-size: 13px; font-weight: 700; letter-spacing: .1px;
-        }
-        .dash-tbl th {
-            background: #2260A0;
-            padding: 10px 14px;
-            font-size: 11px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: .5px;
-        }
-        .dash-tbl td { padding: 10px 14px; font-size: 12px }
-        .dash-tbl .gt td {
-            background: linear-gradient(90deg,#122840,#1A3C5E);
-            font-size: 12px;
-        }
-
-        /* ── SITE CARDS ── */
-        .site-card {
-            border-radius: 14px;
-            border: 1px solid #E4EAF2;
-            box-shadow: 0 2px 10px rgba(26,60,94,.07);
-            transition: box-shadow .2s;
-            overflow: hidden;
-        }
-        .site-card:hover { box-shadow: 0 5px 20px rgba(26,60,94,.12) }
-        .site-hdr {
-            padding: 14px 18px; gap: 14px;
-            background: #fff;
-        }
-        .site-hdr:hover { background: #F7FAFD }
-        .site-hdr.open {
-            background: linear-gradient(100deg,#122840,#1A3C5E);
-        }
-        .snum {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg,#1A3C5E,#2E75B6);
-            font-size: 12px; font-weight: 800;
-            box-shadow: 0 2px 8px rgba(46,117,182,.35);
-        }
-        .site-hdr.open .snum { background: rgba(255,255,255,.2); box-shadow: none }
-        .sname { font-size: 14px; font-weight: 700; letter-spacing: -.1px }
-        .smeta { font-size: 11px; color: #7A8CA0; margin-top: 3px; font-weight: 500 }
-        .site-hdr.open .smeta { color: #8DC8E8 }
-        .sarr { font-size: 14px; color: #B0BEC8 }
-        .site-hdr.open .sarr { color: #8DC8E8 }
-        .sc-pill {
-            background: linear-gradient(135deg,#6759D4,#4237A8);
-            color: #fff; font-size: 9px;
-            padding: 2px 7px; border-radius: 99px;
-            font-weight: 700; margin-left: 6px;
-            box-shadow: 0 1px 4px rgba(103,89,212,.4);
-        }
-
-        /* ── SECTION TABS ── */
-        .sec-tabs { background: #F5F8FC; border-bottom: 1px solid #E4EAF2 }
-        .sec-tab {
-            padding: 11px 16px; font-size: 12px; font-weight: 600;
-            color: #7A8CA0; border-bottom: 3px solid transparent;
-        }
-        .sec-tab:hover { background: #EEF3FB; color: #1A3C5E }
-        .sec-tab.on { color: #1A3C5E; border-bottom-color: #2E75B6; background: #fff; font-weight: 700 }
-
-        /* ── CATEGORY PILLS ── */
-        .ctab {
-            padding: 5px 12px; border-radius: 99px;
-            font-size: 11px; font-weight: 600;
-            border: 1.5px solid #DDE3EC;
-            background: #F5F8FC; color: #556070;
-            transition: all .15s;
-        }
-        .ctab:hover { background: #E4EAF4; border-color: #B0C4DC }
-        .ctab.on {
-            background: linear-gradient(135deg,#1A3C5E,#2E75B6);
-            border-color: transparent; color: #fff;
-            box-shadow: 0 2px 8px rgba(26,60,94,.3);
-        }
-        .add-cat-btn {
-            padding: 5px 12px; border-radius: 99px;
-            font-size: 11px; font-weight: 600;
-            border: 1.5px dashed #2E75B6;
-            background: #EBF4FD; color: #1A5FA5;
-            transition: all .15s;
-        }
-        .add-cat-btn:hover { background: #D0E8FA; border-style: solid }
-
-        /* ── FORMS ── */
-        .fi label {
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: .5px;
-            color: #7A8CA0; margin-bottom: 4px
-        }
-        .fi input, .fi select {
-            border: 1.5px solid #DDE3EC;
-            border-radius: 8px;
-            padding: 7px 10px;
-            font-size: 12px; font-weight: 500;
-            color: #1a1a1a;
-            background: #FAFBFD;
-            transition: all .15s;
-        }
-        .fi input:hover, .fi select:hover { border-color: #B0C4DC; background: #fff }
-        .fi input:focus, .fi select:focus {
-            border-color: #2E75B6;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(46,117,182,.12);
-        }
-
-        /* ── DATA TABLES ── */
-        .etbl th {
-            background: linear-gradient(90deg,#122840,#1A3C5E);
-            padding: 9px 12px;
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: .5px;
-        }
-        .etbl td { padding: 9px 12px; font-size: 12px }
-        .etbl tbody tr:hover td { background: #F0F5FB !important }
-        .etbl tbody tr:nth-child(even) td { background: #F7FAFD }
-        .sub-row td {
-            background: linear-gradient(90deg,#EBF1FA,#EEF4FB) !important;
-            color: #1A3C5E; font-weight: 700;
-            font-size: 12px;
-        }
-        .sc-row td { background: #EEEDFE !important; color: #3C3489; font-weight: 600 }
-        .empty-row td { background: #FAFBFD !important; color: #B0BEC8; font-style: italic; padding: 24px }
-
-        /* ── SUMMARY CARDS ── */
-        .scard {
-            border-radius: 12px; padding: 14px 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06);
-            transition: box-shadow .18s, transform .18s;
-        }
-        .scard:hover { box-shadow: 0 4px 14px rgba(0,0,0,.11); transform: translateY(-2px) }
-        .scard .sl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px }
-        .scard .sv { font-size: 20px; font-weight: 800; letter-spacing: -.4px }
-        .sg { background: linear-gradient(135deg,#E8F8F0,#D4F0E3); border: 1px solid #A8DFC4 }
-        .sg .sl { color: #1A7A4E } .sg .sv { color: #0E8A52 }
-        .sr { background: linear-gradient(135deg,#FDECEC,#FAD8D8); border: 1px solid #F0AAAA }
-        .sr .sl { color: #A02020 } .sr .sv { color: #C02020 }
-        .sa { background: linear-gradient(135deg,#FEF4E4,#FDEACC); border: 1px solid #F5C87A }
-        .sa .sl { color: #8A4E08 } .sa .sv { color: #C07A10 }
-        .sb { background: linear-gradient(135deg,#E6F0FB,#D4E6F8); border: 1px solid #A8C8F0 }
-        .sb .sl { color: #185090 } .sb .sv { color: #1A5FA5 }
-
-        /* ── MODE TOGGLE ── */
-        .mtbtn {
-            padding: 7px 16px; border-radius: 8px;
-            font-size: 11px; font-weight: 700;
-            border: 1.5px solid #DDE3EC;
-            background: #F5F8FC; color: #556070;
-            transition: all .15s;
-        }
-        .mtbtn:hover { background: #E4EAF4 }
-        .mtbtn.on { background: linear-gradient(135deg,#1A3C5E,#2E75B6); color:#fff; border-color:transparent; box-shadow:0 2px 8px rgba(26,60,94,.28) }
-        .mtbtn.on-sc { background: linear-gradient(135deg,#5A4AC0,#3D30A0); color:#fff; border-color:transparent; box-shadow:0 2px 8px rgba(90,74,192,.3) }
-
-        /* ── SC BOX ── */
-        .sc-box {
-            background: linear-gradient(135deg,#F0EFFE,#E8E5FD);
-            border: 1px solid #C0B8F0; border-radius: 12px;
-            padding: 16px; margin-bottom: 14px;
-        }
-        .sc-box-title { font-size: 13px; font-weight: 700; color: #3C3489; margin-bottom: 12px }
-        .sc-note { font-size: 11px; color: #6058C0; margin-top: 8px; font-weight: 500 }
-
-        /* ── ADD SITE BAR ── */
-        .add-site-bar {
-            background: #fff;
-            border: 1.5px solid #DDE3EC;
-            border-radius: 12px;
-            padding: 14px 18px;
-            margin-bottom: 14px;
-            box-shadow: 0 2px 10px rgba(26,60,94,.07);
-        }
-
-        /* ── NOTIFICATION ── */
-        .notif {
-            background: linear-gradient(135deg,#122840,#1A3C5E);
-            border-radius: 12px;
-            font-size: 12px; font-weight: 600;
-            padding: 12px 20px;
-            box-shadow: 0 6px 24px rgba(13,32,53,.4);
-            letter-spacing: .1px;
-        }
-
-        /* ── MODAL ── */
-        .modal {
-            border-radius: 16px;
-            box-shadow: 0 16px 48px rgba(0,0,0,.28);
-        }
-        .modal h3 {
-            font-size: 15px; font-weight: 800;
-            color: #1A3C5E; margin-bottom: 16px;
-            letter-spacing: -.2px;
-        }
-        .modal-bg { backdrop-filter: blur(4px); background: rgba(10,20,35,.5) }
-
-        /* ── LOCK SCREEN ── */
-        #lockScreen {
-            background: radial-gradient(ellipse at 60% 40%, #1E4D78 0%, #0D2035 50%, #070F1A 100%);
-        }
-        .lock-box {
-            border-radius: 20px;
-            box-shadow: 0 24px 64px rgba(0,0,0,.5);
-            padding: 40px 36px 32px;
-        }
-        .lock-logo { font-size: 44px; margin-bottom: 10px; filter: drop-shadow(0 4px 12px rgba(46,117,182,.5)) }
-        .lock-box h2 { font-size: 18px; font-weight: 800; letter-spacing: -.3px }
-        .lock-box p { font-size: 12px; color: #94A3B8; margin-bottom: 24px; font-weight: 500 }
-        #lockInput {
-            border: 1.5px solid #DDE3EC;
-            border-radius: 10px; padding: 11px 42px 11px 14px;
-            font-size: 14px; font-weight: 600; letter-spacing: 3px;
-            background: #F8FAFC;
-        }
-        #lockInput:focus { border-color: #2E75B6; background: #fff; box-shadow: 0 0 0 4px rgba(46,117,182,.12) }
-        #lockBtn {
-            background: linear-gradient(135deg,#1A3C5E,#2E75B6);
-            border-radius: 10px; padding: 12px;
-            font-size: 13px; font-weight: 700; letter-spacing: .2px;
-            box-shadow: 0 4px 16px rgba(26,60,94,.4);
-        }
-        #lockBtn:hover { background: linear-gradient(135deg,#21527F,#3585CC) }
-
-        /* ── VENDOR SUMMARY SECTION HEADER ── */
-        .vsec-hdr {
-            background: linear-gradient(90deg,#1A3C5E,#2E75B6);
-            border-radius: 8px; padding: 9px 14px;
-            font-size: 12px; font-weight: 700;
-            margin-top: 16px; letter-spacing: .1px;
-            box-shadow: 0 2px 8px rgba(26,60,94,.2);
-        }
-
-        /* ── DAY BOOK ── */
-        .db-filter-bar { background: #F5F8FC; padding: 16px; border-bottom: 1px solid #E4EAF2 }
-        .db-date-cell { color: #1A3C5E; font-weight: 700 }
-        .db-type-receipt { color: #0E8A52; font-weight: 600 }
-        .db-type-mat     { color: #1A5FA5 }
-        .db-type-lab     { color: #5A4AC0 }
-        .db-total-row td { background: linear-gradient(90deg,#122840,#1A3C5E) !important; color:#fff; font-weight:700 }
-        .db-net-row td   { background: #E8F8F0 !important; color:#1A3C5E; font-weight:700 }
-
-        /* ── SCROLLBAR ── */
-        ::-webkit-scrollbar { width: 5px; height: 5px }
-        ::-webkit-scrollbar-track { background: transparent }
-        ::-webkit-scrollbar-thumb { background: #C0CDD8; border-radius: 99px }
-        ::-webkit-scrollbar-thumb:hover { background: #8A9CAC }
-
-        /* ── DROP ZONE ── */
-        #dropZone {
-            border: 2px dashed #6759D4 !important;
-            background: linear-gradient(135deg,#F3F2FE,#EAE8FD) !important;
-            border-radius: 14px !important;
-            box-shadow: 0 2px 12px rgba(103,89,212,.15);
-        }
-
-        /* ── RESPONSIVE ── */
-        @media(max-width:700px) {
-            .main { padding: 12px 14px }
-            .topbar { padding: 10px 14px }
-            .nav-tabs { padding: 0 14px }
-        }
-
-        /* ── PRINT ── overrides */
-        @media print {
-            body { background: #fff }
-            .site-hdr { background: none !important }
-            .dcard, .site-card, .dash-tbl-wrap { box-shadow: none }
-        }
-
-        @keyframes orb1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(40px,30px) scale(1.15)} }
-        @keyframes orb2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-30px,40px) scale(1.1)} }
-
-        /* ══════════════════════════════════════════════
-           DEEP VISUAL UPGRADE v2
-        ══════════════════════════════════════════════ */
-
-        /* ── DARK MODE TRANSITION ── */
-        *, *::before, *::after { transition: background-color .25s, border-color .25s, color .1s }
-        .btn, .btn *, input, select { transition: all .18s !important }
-
-        /* ── TOPBAR ── */
-        .topbar {
-            padding: 0 28px;
-            height: 58px;
-            background: linear-gradient(100deg, var(--navy) 0%, #1A3C5E 50%, #1E4E7A 100%);
-            box-shadow: 0 3px 20px rgba(0,0,0,.35);
-        }
-        .tb-left h1 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 17px; font-weight: 800; letter-spacing: -.4px;
-            background: linear-gradient(90deg, #fff 40%, #7EB4D8 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        /* ── DARK MODE TOGGLE ── */
-        .dm-toggle {
-            width: 38px; height: 20px;
-            background: rgba(255,255,255,.2);
-            border-radius: 99px; border: none; cursor: pointer;
-            position: relative; display: flex; align-items: center;
-            padding: 0 3px; transition: background .2s;
-            flex-shrink: 0;
-        }
-        .dm-toggle::after {
-            content: ''; width: 14px; height: 14px;
-            background: #fff; border-radius: 50%;
-            position: absolute; left: 3px;
-            transition: left .2s, background .2s;
-            box-shadow: 0 1px 4px rgba(0,0,0,.3);
-        }
-        [data-theme="dark"] .dm-toggle { background: var(--blue) }
-        [data-theme="dark"] .dm-toggle::after { left: 21px; background: #fff }
-        .dm-icon { font-size: 11px; margin-left: 4px; color: rgba(255,255,255,.7); user-select:none }
-
-        /* ── NAV TABS ── */
-        .nav-tabs {
-            background: var(--card);
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 2px 12px rgba(13,32,53,.07);
-            top: 58px;
-        }
-        [data-theme="dark"] .nav-tabs { background: #132233; border-color: #1E3550 }
-        .nav-tab { color: var(--muted); font-family: 'Inter', sans-serif }
-        .nav-tab.on { color: var(--navy2) }
-        [data-theme="dark"] .nav-tab.on { color: var(--blue-lt) }
-        [data-theme="dark"] .nav-tab.on { border-bottom-color: var(--blue-lt) }
-
-        /* ── BODY / MAIN ── */
-        .main { padding: 22px 28px; max-width: 1280px }
-        [data-theme="dark"] body { background: var(--bg) }
-
-        /* ── DASHBOARD STAT CARDS ── */
-        .dash-cards { grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px }
-        .dcard {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 22px 16px;
-            box-shadow: var(--shadow-sm);
-            position: relative; overflow: hidden;
-        }
-        [data-theme="dark"] .dcard { background: #132233; border-color: #1E3550 }
-        .dcard::after {
-            content: attr(data-icon);
-            position: absolute; right: 16px; top: 14px;
-            font-size: 28px; opacity: .13; line-height:1;
-            pointer-events: none;
-        }
-        .dcard .dl {
-            font-size: 10px; font-weight: 700; letter-spacing: .8px;
-            text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
-        }
-        .dcard .dv {
-            font-family: 'Poppins', sans-serif;
-            font-size: 24px; font-weight: 800; letter-spacing: -.6px; line-height: 1;
-        }
-        .dcard .dcard-sub {
-            font-size: 10px; color: var(--muted); margin-top: 8px; font-weight: 500;
-        }
-        .dcard .dcard-bar {
-            height: 4px; border-radius: 99px;
-            background: var(--border); margin-top: 10px; overflow: hidden;
-        }
-        .dcard .dcard-bar-fill {
-            height: 100%; border-radius: 99px;
-            transition: width 1s cubic-bezier(.4,0,.2,1);
-        }
-        .dcard.dv-green-card { border-left: 4px solid var(--green) }
-        .dcard.dv-green-card .dcard-bar-fill { background: var(--green) }
-        .dcard.dv-red-card   { border-left: 4px solid var(--red) }
-        .dcard.dv-red-card   .dcard-bar-fill { background: var(--red) }
-        .dcard.dv-amber-card { border-left: 4px solid var(--amber) }
-        .dcard.dv-amber-card .dcard-bar-fill { background: var(--amber) }
-        .dcard.dv-blue-card  { border-left: 4px solid var(--blue) }
-        .dcard.dv-blue-card  .dcard-bar-fill { background: var(--blue) }
-
-        /* ── SITE SEARCH BAR ── */
-        .site-search-bar {
-            display: flex; align-items: center; gap: 10px;
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 10px 16px;
-            margin-bottom: 14px; box-shadow: var(--shadow-sm);
-        }
-        [data-theme="dark"] .site-search-bar { background: #132233; border-color: #1E3550 }
-        .site-search-bar input {
-            border: none; outline: none; background: none;
-            font-size: 13px; color: var(--text); flex: 1; font-family: inherit;
-        }
-        .site-search-bar input::placeholder { color: var(--muted) }
-        .site-search-icon { font-size: 15px; color: var(--muted) }
-        .site-count-badge {
-            background: var(--blue); color: #fff;
-            font-size: 10px; font-weight: 700;
-            padding: 2px 8px; border-radius: 99px;
-        }
-
-        /* ── SITE CARDS ── */
-        .site-card {
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-sm);
-        }
-        [data-theme="dark"] .site-card { background: #132233; border-color: #1E3550 }
-        .site-hdr { background: var(--card); border-radius: var(--radius) var(--radius) 0 0 }
-        [data-theme="dark"] .site-hdr { background: #132233 }
-        [data-theme="dark"] .site-hdr:hover { background: #163A58 }
-        .site-hdr.open { background: linear-gradient(100deg, #0D2035, #1A3C5E 60%, #1E4E7A) !important; border-radius: var(--radius) var(--radius) 0 0 }
-
-        /* ── SITE BALANCE MINI BAR ── */
-        .site-bal-bar {
-            height: 3px; border-radius: 99px;
-            background: var(--border); margin-top: 6px; overflow: hidden;
-        }
-        .site-bal-bar-fill { height: 100%; border-radius: 99px; transition: width .8s }
-
-        /* ── SEC TABS ── */
-        .sec-tabs { background: var(--bg) }
-        [data-theme="dark"] .sec-tabs { background: #0D1B2A }
-        .sec-tab { color: var(--muted) }
-        [data-theme="dark"] .sec-tab.on { color: var(--blue-lt); border-bottom-color: var(--blue-lt); background: #132233 }
-
-        /* ── FORM INPUTS ── */
-        .fi label { color: var(--muted); font-family: 'Poppins', sans-serif }
-        .fi input, .fi select {
-            background: var(--bg); border-color: var(--border);
-            color: var(--text); border-radius: 10px;
-            font-family: 'Inter', sans-serif; font-size: 12px;
-        }
-        [data-theme="dark"] .fi input, [data-theme="dark"] .fi select {
-            background: #0D1B2A; border-color: #1E3550; color: var(--text)
-        }
-        .fi input:focus, .fi select:focus {
-            background: var(--card);
-            border-color: var(--blue);
-            box-shadow: 0 0 0 3px rgba(46,117,182,.15);
-        }
-
-        /* ── DATA TABLES ── */
-        .tbl-wrap { border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm) }
-        .etbl th {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(90deg, #0D2035, #1A3C5E);
-            font-size: 10px; letter-spacing: .6px;
-        }
-        [data-theme="dark"] .etbl td { background: #132233; color: var(--text); border-color: #1E3550 }
-        [data-theme="dark"] .etbl tbody tr:nth-child(even) td { background: #0F1E30 }
-        [data-theme="dark"] .etbl tbody tr:hover td { background: #163A58 !important }
-        .sub-row td {
-            background: linear-gradient(90deg, #E6EFF8, #EBF2FB) !important;
-            font-family: 'Poppins', sans-serif;
-        }
-        [data-theme="dark"] .sub-row td { background: linear-gradient(90deg,#1A3050,#1E3A5C) !important; color: #7EC8F0 }
-
-        /* ── DASH TABLE ── */
-        [data-theme="dark"] .dash-tbl td { background: #132233; color: var(--text); border-color: #1E3550 }
-        [data-theme="dark"] .dash-tbl tbody tr:nth-child(even) td { background: #0F1E30 }
-        [data-theme="dark"] .dash-tbl tbody tr:hover td { background: #163A58 !important }
-        .dash-tbl-wrap { border-radius: var(--radius); box-shadow: var(--shadow-md) }
-
-        /* ── VENDOR SEC HEADER ── */
-        .vsec-hdr {
-            background: linear-gradient(90deg, #0D2035 0%, #1A3C5E 60%, #2260A0);
-            letter-spacing: .2px; margin-top: 20px;
-            border-radius: 10px; display: flex; align-items: center; gap: 8px;
-        }
-
-        /* ── SUMMARY CARDS ── */
-        .sum-grid { gap: 14px }
-        .scard { border-radius: var(--radius); padding: 16px 20px }
-        .scard .sl { font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: .7px }
-        .scard .sv { font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -.5px }
-
-        /* ── MODAL ── */
-        .modal { border-radius: 18px; padding: 24px }
-        .modal h3 { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 800 }
-        [data-theme="dark"] .modal { background: #132233; color: var(--text) }
-        [data-theme="dark"] .modal h3 { color: var(--blue-lt) }
-        [data-theme="dark"] .fi input, [data-theme="dark"] .fi select { color: var(--text) }
-
-        /* ── NOTIF ── */
-        .notif {
-            font-family: 'Poppins', sans-serif; font-size: 12px;
-            padding: 13px 22px; letter-spacing: .1px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .notif::before { content: '✓'; font-weight: 900; font-size: 14px; color: var(--green) }
-
-        /* ── ADD SITE BAR ── */
-        .add-site-bar {
-            background: var(--card); border: 1.5px solid var(--blue);
-            border-radius: var(--radius);
-            box-shadow: 0 0 0 4px rgba(46,117,182,.08);
-        }
-        [data-theme="dark"] .add-site-bar { background: #132233; border-color: #2E75B6 }
-
-        /* ── LOCK SCREEN ── */
-        .lock-box {
-            background: var(--card);
-            border: 1px solid rgba(255,255,255,.1);
-        }
-        .lock-box h2 { font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 900; letter-spacing: -.4px }
-        #lockBtn { font-family: 'Poppins', sans-serif; font-size: 14px; letter-spacing: .2px }
-
-        /* ── SC BOX ── */
-        .sc-box { border-radius: var(--radius) }
-        .sc-box-title { font-family: 'Poppins', sans-serif }
-
-        /* ── CATEGORY TABS ── */
-        .ctab { font-family: 'Inter', sans-serif }
-        [data-theme="dark"] .ctab { background: #0D1B2A; border-color: #1E3550; color: var(--muted) }
-        [data-theme="dark"] .ctab:hover { background: #163A58 }
-        [data-theme="dark"] .ctab.on { background: linear-gradient(135deg, #1A3C5E, #2E75B6); color: #fff }
-
-        /* ── PROGRESS RING (dashboard) ── */
-        .dash-ring-wrap { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-bottom: 14px }
-        [data-theme="dark"] .dash-ring-wrap { background: #132233; border-color: #1E3550 }
-        .dash-ring-wrap canvas { flex-shrink: 0 }
-        .dash-ring-legend { flex: 1 }
-        .dash-ring-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 600 }
-        .dash-ring-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0 }
-        .dash-ring-label { color: var(--muted); font-size: 11px; flex: 1 }
-        .dash-ring-val { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 12px }
-
-        /* ── DB FILTER BAR ── */
-        .db-filter-bar { background: var(--bg) }
-        [data-theme="dark"] .db-filter-bar { background: #0D1B2A }
-
-        /* ── SCROLLBAR ── */
-        ::-webkit-scrollbar { width: 4px; height: 4px }
-        ::-webkit-scrollbar-thumb { background: #C0CDD8; border-radius: 99px }
-        [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #2E5070 }
-
-        /* ── RESPONSIVE ── */
-        @media(max-width:900px) {
-            .dash-cards { grid-template-columns: repeat(2,1fr) }
-        }
-        @media(max-width:600px) {
-            .main { padding: 12px 14px }
-            .topbar { padding: 0 14px; height: auto; padding-top: 8px; padding-bottom: 8px }
-            .nav-tabs { top: auto }
-            .dash-cards { grid-template-columns: 1fr 1fr }
-        }
-
-        /* ── SITE PROGRESS BAR on dashboard ── */
-        .site-lnk { color: var(--blue); font-weight: 700 }
-        .bal-p { color: var(--green); font-weight: 700 }
-        .bal-n { color: var(--red);   font-weight: 700 }
-
-        /* ── KEYFRAMES ── */
-        @keyframes countUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px) } to { opacity: 1; transform: translateX(0) } }
-        @keyframes fadeUp  { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
-
-        .dcard { animation: fadeUp .3s ease both }
-        .dcard:nth-child(1) { animation-delay: .05s }
-        .dcard:nth-child(2) { animation-delay: .10s }
-        .dcard:nth-child(3) { animation-delay: .15s }
-        .dcard:nth-child(4) { animation-delay: .20s }
-
-        .site-card { animation: slideIn .25s ease both }
-
-        /* ── TOOLTIP ── */
-        [data-tip] { position: relative; cursor: default }
-        [data-tip]::after {
-            content: attr(data-tip);
-            position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%);
-            background: #0D2035; color: #fff;
-            font-size: 10px; font-weight: 600; white-space: nowrap;
-            padding: 4px 10px; border-radius: 6px;
-            pointer-events: none; opacity: 0; transition: opacity .15s;
-            box-shadow: 0 2px 8px rgba(0,0,0,.3); z-index: 999;
-        }
-        [data-tip]:hover::after { opacity: 1 }
-
-
-        /* ══════════════════════════════════════
-           SMART BUILD STYLE DASHBOARD
-        ══════════════════════════════════════ */
-
-        /* ── Section card (Projects Overview / This Month) ── */
-        .dash-section-card {
-            background: var(--card);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            overflow: hidden;
-            margin-bottom: 0;
-        }
-        [data-theme="dark"] .dash-section-card { background: #132233; border-color: #1E3550 }
-
-        .dash-section-hdr {
-            background: linear-gradient(100deg, #0D2035, #1A3C5E);
-            color: #fff;
-            padding: 11px 16px;
-            font-size: 13px;
-            font-weight: 700;
-            font-family: 'Poppins', sans-serif;
-            letter-spacing: .1px;
-        }
-
-        /* ── Overview cells (Active/Total Sites, Income/Expense) ── */
-        .dash-ov-cell {
-            padding: 18px 20px;
-            border-right: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-        .dash-ov-cell:last-child { border-right: none }
-        [data-theme="dark"] .dash-ov-cell { border-color: #1E3550 }
-
-        .dash-ov-label {
-            font-size: 11px; font-weight: 700; color: var(--muted);
-            text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
-        }
-        .dash-ov-num {
-            font-family: 'Poppins', sans-serif;
-            font-size: 28px; font-weight: 900; letter-spacing: -.8px; line-height: 1;
-        }
-        .dash-ov-sub {
-            font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 500;
-        }
-
-        /* ── Today's Summary Grid ── */
-        .dash-today-cell {
-            padding: 16px 20px;
-            border-right: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            position: relative;
-        }
-        .dash-today-cell:nth-child(3n) { border-right: none }
-        .dash-today-cell:nth-last-child(-n+3) { border-bottom: none }
-        [data-theme="dark"] .dash-today-cell { border-color: #1E3550 }
-
-        .dash-today-label {
-            font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px;
-            font-family: 'Poppins', sans-serif;
-        }
-        .dash-today-sub {
-            font-size: 10px; color: var(--muted); font-weight: 500; margin-bottom: 8px;
-        }
-        .dash-today-num {
-            font-family: 'Poppins', sans-serif;
-            font-size: 22px; font-weight: 900; letter-spacing: -.5px;
-        }
-        .dtc-green { color: #0EA271 }
-        .dtc-red   { color: #D93025 }
-        .dtc-blue  { color: #1A5FA5 }
-        .dtc-amber { color: #C07A10 }
-
-        /* ── Responsive top row ── */
-        @media(max-width: 700px) {
-            #dashTopRow { grid-template-columns: 1fr !important }
-            #dashTodayGrid { grid-template-columns: 1fr 1fr !important }
-        }
-
     </style>
 </head>
 
@@ -2032,15 +1142,10 @@
 
     <!-- Password lock screen -->
     <div id="lockScreen">
-        <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
-            <div style="position:absolute;width:380px;height:380px;background:radial-gradient(circle,rgba(46,117,182,.18),transparent 70%);top:-80px;left:-80px;animation:orb1 8s ease-in-out infinite alternate"></div>
-            <div style="position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(103,89,212,.14),transparent 70%);bottom:-60px;right:-60px;animation:orb2 10s ease-in-out infinite alternate"></div>
-            <div style="position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(29,158,117,.1),transparent 70%);bottom:30%;left:20%;animation:orb1 12s ease-in-out infinite alternate-reverse"></div>
-        </div>
         <div class="lock-box">
             <div class="lock-logo">&#127959;</div>
             <h2>Meridian Construction</h2>
-            <p>Site Income &amp; Expenditure Manager<br><span style="color:#CBD5E1;font-size:10px;font-weight:400">Secure access — enter your password</span></p>
+            <p>Enter your password to continue</p>
             <div class="lock-input-wrap">
                 <input id="lockInput" type="password" placeholder="Password" autocomplete="current-password"
                     onkeydown="if(event.key==='Enter')unlock()">
@@ -2056,7 +1161,7 @@
         <div class="topbar">
             <div class="tb-left">
                 <h1>&#127959; Meridian Construction Company</h1>
-                <p>Income &amp; Expenditure — Site Manager &nbsp;·&nbsp; <span id="liveClock" style="font-weight:600;color:#A8D4F0"></span></p>
+                <p>Income &amp; Expenditure — Site Manager</p>
             </div>
             <div class="tb-right">
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
@@ -2065,8 +1170,6 @@
                 <button class="btn btn-amber" onclick="exportExcel()">&#8595; Export Excel</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
                 <input type="file" id="importFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(this)">
-                <button class="dm-toggle" id="dmToggle" onclick="toggleDark()" title="Toggle dark mode"></button>
-                <span class="dm-icon" id="dmIcon">🌙</span>
             </div>
         </div>
 
@@ -2106,88 +1209,12 @@
             </div>
 
             <div id="view-dash">
-                <!-- ── Projects Overview + This Month Report ── -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px" id="dashTopRow">
-                    <!-- Projects Overview -->
-                    <div class="dash-section-card">
-                        <div class="dash-section-hdr">&#127959; Projects Overview</div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-                            <div class="dash-ov-cell" id="dashOvActive">
-                                <div class="dash-ov-label">Active Sites</div>
-                                <div class="dash-ov-num" style="color:#F4A825">0</div>
-                                <div class="dash-ov-sub">With active entries</div>
-                            </div>
-                            <div class="dash-ov-cell" id="dashOvTotal">
-                                <div class="dash-ov-label">Total Sites</div>
-                                <div class="dash-ov-num" style="color:#0EA271">0</div>
-                                <div class="dash-ov-sub">All registered sites</div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- This Month Report -->
-                    <div class="dash-section-card">
-                        <div class="dash-section-hdr" id="dashMonthHdr">&#128200; This Month Report</div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-                            <div class="dash-ov-cell" id="dashMonthInc">
-                                <div class="dash-ov-label">Total Income</div>
-                                <div class="dash-ov-num" style="color:#0EA271">—</div>
-                                <div class="dash-ov-sub">Cash receipts this month</div>
-                            </div>
-                            <div class="dash-ov-cell" id="dashMonthExp">
-                                <div class="dash-ov-label">Total Expense</div>
-                                <div class="dash-ov-num" style="color:#D93025">—</div>
-                                <div class="dash-ov-sub">Expenditure this month</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ── 4 Stat Cards ── -->
                 <div class="dash-cards" id="dashCards"></div>
-
-                <!-- ── Today's Summary Report ── -->
-                <div class="dash-section-card" style="margin-bottom:18px">
-                    <div class="dash-section-hdr" id="dashTodayHdr">&#128197; Today's Summary</div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0" id="dashTodayGrid">
-                        <div class="dash-today-cell">
-                            <div class="dash-today-label">Total Sites</div>
-                            <div class="dash-today-sub">All registered</div>
-                            <div class="dash-today-num dtc-blue" id="dtcTotalSites">0</div>
-                        </div>
-                        <div class="dash-today-cell">
-                            <div class="dash-today-label">Active Sites</div>
-                            <div class="dash-today-sub">Have entries</div>
-                            <div class="dash-today-num dtc-green" id="dtcActiveSites">0</div>
-                        </div>
-                        <div class="dash-today-cell">
-                            <div class="dash-today-label">Material Due</div>
-                            <div class="dash-today-sub">Unpaid balances</div>
-                            <div class="dash-today-num dtc-red" id="dtcMatDue">₹0</div>
-                        </div>
-                        <div class="dash-today-cell">
-                            <div class="dash-today-label">Total Income</div>
-                            <div class="dash-today-sub">All receipts</div>
-                            <div class="dash-today-num dtc-green" id="dtcTotalInc">₹0</div>
-                        </div>
-                        <div class="dash-today-cell">
-                            <div class="dash-today-label">Total Expense</div>
-                            <div class="dash-today-sub">All expenditure</div>
-                            <div class="dash-today-num dtc-red" id="dtcTotalExp">₹0</div>
-                        </div>
-                        <div class="dash-today-cell">
-                            <div class="dash-today-label">Net Balance</div>
-                            <div class="dash-today-sub">Income − Exp − Profit</div>
-                            <div class="dash-today-num dtc-blue" id="dtcNetBal">₹0</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ── Sites Summary Table ── -->
                 <div class="dash-tbl-wrap">
                     <div class="dash-tbl-hdr">
-                        <span>&#128203; All Sites — Income &amp; Expenditure Summary</span>
+                        <span>All Sites — Income &amp; Expenditure Summary</span>
                         <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
-                            onclick="printDash()">&#128424; Print</button>
+                            onclick="window.print()">&#128424; Print</button>
                     </div>
                     <div class="print-header">
                         <h2>Meridian Construction Company</h2>
@@ -2209,11 +1236,6 @@
             </div>
 
             <div id="view-sites" style="display:none">
-                <div class="site-search-bar">
-                    <span class="site-search-icon">🔍</span>
-                    <input type="text" id="siteSearch" placeholder="Search sites by name..." oninput="filterSites(this.value)">
-                    <span class="site-count-badge" id="siteCountBadge">0</span>
-                </div>
                 <div class="sites-list" id="sitesList"></div>
             </div>
 
@@ -2418,112 +1440,19 @@
             }
 
             function renderDash() {
-                const now = new Date();
-                const thisMonth = now.getMonth(), thisYear = now.getFullYear();
-                const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
                 let tR = 0, tE = 0, tP = 0, tB = 0;
-                let activeSites = 0;
-                let monthInc = 0, monthExp = 0;
-                let totalMatDue = 0;
-
-                sites.forEach((s, i) => {
-                    const c = calc(i);
-                    tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal;
-                    if (c.rec > 0 || c.exp > 0) activeSites++;
-
-                    // This month receipts
-                    s.cash.forEach(r => {
-                        if (r.date && r.date.startsWith(thisYear + "-" + String(thisMonth+1).padStart(2,"0"))) monthInc += (r.amt||0);
-                    });
-                    // This month expenses (mat + lab)
-                    s.matCats.forEach(cat => {
-                        (s.mat[cat]||[]).forEach(r => {
-                            if (r.date && r.date.startsWith(thisYear + "-" + String(thisMonth+1).padStart(2,"0"))) {
-                                monthExp += (r.totalAmt !== undefined ? r.totalAmt : (r.amt||0));
-                            }
-                            // Material due
-                            const rT = r.totalAmt !== undefined ? r.totalAmt : (r.amt||0);
-                            const rP = r.paid !== undefined ? r.paid : rT;
-                            totalMatDue += Math.max(0, rT - rP);
-                        });
-                    });
-                    s.labCats.forEach(cat => {
-                        const lb = s.lab[cat]||{};
-                        (lb.daily||[]).forEach(r => {
-                            if (r.date && r.date.startsWith(thisYear + "-" + String(thisMonth+1).padStart(2,"0"))) monthExp += (r.amt||0);
-                        });
-                    });
-                });
-
-                // ── Projects Overview ──
-                const ovActive = document.getElementById("dashOvActive");
-                const ovTotal  = document.getElementById("dashOvTotal");
-                if (ovActive) ovActive.querySelector(".dash-ov-num").textContent = activeSites;
-                if (ovTotal)  ovTotal.querySelector(".dash-ov-num").textContent  = sites.length;
-
-                // ── This Month ──
-                const monthHdr = document.getElementById("dashMonthHdr");
-                if (monthHdr) monthHdr.textContent = "📈 This Month Report — " + months[thisMonth] + " " + thisYear;
-                const mInc = document.getElementById("dashMonthInc");
-                const mExp = document.getElementById("dashMonthExp");
-                if (mInc) mInc.querySelector(".dash-ov-num").textContent = fmt(monthInc);
-                if (mExp) mExp.querySelector(".dash-ov-num").textContent = fmt(monthExp);
-
-                // ── Today header ──
-                const todayHdr = document.getElementById("dashTodayHdr");
-                if (todayHdr) {
-                    const d = now.getDate(), mo = months[now.getMonth()], yr = now.getFullYear();
-                    todayHdr.textContent = "📋 Overall Summary — " + d + "-" + mo + "-" + yr;
-                }
-
-                // ── Today grid cells ──
-                const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-                set("dtcTotalSites", sites.length);
-                set("dtcActiveSites", activeSites);
-                set("dtcMatDue",  totalMatDue > 0 ? fmt(totalMatDue) : "✓ Nil");
-                set("dtcTotalInc", fmt(tR));
-                set("dtcTotalExp", fmt(tE));
-                const nb = document.getElementById("dtcNetBal");
-                if (nb) { nb.textContent = fmt(tB); nb.className = "dash-today-num " + (tB >= 0 ? "dtc-green" : "dtc-red"); }
-
-                // ── 4 Stat Cards ──
-                const balPct = tR > 0 ? Math.min(100, Math.round((tB / tR) * 100)) : 0;
-                const expPct = tR > 0 ? Math.min(100, Math.round((tE / tR) * 100)) : 0;
+                sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; });
                 document.getElementById("dashCards").innerHTML = `
-    <div class="dcard dv-green-card" data-icon="💰">
-        <div class="dl">Total Receipts</div>
-        <div class="dv dv-green">${fmt(tR)}</div>
-        <div class="dcard-sub">${activeSites} active site${activeSites!==1?'s':''}</div>
-        <div class="dcard-bar"><div class="dcard-bar-fill" style="width:100%"></div></div>
-    </div>
-    <div class="dcard dv-red-card" data-icon="📤">
-        <div class="dl">Total Expenditure</div>
-        <div class="dv dv-red">${fmt(tE)}</div>
-        <div class="dcard-sub">${expPct}% of receipts</div>
-        <div class="dcard-bar"><div class="dcard-bar-fill" style="width:${expPct}%"></div></div>
-    </div>
-    <div class="dcard dv-amber-card" data-icon="📊">
-        <div class="dl">Profit @ 15%</div>
-        <div class="dv dv-amber">${fmt(tP)}</div>
-        <div class="dcard-sub">On total expenditure</div>
-        <div class="dcard-bar"><div class="dcard-bar-fill" style="width:${tR>0?Math.min(100,Math.round(tP/tR*100)):0}%"></div></div>
-    </div>
-    <div class="dcard dv-blue-card" data-icon="⚖️">
-        <div class="dl">Net Balance</div>
-        <div class="dv ${tB >= 0 ? 'dv-blue' : 'dv-red'}">${fmt(tB)}</div>
-        <div class="dcard-sub">${tB >= 0 ? '✓ Surplus' : '⚠ Deficit'}</div>
-        <div class="dcard-bar"><div class="dcard-bar-fill" style="width:${Math.abs(balPct)}%"></div></div>
-    </div>`;
-
-                // ── Sites Table ──
+    <div class="dcard"><div class="dl">Total Receipts</div><div class="dv dv-green">${fmt(tR)}</div></div>
+    <div class="dcard"><div class="dl">Total Expenditure</div><div class="dv dv-red">${fmt(tE)}</div></div>
+    <div class="dcard"><div class="dl">Total Profit (15%)</div><div class="dv dv-amber">${fmt(tP)}</div></div>
+    <div class="dcard"><div class="dl">Net Balance</div><div class="dv dv-blue">${fmt(tB)}</div></div>`;
                 let rows = "";
                 sites.forEach((s, i) => {
                     const c = calc(i);
-                    const isEmpty = (c.rec === 0 && c.exp === 0);
                     const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
                     const bc = c.bal >= 0 ? "bal-p" : "bal-n";
-                    rows += `<tr class="${isEmpty ? 'dash-empty-row' : ''}"><td><span class="site-lnk" onclick="goSite(${i})">${esc(s.name)}</span>${hasSC ? '<span class="sc-pill">SC</span>' : ''}</td><td>${fmt(c.rec)}</td><td>${fmt(c.exp)}</td><td>${fmt(c.prof)}</td><td class="${bc}">${fmt(c.bal)}</td></tr>`;
+                    rows += `<tr><td><span class="site-lnk" onclick="goSite(${i})">${esc(s.name)}</span>${hasSC ? '<span class="sc-pill">SC</span>' : ''}</td><td>${fmt(c.rec)}</td><td>${fmt(c.exp)}</td><td>${fmt(c.prof)}</td><td class="${bc}">${fmt(c.bal)}</td></tr>`;
                 });
                 rows += `<tr class="gt"><td>GRAND TOTAL — ALL SITES</td><td>${fmt(tR)}</td><td>${fmt(tE)}</td><td>${fmt(tP)}</td><td>${fmt(tB)}</td></tr>`;
                 document.getElementById("dashBody").innerHTML = rows;
@@ -2670,9 +1599,7 @@
                     const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
                     const bc = bal >= 0 ? "bal-p" : "bal-n";
                     const div = document.createElement("div");
-                    // Mark sites with zero receipts AND zero expenses as print-empty
-                    const isEmpty = (rec === 0 && exp === 0);
-                    div.className = "site-card" + (isEmpty ? " print-empty" : ""); div.id = "sc-" + i;
+                    div.className = "site-card"; div.id = "sc-" + i;
                     div.innerHTML = `
       <div class="site-hdr${isOpen ? " open" : ""}" onclick="toggleSite(${i})">
         <div class="snum">${String(i + 1).padStart(2, "0")}</div>
@@ -3005,19 +1932,8 @@
             function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
             function printSec(siteIdx, sec) {
-                // Switch to sites tab, open the correct site/section
-                showTab("sites");
-                openSite = siteIdx;
-                openSec[siteIdx] = sec;
+                openSite = siteIdx; openSec[siteIdx] = sec;
                 renderSites();
-                // Wait for DOM to fully render then print
-                setTimeout(() => {
-                    window.print();
-                }, 400);
-            }
-
-            function printDash() {
-                showTab("dash");
                 setTimeout(() => window.print(), 300);
             }
 
@@ -3647,23 +2563,6 @@
 
             if (window.firebaseReady) { boot(); }
             else { window.addEventListener("firebaseReady", boot); setTimeout(() => { if (!fbConnected) boot(); }, 3000); }
-
-            // ── LIVE CLOCK ──
-            (function() {
-                function updateClock() {
-                    const el = document.getElementById("liveClock");
-                    if (!el) return;
-                    const now = new Date();
-                    const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-                    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-                    const h = now.getHours(), m = String(now.getMinutes()).padStart(2,"0");
-                    const ampm = h >= 12 ? "PM" : "AM";
-                    const h12 = h % 12 || 12;
-                    el.textContent = days[now.getDay()] + " " + now.getDate() + " " + months[now.getMonth()] + "  " + h12 + ":" + m + " " + ampm;
-                }
-                updateClock();
-                setInterval(updateClock, 30000);
-            })();
         </script>
 
     </div> <!-- /appWrap -->
