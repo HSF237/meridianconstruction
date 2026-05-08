@@ -2610,7 +2610,7 @@
         function renderSites() {
             const wrap = document.getElementById("sitesList"); wrap.innerHTML = "";
             sites.forEach((s, i) => {
-                const { rec, exp, bal } = calc(i); const isOpen = openSite === i;
+                const { rec, exp, paid, pending, hand } = calc(i); const isOpen = openSite === i;
                 const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
                 const div = document.createElement("div"); div.className = "site-card"; div.id = "sc-" + i;
                 div.innerHTML = `
