@@ -3745,8 +3745,8 @@
                     rows.push(["Sub Total — " + cat, "", "", sub]); rows.push([""]);
                 });
                 rows.push(["SUMMARY", "", "", ""]);
-                rows.push(["Total Receipts", "", "", rec]); rows.push(["Total Expenditure", "", "", exp]);
-                rows.push(["Profit @ 15%", "", "", prof]); rows.push(["NET BALANCE", "", "", bal]);
+                rows.push(["Total Receipts", "", "", rec]); rows.push(["Total Expenditure", "", "", paid]);
+                rows.push(["CASH IN HAND", "", "", hand]);
                 const wsn = (s.name || "Site" + (i + 1)).replace(/[^A-Za-z0-9 _-]/g, "").substring(0, 28) || "Site" + (i + 1);
                 const ws = XLSX.utils.aoa_to_sheet(rows); ws["!cols"] = [{ wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 14 }];
                 XLSX.utils.book_append_sheet(wb, ws, wsn);
@@ -3785,6 +3785,8 @@
             }
         })();
         window.unlock = unlock; window.toggleLockEye = toggleLockEye;
+        window.sites = sites; window.vendors = vendors; window.labourers = labourers;
+        window.saveData = saveData; window.renderSites = renderSites; window.renderDash = renderDash;
         if (window.firebaseReady) { if (sessionStorage.getItem(SESSION_KEY) === "1") boot(); }
         else { window.addEventListener("firebaseReady", () => { if (sessionStorage.getItem(SESSION_KEY) === "1") boot(); }); setTimeout(() => { if (!fbConnected && sessionStorage.getItem(SESSION_KEY) === "1") boot(); }, 3000); }
     </script>
