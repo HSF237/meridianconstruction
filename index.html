@@ -1843,6 +1843,29 @@
                         </table>
                     </div>
                 </div>
+                <!-- DEBIT / CREDIT LEDGER -->
+                <div class="tbl-card" style="margin-top:16px">
+                    <div class="tbl-card-hdr">
+                        <h3>⇅ Debit &amp; Credit Ledger</h3>
+                        <div id="ledgerBalance" style="font-size:13px;color:var(--muted)"></div>
+                    </div>
+                    <div class="form-grid fg5" style="margin-bottom:14px;padding:0 4px">
+                        <div class="fi"><label>Date</label><input type="date" id="led-date"></div>
+                        <div class="fi"><label>Particulars</label><input type="text" id="led-part" placeholder="Description..."></div>
+                        <div class="fi"><label>Type</label>
+                            <select id="led-type" style="background:var(--bg-card2);color:var(--bright);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;width:100%">
+                                <option value="Credit">Credit (Money In)</option>
+                                <option value="Debit">Debit (Money Out)</option>
+                            </select>
+                        </div>
+                        <div class="fi"><label>Amount (₹)</label><input type="number" id="led-amt" placeholder="0" min="0"></div>
+                        <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-teal" style="width:100%" onclick="addLedgerEntry()">+ Add Entry</button></div>
+                    </div>
+                    <div style="overflow-x:auto"><table class="data-table">
+                        <thead><tr><th>#</th><th>Date</th><th>Particulars</th><th>Type</th><th class="r">Debit (₹)</th><th class="r">Credit (₹)</th><th class="r">Balance (₹)</th><th></th></tr></thead>
+                        <tbody id="ledgerBody"></tbody>
+                    </table></div>
+                </div>
             </div>
 
             <!-- SITES VIEW -->
@@ -2233,12 +2256,14 @@
         let tenders = [];
         let assets = [];
         let stocks = [];
-        let purchases = [];
-        let attendance = [];
-        let travels = [];
-        let vendors = [];
-        let labourers = [];
-        let openSite = null;
+	        let purchases = [];
+	        let attendance = [];
+	        let travels = [];
+	        let vendors = [];
+	        let labourers = [];
+	        let bankAccounts = [];
+        let ledger = [];
+	        let openSite = null;
         let openSec = {};
         let openCat = {};
         let addCatCtx = null;
@@ -2482,7 +2507,7 @@
         function migrateSite(s) {
             if (!s.matCats) s.matCats = [...DEF_MAT];
             if (!s.labCats) s.labCats = [...DEF_LAB];
-            if (!s.mat) s.mat = {}; if (!s.lab) s.lab = {}; if (!s.cash) s.cash = [];
+            if (!s.mat) s.mat = {}; if (!s.lab) s.lab = {}; if (!s.cash) s.cash = []; if (!s.bank) s.bank = [];
             s.matCats.forEach(c => { if (!s.mat[c]) s.mat[c] = []; });
             s.labCats.forEach(c => {
                 if (!s.lab[c]) s.lab[c] = { daily: [], contract: null, scName: "", scDesc: "" };
@@ -2509,9 +2534,9 @@
                             sites = d.sites.map(migrateSite);
                             tenders = d.tenders || []; assets = d.assets || []; stocks = d.stocks || [];
                             purchases = d.purchases || []; attendance = d.attendance || []; travels = d.travels || [];
-                            vendors = d.vendors || []; labourers = d.labourers || [];
+                            vendors = d.vendors || []; labourers = d.labourers || []; bankAccounts = d.bankAccounts || []; ledger = d.ledger || [];
                             fbConnected = true; setCloudStatus("synced", "✓ Cloud Synced");
-                            localStorage.setItem(STORE_KEY, JSON.stringify({ sites, tenders, assets, stocks, purchases, attendance, travels, vendors, labourers }));
+                            localStorage.setItem(STORE_KEY, JSON.stringify({ sites, tenders, assets, stocks, purchases, attendance, travels, vendors, labourers, bankAccounts, ledger }));
                             return;
                         }
                     }
@@ -2524,19 +2549,19 @@
         function loadLocal() {
             try {
                 const raw = localStorage.getItem(STORE_KEY);
-                if (raw) { const d = JSON.parse(raw); sites = (d.sites || []).map(migrateSite); tenders = d.tenders || []; assets = d.assets || []; stocks = d.stocks || []; purchases = d.purchases || []; attendance = d.attendance || []; travels = d.travels || []; vendors = d.vendors || []; labourers = d.labourers || []; }
+                if (raw) { const d = JSON.parse(raw); sites = (d.sites || []).map(migrateSite); tenders = d.tenders || []; assets = d.assets || []; stocks = d.stocks || []; purchases = d.purchases || []; attendance = d.attendance || []; travels = d.travels || []; vendors = d.vendors || []; labourers = d.labourers || []; bankAccounts = d.bankAccounts || []; ledger = d.ledger || []; }
                 else { for (let i = 1; i <= 20; i++)sites.push(mkSite("Site " + i)); }
             } catch (e) { sites = []; for (let i = 1; i <= 20; i++)sites.push(mkSite("Site " + i)); }
         }
         function saveData() {
-            try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites, tenders, assets, stocks, purchases, attendance, travels, vendors })); } catch (e) { }
+            try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites, tenders, assets, stocks, purchases, attendance, travels, vendors, bankAccounts, ledger })); } catch (e) { }
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = setTimeout(async () => {
                 if (!window.firebaseReady || !window.db || !fbConnected) { setCloudStatus("offline", "💾 Local only"); return; }
                 try {
                     setCloudStatus("syncing", "⚙ Saving...");
                     const ref = window.fsDoc(window.db, "meridian", "main");
-                    await window.fsSetDoc(ref, { sites, tenders, assets, stocks, purchases, attendance, travels, vendors, labourers, updated: new Date().toISOString() });
+                    await window.fsSetDoc(ref, { sites, tenders, assets, stocks, purchases, attendance, travels, vendors, labourers, bankAccounts, ledger, updated: new Date().toISOString() });
                     setCloudStatus("synced", "✓ Cloud Synced");
                 } catch (e) { setCloudStatus("error", "⚠ Cloud error"); }
             }, 800);
@@ -2581,10 +2606,17 @@
         function renderDash() {
             let tR = 0, tP = 0, tL = 0, tH = 0;
             sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tP += c.paid; tL += c.pending; tH += c.hand; });
+            const ledCredit = ledger.filter(e => e.type === "Credit").reduce((a, e) => a + (e.amt || 0), 0);
+            const ledDebit  = ledger.filter(e => e.type === "Debit").reduce((a, e) => a + (e.amt || 0), 0);
+            const ledNet    = ledCredit - ledDebit;
             document.getElementById("dashCards").innerHTML = `
     <div class="stat-card blue"><div class="stat-label">TOTAL RECEIPTS</div><div class="stat-value blue">${fmt(tR)}</div><div class="stat-sub">${sites.length} active sites</div></div>
     <div class="stat-card green"><div class="stat-label">CASH IN HAND</div><div class="stat-value green">${fmt(tH)}</div><div class="stat-sub">Receipts − Paid Exp</div></div>
-    <div class="stat-card amber"><div class="stat-label">CASH PENDING</div><div class="stat-value amber">${fmt(tL)}</div><div class="stat-sub">Outstanding Liability</div></div>`;
+    <div class="stat-card amber"><div class="stat-label">CASH PENDING</div><div class="stat-value amber">${fmt(tL)}</div><div class="stat-sub">Outstanding Liability</div></div>
+    <div class="stat-card green"><div class="stat-label">TOTAL CREDITS</div><div class="stat-value green">${fmt(ledCredit)}</div><div class="stat-sub">${ledger.filter(e=>e.type==="Credit").length} entries</div></div>
+    <div class="stat-card red"><div class="stat-label">TOTAL DEBITS</div><div class="stat-value red">${fmt(ledDebit)}</div><div class="stat-sub">${ledger.filter(e=>e.type==="Debit").length} entries</div></div>`;
+            const bal = document.getElementById("ledgerBalance");
+            if (bal) bal.innerHTML = `Net: <strong style="color:${ledNet >= 0 ? "var(--green)" : "var(--red)"}">  ${fmt(ledNet)}</strong>`;
             let rows = "";
             sites.forEach((s, i) => {
                 const c = calc(i);
@@ -2603,6 +2635,43 @@
     <td class="r"><strong>${fmt(tL)}</strong></td><td class="r"><strong>${fmt(tH)}</strong></td>
   </tr>`;
             document.getElementById("dashBody").innerHTML = rows;
+            renderLedger();
+        }
+        function renderLedger() {
+            const tbody = document.getElementById("ledgerBody");
+            if (!tbody) return;
+            if (ledger.length === 0) {
+                tbody.innerHTML = '<tr class="empty"><td colspan="8">No entries yet — add a debit or credit above</td></tr>';
+                return;
+            }
+            let running = 0, rows = "";
+            ledger.forEach((e, j) => {
+                const isCredit = e.type === "Credit";
+                if (isCredit) running += (e.amt || 0); else running -= (e.amt || 0);
+                rows += `<tr>
+      <td class="muted">${j + 1}</td>
+      <td>${fmtDate(e.date)}</td>
+      <td>${esc(e.part) || "—"}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${isCredit ? "var(--green-glow)" : "var(--red-glow)"};color:${isCredit ? "var(--green)" : "var(--red)"}">
+        ${isCredit ? "▲ Credit" : "▼ Debit"}</span></td>
+      <td class="r" style="color:var(--red)">${!isCredit ? fmt(e.amt) : "—"}</td>
+      <td class="r" style="color:var(--green)">${isCredit ? fmt(e.amt) : "—"}</td>
+      <td class="r" style="color:${running >= 0 ? "var(--green)" : "var(--red)"}">${fmt(running)}</td>
+      <td><button class="del-btn" onclick="delLedgerEntry(${j})" title="Delete">✕</button></td>
+    </tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+        function addLedgerEntry() {
+            const d = val("led-date"), p = val("led-part"), t = val("led-type"), a = num("led-amt");
+            if (!a) { notif("Enter an amount"); return; }
+            ledger.push({ date: d, part: p, type: t, amt: a });
+            saveData(); renderDash();
+            notif((t === "Credit" ? "Credit" : "Debit") + " added — " + fmt(a));
+        }
+        function delLedgerEntry(j) {
+            if (!confirm("Delete this ledger entry?")) return;
+            ledger.splice(j, 1); saveData(); renderDash(); notif("Entry deleted");
         }
         function goSite(i) { navTo("sites"); openSite = i; renderSites(); setTimeout(() => { const el = document.getElementById("sc-" + i); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 80); }
 
@@ -2657,6 +2726,7 @@
         function setSec(i, sec) { openSec[i] = sec; const sb = document.getElementById("sb-" + i); if (sb) sb.innerHTML = bodyHTML(i); }
         function getPanelHTML(i, sec) {
             if (sec === "cash") return cashHTML(i);
+            if (sec === "bank") return bankHTML(i);
             if (sec === "mat") return matHTML(i);
             if (sec === "lab") return labHTML(i);
             if (sec === "sum") return sumHTML(i);
@@ -2693,7 +2763,48 @@
             saveData(); setSec(i, "cash"); refreshHdr(i); notif("Receipt added — " + fmt(a));
         }
 
-        // ── MATERIALS ────────────────────────────────────────────────
+        // ── BANK ACCOUNTS ────────────────────────────────────────────
+        function bankHTML(i) {
+            const rows = sites[i].bank || [];
+            const tot = rows.reduce((a, r) => a + (r.balance || 0), 0);
+            return `<div class="sec-toolbar">
+    <div style="font-size:12px;color:var(--dim)">Bank Accounts for <strong style="color:var(--bright)">${esc(sites[i].name)}</strong></div>
+    <button class="btn btn-ghost btn-sm" onclick="printSec(${i},'bank')">🖨 Print</button>
+  </div>
+  <div class="form-grid fg5" style="margin-bottom:14px">
+    <div class="fi"><label>Bank Name</label><input type="text" id="bk-${i}" placeholder="Bank name"></div>
+    <div class="fi"><label>Account Name</label><input type="text" id="ba-${i}" placeholder="Account holder name"></div>
+    <div class="fi"><label>Account No</label><input type="text" id="ban-${i}" placeholder="Account number"></div>
+    <div class="fi"><label>Balance (₹)</label><input type="number" id="bbl-${i}" placeholder="0" min="0"></div>
+    <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-teal" style="width:100%" onclick="addBankAccount(${i})">+ Add Account</button></div>
+  </div>
+  <div style="overflow-x:auto"><table class="data-table">
+    <thead><tr><th>#</th><th>Bank Name</th><th>Account Name</th><th>Account No</th><th class="r">Balance (₹)</th><th></th></tr></thead>
+    <tbody>
+      ${rows.length === 0 ? '<tr class="empty"><td colspan="6">No bank accounts added yet — add one above</td></tr>' : ""}
+      ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${esc(r.bkName) || "—"}</td><td>${esc(r.accName) || "—"}</td><td>${esc(r.accNo) || "—"}</td><td class="r" style="color:var(--green)">${fmt(r.balance)}</td><td><button class="del-btn" onclick="delBankAccount(${i},${j})" title="Delete">✕</button></td></tr>`).join("")}
+      ${rows.length > 0 ? `<tr class="sub-row"><td colspan="4"><strong>Total Bank Balance</strong></td><td class="r"><strong>${fmt(tot)}</strong></td><td></td></tr>` : ""}
+    </tbody>
+  </table></div>`;
+        }
+        function addBankAccount(i) {
+            const bk = val("bk-" + i), ba = val("ba-" + i), ban = val("ban-" + i), bl = num("bbl-" + i);
+            if (!bk) { notif("Enter bank name"); return; }
+            if (!ba) { notif("Enter account name"); return; }
+            if (!ban) { notif("Enter account number"); return; }
+            if (!bl) { notif("Enter balance"); return; }
+            sites[i].bank.push({ bkName: bk, accName: ba, accNo: ban, balance: bl });
+            document.getElementById("bk-" + i).value = "";
+            document.getElementById("ba-" + i).value = "";
+            document.getElementById("ban-" + i).value = "";
+            document.getElementById("bbl-" + i).value = "";
+            saveData(); setSec(i, "bank"); notif("Bank account added — " + bk);
+        }
+        function delBankAccount(i, j) {
+            if (!confirm("Delete this bank account?")) return;
+            sites[i].bank.splice(j, 1);
+            saveData(); setSec(i, "bank"); notif("Bank account deleted");
+        }
         function matHTML(i) {
             const s = sites[i];
             const cat = openCat["m" + i] || s.matCats[0] || "";
@@ -3067,6 +3178,11 @@
             sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; });
             let tPB = 0; purchases.filter(p => p.type === "PB").forEach(p => tPB += p.amt || 0);
             let tTravel = 0; travels.forEach(t => tTravel += t.amt || 0);
+            const tBankBal = bankAccounts.reduce((a, r) => a + (r.balance || 0), 0);
+            const bankRows = bankAccounts.length === 0
+                ? '<tr class="empty"><td colspan="5">No bank accounts added yet — add one above</td></tr>'
+                : bankAccounts.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${esc(r.bkName) || "—"}</td><td>${esc(r.accName) || "—"}</td><td>${esc(r.accNo) || "—"}</td><td class="r" style="color:var(--green)">${fmt(r.balance)}</td><td><button class="del-btn" onclick="delGlobalBankAccount(${j})" title="Delete">✕</button></td></tr>`).join("")
+                  + `<tr class="sub-row"><td colspan="4"><strong>Total Bank Balance</strong></td><td class="r"><strong>${fmt(tBankBal)}</strong></td><td></td></tr>`;
             document.getElementById("accountsContent").innerHTML = `
     <div style="padding:16px">
       <div class="stat-grid" style="margin-bottom:20px">
@@ -3074,6 +3190,22 @@
         <div class="stat-card red"><div class="stat-label">Total Expenditure</div><div class="stat-value red">${fmt(tE)}</div></div>
         <div class="stat-card amber"><div class="stat-label">Profit Provisioned</div><div class="stat-value amber">${fmt(tP)}</div></div>
         <div class="stat-card blue"><div class="stat-label">Net Balance</div><div class="stat-value" style="color:${tB >= 0 ? "var(--blue)" : "var(--red)"}">${fmt(tB)}</div></div>
+      </div>
+      <div class="tbl-card" style="margin-bottom:20px">
+        <div class="tbl-card-hdr"><h3>🏦 Bank Accounts</h3></div>
+        <div style="padding:14px;border-bottom:1px solid var(--border)">
+          <div class="form-grid fg5" style="margin-bottom:0">
+            <div class="fi"><label>Bank Name</label><input type="text" id="gbk-name" placeholder="e.g. SBI, HDFC"></div>
+            <div class="fi"><label>Account Name</label><input type="text" id="gbk-accname" placeholder="Account holder name"></div>
+            <div class="fi"><label>Account No</label><input type="text" id="gbk-accno" placeholder="Account number"></div>
+            <div class="fi"><label>Balance (₹)</label><input type="number" id="gbk-bal" placeholder="0" min="0"></div>
+            <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-teal" style="width:100%" onclick="addGlobalBankAccount()">+ Add Account</button></div>
+          </div>
+        </div>
+        <div style="overflow-x:auto"><table class="data-table">
+          <thead><tr><th>#</th><th>Bank Name</th><th>Account Name</th><th>Account No</th><th class="r">Balance (₹)</th><th></th></tr></thead>
+          <tbody>${bankRows}</tbody>
+        </table></div>
       </div>
       <div class="tbl-card">
         <div class="tbl-card-hdr"><h3>📑 Account-wise Summary</h3></div>
@@ -3085,11 +3217,25 @@
             <tr><td style="color:#a78bfa">👷 Labour Costs</td><td class="r" style="color:#a78bfa">${fmt(sites.reduce((a, _, i) => a + calc(i).labExp, 0))}</td><td class="r">${tE > 0 ? Math.round(sites.reduce((a, _, i) => a + calc(i).labExp, 0) / tE * 100) + "%" : "—"}</td></tr>
             <tr><td style="color:var(--amber)">🛒 Purchase Bills (PB)</td><td class="r" style="color:var(--amber)">${fmt(tPB)}</td><td class="r">—</td></tr>
             <tr><td style="color:var(--muted)">🚌 Travel Allowance</td><td class="r">${fmt(tTravel)}</td><td class="r">—</td></tr>
+            <tr><td style="color:var(--green)">🏦 Bank Balance (Total)</td><td class="r" style="color:var(--green)">${fmt(tBankBal)}</td><td class="r">—</td></tr>
             <tr class="sub-row"><td><strong>Net Balance (Income − Expenditure − Profit)</strong></td><td class="r" style="color:${tB >= 0 ? "var(--blue)" : "var(--red)"}"><strong>${fmt(tB)}</strong></td><td class="r">—</td></tr>
           </tbody>
         </table></div>
       </div>
     </div>`;
+        }
+        function addGlobalBankAccount() {
+            const bk = val("gbk-name"), ba = val("gbk-accname"), ban = val("gbk-accno"), bl = num("gbk-bal");
+            if (!bk) { notif("Enter bank name"); return; }
+            if (!ba) { notif("Enter account name"); return; }
+            if (!ban) { notif("Enter account number"); return; }
+            bankAccounts.push({ bkName: bk, accName: ba, accNo: ban, balance: bl });
+            saveData(); renderAccountsView(); notif("Bank account added — " + bk);
+        }
+        function delGlobalBankAccount(j) {
+            if (!confirm("Delete this bank account?")) return;
+            bankAccounts.splice(j, 1);
+            saveData(); renderAccountsView(); notif("Bank account deleted");
         }
 
         // ══ STAFF ════════════════════════════════════════════════════════
