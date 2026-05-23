@@ -1545,7 +1545,6 @@
             <div class="tb-right">
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
                 <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
-                <button class="btn btn-amber" onclick="exportExcel()">&#8595; Export Excel</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
             </div>
         </div>
@@ -2182,7 +2181,8 @@
                 }).join("");
                 return `
     <div class="print-header"><h2>${esc(s.name)} - Summary</h2><p>Meridian Construction Company</p></div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px">
+      <button class="btn btn-amber" style="font-size:11px;padding:5px 10px" onclick="exportSiteExcel(${i})">&#8595; Export Excel</button>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'sum')">&#128424; Print</button>
     </div>
     <div class="sum-grid">
@@ -2804,6 +2804,122 @@
             }
 
             // -- EXCEL EXPORT --
+            function exportSiteExcel(i) {
+                const s = sites[i];
+                const { rec, matExp, labExp, exp, prof, bal, paid, pending } = calc(i);
+                const wb = XLSX.utils.book_new();
+                const d = new Date();
+                const ds = d.getDate() + "-" + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()] + "-" + d.getFullYear();
+
+                // Sheet 1: Cash Receipts
+                const cashData = [
+                    [s.name.toUpperCase() + " - CASH RECEIPTS"],
+                    ["Generated: " + ds],
+                    [""],
+                    ["#", "Date", "Particulars", "Amount (₹)"]
+                ];
+                s.cash.forEach((r, j) => cashData.push([j + 1, r.date || "", r.part || "", r.amt || 0]));
+                cashData.push(["", "", "TOTAL RECEIPTS", rec]);
+                const wsCash = XLSX.utils.aoa_to_sheet(cashData);
+                wsCash["!cols"] = [{ wch: 4 }, { wch: 14 }, { wch: 30 }, { wch: 16 }];
+                XLSX.utils.book_append_sheet(wb, wsCash, "Cash Receipts");
+
+                // Sheet 2: Materials
+                const matData = [
+                    [s.name.toUpperCase() + " - MATERIAL PURCHASES"],
+                    ["Generated: " + ds],
+                    [""],
+                    ["#", "Date", "Category", "Vendor", "Material", "Bill No", "Total (₹)", "Paid (₹)", "Pending (₹)"]
+                ];
+                let matRow = 0;
+                s.matCats.forEach(cat => {
+                    const entries = s.mat[cat] || [];
+                    if (entries.length === 0) return;
+                    const catTotal = entries.reduce((a, r) => a + (r.amt || 0), 0);
+                    const catPaid = entries.reduce((a, r) => a + (r.paid || 0), 0);
+                    entries.forEach(r => {
+                        matRow++;
+                        const pend = (r.amt || 0) - (r.paid || 0);
+                        matData.push([matRow, r.date || "", cat, r.det || "", r.item || cat, r.bill || "", r.amt || 0, r.paid || 0, pend]);
+                    });
+                    matData.push(["", "", "Subtotal - " + cat, "", "", "", catTotal, catPaid, catTotal - catPaid]);
+                    matData.push([""]);
+                });
+                matData.push(["", "", "GRAND TOTAL MATERIALS", "", "", "", matExp, s.matCats.reduce((a, c) => a + (s.mat[c] || []).reduce((b, r) => b + (r.paid || 0), 0), 0), matExp - s.matCats.reduce((a, c) => a + (s.mat[c] || []).reduce((b, r) => b + (r.paid || 0), 0), 0)]);
+                const wsMat = XLSX.utils.aoa_to_sheet(matData);
+                wsMat["!cols"] = [{ wch: 4 }, { wch: 12 }, { wch: 16 }, { wch: 22 }, { wch: 18 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }];
+                XLSX.utils.book_append_sheet(wb, wsMat, "Materials");
+
+                // Sheet 3: Labour
+                const labData = [
+                    [s.name.toUpperCase() + " - LABOUR COSTS"],
+                    ["Generated: " + ds],
+                    [""],
+                    ["#", "Date", "Category", "Worker / Contractor", "Voucher No", "Total (₹)", "Paid (₹)", "Pending (₹)"]
+                ];
+                let labRow = 0;
+                s.labCats.forEach(cat => {
+                    const lb = s.lab[cat] || { daily: [], contract: null };
+                    const isSC = lb.contract !== null;
+                    if (isSC) {
+                        labRow++;
+                        labData.push([labRow, "", cat + " [SUBCONTRACT]", lb.scName || "Subcontractor", lb.scDesc || "", lb.contract || 0, lb.contract || 0, 0]);
+                        labData.push(["", "", "Subtotal - " + cat, "", "", lb.contract || 0, lb.contract || 0, 0]);
+                    } else {
+                        const entries = lb.daily || [];
+                        if (entries.length === 0) return;
+                        const catTotal = entries.reduce((a, r) => a + (r.amt || 0), 0);
+                        const catPaid = entries.reduce((a, r) => a + (r.paid || 0), 0);
+                        entries.forEach(r => {
+                            labRow++;
+                            const pend = (r.amt || 0) - (r.paid || 0);
+                            labData.push([labRow, r.date || "", cat, r.part || "", r.voucher || "", r.amt || 0, r.paid || 0, pend]);
+                        });
+                        labData.push(["", "", "Subtotal - " + cat, "", "", catTotal, catPaid, catTotal - catPaid]);
+                    }
+                    labData.push([""]);
+                });
+                labData.push(["", "", "GRAND TOTAL LABOUR", "", "", labExp, s.labCats.reduce((a, c) => { const lb = s.lab[c] || {}; return a + (lb.contract !== null ? (lb.contract || 0) : (lb.daily || []).reduce((b, r) => b + (r.paid || 0), 0)); }, 0), labExp - s.labCats.reduce((a, c) => { const lb = s.lab[c] || {}; return a + (lb.contract !== null ? (lb.contract || 0) : (lb.daily || []).reduce((b, r) => b + (r.paid || 0), 0)); }, 0)]);
+                const wsLab = XLSX.utils.aoa_to_sheet(labData);
+                wsLab["!cols"] = [{ wch: 4 }, { wch: 12 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }];
+                XLSX.utils.book_append_sheet(wb, wsLab, "Labour");
+
+                // Sheet 4: Summary
+                const sumData = [
+                    [s.name.toUpperCase() + " - SUMMARY"],
+                    ["Generated: " + ds],
+                    [""],
+                    ["Item", "Amount (₹)", "With 15% Profit (₹)"],
+                    [""],
+                    ["MATERIALS", "", ""],
+                ];
+                s.matCats.forEach(cat => {
+                    const v = (s.mat[cat] || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    sumData.push([cat, v, Math.round(v * (1 + PT))]);
+                });
+                sumData.push(["Total Materials", matExp, Math.round(matExp * (1 + PT))]);
+                sumData.push([""]);
+                sumData.push(["LABOUR", "", ""]);
+                s.labCats.forEach(cat => {
+                    const lb = s.lab[cat] || { daily: [], contract: null };
+                    const v = lb.contract !== null ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    sumData.push([cat + (lb.contract !== null ? " [SC]" : ""), v, Math.round(v * (1 + PT))]);
+                });
+                sumData.push(["Total Labour", labExp, Math.round(labExp * (1 + PT))]);
+                sumData.push([""]);
+                sumData.push(["TOTAL EXPENDITURE", exp, Math.round(exp * (1 + PT))]);
+                sumData.push(["TOTAL RECEIPTS", rec, ""]);
+                sumData.push(["PROFIT @ 15%", prof, ""]);
+                sumData.push(["NET BALANCE", bal, ""]);
+                const wsSum = XLSX.utils.aoa_to_sheet(sumData);
+                wsSum["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 22 }];
+                XLSX.utils.book_append_sheet(wb, wsSum, "Summary");
+
+                const safeName = (s.name || "Site").replace(/[^A-Za-z0-9 _-]/g, "").substring(0, 20) || "Site";
+                XLSX.writeFile(wb, "Meridian_" + safeName + "_" + ds + ".xlsx");
+                notif("Excel exported for " + s.name);
+            }
+
             function exportExcel() {
                 const wb = XLSX.utils.book_new();
                 // Dashboard
