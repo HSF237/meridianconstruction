@@ -1464,6 +1464,39 @@
             }
         }
 
+        /* -- Payment history ----------------------------- */
+        .pay-hist-btn {
+            background: #E6F1FB;
+            border: 1px solid #B5D4F4;
+            color: #185FA5;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 6px;
+            transition: background .15s
+        }
+        .pay-hist-btn:hover { background: #B5D4F4 }
+        .pay-hist-btn.has-pmts { background: #EAF3DE; border-color: #C0DD97; color: #3B6D11 }
+        .pay-hist-btn.has-pmts:hover { background: #C0DD97 }
+        .pay-hist-row td { padding: 0 !important }
+        .pay-hist-wrap {
+            background: #F5F8FF;
+            border-top: 2px solid #B5D4F4;
+            padding: 12px 16px 14px
+        }
+        .pay-hist-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1A3C5E;
+            margin-bottom: 8px
+        }
+        .ph-pending { color: #BA7517; font-weight: 700 }
+        .ph-paid { color: #1D9E75; font-weight: 700 }
+        .pay-hist-tbl { margin-bottom: 10px }
+        .pay-hist-tbl th { background: #2E75B6 !important }
+        .pay-hist-empty { color: #aaa; font-size: 11px; font-style: italic; margin: 0 0 8px }
+
         /* -- Daybook tab amber highlight -------------- */
         .nav-tab.daybook-tab {
             color: #9A6010;
@@ -1699,7 +1732,11 @@
                     if (!s.mat[c]) s.mat[c] = [];
                     s.mat[c].forEach(r => {
                         if (r.vendor && !r.det) r.det = r.vendor;
-                        if (r.paid === undefined || r.paid === null) r.paid = r.amt || 0;
+                        if (r.paid === undefined || r.paid === null) r.paid = 0;
+                        if (!r.payments) {
+                            r.payments = r.paid > 0 ? [{ date: r.date || "", amount: r.paid, note: "Legacy" }] : [];
+                        }
+                        r.paid = r.payments.reduce((a, p) => a + (p.amount || 0), 0);
                     });
                 });
                 s.labCats.forEach(c => {
@@ -1708,7 +1745,11 @@
                     if (!s.lab[c].daily) s.lab[c].daily = [];
                     s.lab[c].daily.forEach(r => {
                         if (r.worker && !r.part) r.part = r.worker;
-                        if (r.paid === undefined || r.paid === null) r.paid = r.amt || 0;
+                        if (r.paid === undefined || r.paid === null) r.paid = 0;
+                        if (!r.payments) {
+                            r.payments = r.paid > 0 ? [{ date: r.date || "", amount: r.paid, note: "Legacy" }] : [];
+                        }
+                        r.paid = r.payments.reduce((a, p) => a + (p.amount || 0), 0);
                     });
                 });
                 return s;
@@ -2035,6 +2076,7 @@
                 const rows = s.mat[cat] || [];
                 const sub = rows.reduce((a, r) => a + (r.amt || 0), 0);
                 const paidSub = rows.reduce((a, r) => a + (r.paid || 0), 0);
+                const catIdx = s.matCats.indexOf(cat);
                 return `
     <div class="print-header"><h2>${esc(s.name)} - Materials: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
     <div class="sec-toolbar">
@@ -2058,7 +2100,26 @@
       <thead><tr><th>#</th><th>Date</th><th>Vendor</th><th>Material</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
       <tbody>
         ${rows.length === 0 ? `<tr class="empty-row"><td colspan="9">No ${esc(cat)} entries yet</td></tr>` : ""}
-        ${rows.map((r, j) => { const pending = (r.amt || 0) - (r.paid || 0); return `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "-"}</td><td>${esc(r.item || cat)}</td><td class="muted">${esc(r.bill) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td><td><button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td></tr>`; }).join("")}
+        ${rows.map((r, j) => {
+            const pending = (r.amt || 0) - (r.paid || 0);
+            const pmts = r.payments || [];
+            const phId = `ph-mat-${i}-${catIdx}-${j}`;
+            const pRows = pmts.map((p, k) => `<tr><td>${fmtDate(p.date)}</td><td>${esc(p.note)||'-'}</td><td class="r" style="color:#1D9E75">${fmt(p.amount)}</td><td><button class="del-btn" onclick="delMatPayment(${i},${catIdx},${j},${k})">&#10005;</button></td></tr>`).join("");
+            return `<tr>
+              <td class="muted">${j+1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det)||"-"}</td><td>${esc(r.item||cat)}</td><td class="muted">${esc(r.bill)||"-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid||0)}</td><td class="r" style="color:${pending>0?'#BA7517':'#1D9E75'}">${pending>0?fmt(pending):'Paid'}</td>
+              <td style="white-space:nowrap"><button class="pay-hist-btn${pmts.length>0?' has-pmts':''}" onclick="togglePayHist('${phId}')" title="Payment history">&#128179;${pmts.length>0?' '+pmts.length:''}</button> <button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td>
+            </tr>
+            <tr id="${phId}" class="pay-hist-row" style="display:none"><td colspan="9"><div class="pay-hist-wrap">
+              <div class="pay-hist-title">Payment History &nbsp; ${pending>0?`<span class="ph-pending">Remaining: ${fmt(pending)}</span>`:`<span class="ph-paid">&#10003; Fully Paid</span>`}</div>
+              ${pmts.length>0?`<table class="etbl pay-hist-tbl"><thead><tr><th>Date</th><th>Note</th><th class="r">Amount</th><th></th></tr></thead><tbody>${pRows}</tbody></table>`:'<p class="pay-hist-empty">No payments recorded yet.</p>'}
+              ${pending>0?`<div class="form-row" style="grid-template-columns:130px 130px 1fr 120px;gap:6px;margin:8px 0 0">
+                <div class="fi"><label>Date</label><input type="date" id="mpd-${i}-${catIdx}-${j}"></div>
+                <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="mpa-${i}-${catIdx}-${j}" placeholder="0" max="${pending}" min="0"></div>
+                <div class="fi"><label>Note</label><input type="text" id="mpn-${i}-${catIdx}-${j}" placeholder="Advance, Final..."></div>
+                <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%;font-size:11px" onclick="addMatPayment(${i},${catIdx},${j})">+ Add Payment</button></div>
+              </div>`:''}
+            </div></td></tr>`;
+        }).join("")}
         ${rows.length > 0 ? `<tr class="sub-row"><td colspan="5">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
@@ -2077,7 +2138,8 @@
                 if (!supplier) { notif("Unknown supplier — use + New to add them with contact details"); return; }
                 const detName = supplier.name;
                 if (!sites[i].mat[cat]) sites[i].mat[cat] = [];
-                sites[i].mat[cat].push({ date: d, det: detName, item: item || cat, bill: bn, amt: a, paid: p });
+                const initPmts = p > 0 ? [{ date: d || new Date().toISOString().slice(0,10), amount: p, note: "Initial" }] : [];
+                sites[i].mat[cat].push({ date: d, det: detName, item: item || cat, bill: bn, amt: a, paid: p, payments: initPmts });
                 saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); renderDash(); notif(cat + " entry added");
             }
             // -- LABOUR --
@@ -2089,6 +2151,7 @@
                 const isSC = lb.contract !== null;
                 const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
                 const paidSub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.paid || 0), 0);
+                const labCatIdx = s.labCats.indexOf(cat);
                 return `
     <div class="print-header"><h2>${esc(s.name)} - Labour: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
     <div class="sec-toolbar">
@@ -2126,7 +2189,26 @@
         <thead><tr><th>#</th><th>Date</th><th>Worker</th><th>Voucher No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
         <tbody>
           ${(lb.daily || []).length === 0 ? `<tr class="empty-row"><td colspan="8">No ${esc(cat)} entries yet</td></tr>` : ""}
-          ${(lb.daily || []).map((r, j) => { const pending = (r.amt || 0) - (r.paid || 0); return `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "-"}</td><td class="muted">${esc(r.voucher) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td><td><button class="del-btn" onclick="delEntry(${i},'lab-${jsq(cat)}',${j})">&#10005;</button></td></tr>`; }).join("")}
+          ${(lb.daily || []).map((r, j) => {
+              const pending = (r.amt || 0) - (r.paid || 0);
+              const pmts = r.payments || [];
+              const phId = `ph-lab-${i}-${labCatIdx}-${j}`;
+              const pRows = pmts.map((p, k) => `<tr><td>${fmtDate(p.date)}</td><td>${esc(p.note)||'-'}</td><td class="r" style="color:#1D9E75">${fmt(p.amount)}</td><td><button class="del-btn" onclick="delLabPayment(${i},${labCatIdx},${j},${k})">&#10005;</button></td></tr>`).join("");
+              return `<tr>
+                <td class="muted">${j+1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part)||"-"}</td><td class="muted">${esc(r.voucher)||"-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid||0)}</td><td class="r" style="color:${pending>0?'#BA7517':'#1D9E75'}">${pending>0?fmt(pending):'Paid'}</td>
+                <td style="white-space:nowrap"><button class="pay-hist-btn${pmts.length>0?' has-pmts':''}" onclick="togglePayHist('${phId}')" title="Payment history">&#128179;${pmts.length>0?' '+pmts.length:''}</button> <button class="del-btn" onclick="delEntry(${i},'lab-${jsq(cat)}',${j})">&#10005;</button></td>
+              </tr>
+              <tr id="${phId}" class="pay-hist-row" style="display:none"><td colspan="8"><div class="pay-hist-wrap">
+                <div class="pay-hist-title">Payment History &nbsp; ${pending>0?`<span class="ph-pending">Remaining: ${fmt(pending)}</span>`:`<span class="ph-paid">&#10003; Fully Paid</span>`}</div>
+                ${pmts.length>0?`<table class="etbl pay-hist-tbl"><thead><tr><th>Date</th><th>Note</th><th class="r">Amount</th><th></th></tr></thead><tbody>${pRows}</tbody></table>`:'<p class="pay-hist-empty">No payments recorded yet.</p>'}
+                ${pending>0?`<div class="form-row" style="grid-template-columns:130px 130px 1fr 120px;gap:6px;margin:8px 0 0">
+                  <div class="fi"><label>Date</label><input type="date" id="lpd-${i}-${labCatIdx}-${j}"></div>
+                  <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="lpa-${i}-${labCatIdx}-${j}" placeholder="0" max="${pending}" min="0"></div>
+                  <div class="fi"><label>Note</label><input type="text" id="lpn-${i}-${labCatIdx}-${j}" placeholder="Advance, Final..."></div>
+                  <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%;font-size:11px" onclick="addLabPayment(${i},${labCatIdx},${j})">+ Add Payment</button></div>
+                </div>`:''}
+              </div></td></tr>`;
+          }).join("")}
           ${(lb.daily || []).length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
         </tbody>
       </table></div>`}`;
@@ -2145,9 +2227,75 @@
                 if (!worker) { notif("Unknown worker — use + New to add them with contact details"); return; }
                 const workerName = worker.name;
                 if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
-                sites[i].lab[cat].daily.push({ date: d, part: workerName, voucher: vn, amt: a, paid });
+                const initLabPmts = paid > 0 ? [{ date: d || new Date().toISOString().slice(0,10), amount: paid, note: "Initial" }] : [];
+                sites[i].lab[cat].daily.push({ date: d, part: workerName, voucher: vn, amt: a, paid, payments: initLabPmts });
                 saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); renderDash(); notif(cat + " entry added");
             }
+            function togglePayHist(id) {
+                const el = document.getElementById(id);
+                if (el) el.style.display = el.style.display === "none" ? "table-row" : "none";
+            }
+
+            function addMatPayment(i, catIdx, j) {
+                const s = sites[i];
+                const cat = s.matCats[catIdx];
+                const date = val(`mpd-${i}-${catIdx}-${j}`);
+                const amount = num(`mpa-${i}-${catIdx}-${j}`);
+                const note = val(`mpn-${i}-${catIdx}-${j}`);
+                if (!amount) { notif("Enter payment amount"); return; }
+                const entry = s.mat[cat][j];
+                const rem = (entry.amt || 0) - (entry.paid || 0);
+                if (amount > rem + 0.01) { notif("Amount exceeds remaining " + fmt(rem)); return; }
+                if (!entry.payments) entry.payments = [];
+                entry.payments.push({ date, amount, note });
+                entry.paid = entry.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); renderDash();
+                notif("Payment of " + fmt(amount) + " recorded");
+                setTimeout(() => { const el = document.getElementById(`ph-mat-${i}-${catIdx}-${j}`); if (el) el.style.display = "table-row"; }, 50);
+            }
+
+            function delMatPayment(i, catIdx, j, k) {
+                if (!confirm("Delete this payment record?")) return;
+                const s = sites[i];
+                const cat = s.matCats[catIdx];
+                const entry = s.mat[cat][j];
+                entry.payments.splice(k, 1);
+                entry.paid = entry.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); renderDash();
+                notif("Payment deleted");
+                setTimeout(() => { const el = document.getElementById(`ph-mat-${i}-${catIdx}-${j}`); if (el) el.style.display = "table-row"; }, 50);
+            }
+
+            function addLabPayment(i, catIdx, j) {
+                const s = sites[i];
+                const cat = s.labCats[catIdx];
+                const date = val(`lpd-${i}-${catIdx}-${j}`);
+                const amount = num(`lpa-${i}-${catIdx}-${j}`);
+                const note = val(`lpn-${i}-${catIdx}-${j}`);
+                if (!amount) { notif("Enter payment amount"); return; }
+                const entry = s.lab[cat].daily[j];
+                const rem = (entry.amt || 0) - (entry.paid || 0);
+                if (amount > rem + 0.01) { notif("Amount exceeds remaining " + fmt(rem)); return; }
+                if (!entry.payments) entry.payments = [];
+                entry.payments.push({ date, amount, note });
+                entry.paid = entry.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); renderDash();
+                notif("Payment of " + fmt(amount) + " recorded");
+                setTimeout(() => { const el = document.getElementById(`ph-lab-${i}-${catIdx}-${j}`); if (el) el.style.display = "table-row"; }, 50);
+            }
+
+            function delLabPayment(i, catIdx, j, k) {
+                if (!confirm("Delete this payment record?")) return;
+                const s = sites[i];
+                const cat = s.labCats[catIdx];
+                const entry = s.lab[cat].daily[j];
+                entry.payments.splice(k, 1);
+                entry.paid = entry.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); renderDash();
+                notif("Payment deleted");
+                setTimeout(() => { const el = document.getElementById(`ph-lab-${i}-${catIdx}-${j}`); if (el) el.style.display = "table-row"; }, 50);
+            }
+
             function setMode(i, cat, isSC) {
                 if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
                 const lb = sites[i].lab[cat];
@@ -2726,11 +2874,26 @@
 
             function markPayCtxPaid() {
                 if (!payCtx) { closeQR(); return; }
+                const today = new Date().toISOString().slice(0, 10);
                 sites.forEach(s => {
                     if (payCtx.type === "vendor") {
-                        s.matCats.forEach(cat => (s.mat[cat] || []).forEach(e => { if (e.det === payCtx.name) e.paid = e.amt || 0; }));
+                        s.matCats.forEach(cat => (s.mat[cat] || []).forEach(e => {
+                            if (e.det !== payCtx.name) return;
+                            const rem = (e.amt || 0) - (e.paid || 0);
+                            if (rem <= 0) return;
+                            if (!e.payments) e.payments = [];
+                            e.payments.push({ date: today, amount: rem, note: "UPI Payment" });
+                            e.paid = e.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                        }));
                     } else {
-                        s.labCats.forEach(cat => { const lb = s.lab[cat]; (lb?.daily || []).forEach(e => { if (e.part === payCtx.name) e.paid = e.amt || 0; }); });
+                        s.labCats.forEach(cat => { const lb = s.lab[cat]; (lb?.daily || []).forEach(e => {
+                            if (e.part !== payCtx.name) return;
+                            const rem = (e.amt || 0) - (e.paid || 0);
+                            if (rem <= 0) return;
+                            if (!e.payments) e.payments = [];
+                            e.payments.push({ date: today, amount: rem, note: "UPI Payment" });
+                            e.paid = e.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                        }); });
                     }
                 });
                 saveData(); closeQR(); renderDash(); renderVendors(); renderLabours(); notif("All entries marked paid for " + payCtx.name); payCtx = null;
