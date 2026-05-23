@@ -1,0 +1,455 @@
+
+                <div class="topbar-title">
+                    <h2 id="topbarTitle">Dashboard</h2>
+                    <p id="topbarSub">Meridian Builders — Income &amp; Expenditure Manager</p>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <span class="cloud-pill cloud-syncing" id="cloudStatus">⚙ Connecting...</span>
+                    <button class="btn btn-green btn-sm" onclick="toggleAddSite()">+ Add Site</button>
+                    <button class="btn btn-amber btn-sm" onclick="exportExcel()">↓ Export</button>
+                    <button class="btn btn-blue btn-sm" onclick="document.getElementById('excelImport').click()">↑ Import</button>
+                    <input type="file" id="excelImport" style="display:none" onchange="importExcel(event)">
+                    <button class="btn btn-red btn-sm" onclick="clearAllData()">Reset</button>
+                </div>
+            </div>
+
+            <!-- Add Site Bar -->
+            <div class="add-site-bar" id="addSiteBar" style="margin:10px 20px 0">
+                <div class="fi" style="flex:1;min-width:180px"><label>New Site Name</label><input type="text"
+                        id="newSiteName" placeholder="e.g. Site 21 — Kavya Residency"
+                        onkeydown="if(event.key==='Enter')addSite()"></div>
+                <button class="btn btn-teal" onclick="addSite()">Add Site</button>
+                <button class="btn btn-ghost" onclick="toggleAddSite()">Cancel</button>
+            </div>
+
+            <!-- DASHBOARD VIEW -->
+            <div class="view on" id="view-dashboard">
+                <div class="stat-grid" id="dashCards"></div>
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>📊 All Sites — Income &amp; Expenditure Summary</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:30%">Site</th>
+                                    <th class="r">Receipts (₹)</th>
+                                    <th class="r">Expenditure (₹)</th>
+                                    <th class="r">Profit 15% (₹)</th>
+                                    <th class="r">Balance (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SITES VIEW -->
+            <div class="view" id="view-sites">
+                <div id="sitesList"></div>
+            </div>
+
+            <!-- TENDERS VIEW -->
+            <div class="view" id="view-tenders">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>📄 Tenders</h3>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-teal btn-sm" onclick="openTenderModal()">+ New Tender</button>
+                            <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+                        </div>
+                    </div>
+                    <div id="tenderContent" style="overflow-x:auto"></div>
+                </div>
+            </div>
+
+            <!-- PROJECTS VIEW -->
+            <div class="view" id="view-projects">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>🏗 Projects Overview</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+                    </div>
+                    <div id="projectsContent" style="overflow-x:auto"></div>
+                </div>
+            </div>
+
+            <!-- ASSETS VIEW -->
+            <div class="view" id="view-assets">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>🏛 Assets &amp; Security Deposits</h3>
+                        <button class="btn btn-teal btn-sm" onclick="openAssetModal()">+ Add Asset</button>
+                    </div>
+                    <div id="assetsContent" style="overflow-x:auto"></div>
+                </div>
+                <div class="tbl-card" style="margin-top:16px">
+                    <div class="tbl-card-hdr">
+                        <h3>📦 Stock Transfer</h3><button class="btn btn-teal btn-sm" onclick="openStockModal()">+
+                            Transfer</button>
+                    </div>
+                    <div id="stockContent" style="overflow-x:auto"></div>
+                </div>
+            </div>
+
+            <!-- ACCOUNTS VIEW -->
+            <div class="view" id="view-accounts">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>💼 Accounts Management</h3>
+                    </div>
+                    <div id="accountsContent"></div>
+                </div>
+            </div>
+
+            <!-- STAFF VIEW -->
+            <div class="view" id="view-staff">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>👷 Staff &amp; Labour Register</h3>
+                    </div>
+                    <div id="staffContent"></div>
+                </div>
+            </div>
+
+            <!-- VENDOR SUMMARY VIEW -->
+            <!-- Labour & Workers -->
+            <div class="view" id="view-labour">
+                <div id="labourContent">Loading Labourers...</div>
+            </div>
+
+            <!-- Vendors -->
+            <div class="view" id="view-vendors">
+                <div id="vendorsContent">Loading Vendors...</div>
+            </div>
+
+            <!-- Vendor Summary -->
+            <div class="view" id="view-vsummary">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>📈 Vendor &amp; Labour Summary</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+                    </div>
+                    <div id="vsummaryContent"></div>
+                </div>
+            </div>
+
+            <!-- DAY BOOK VIEW -->
+            <div class="view" id="view-daybook">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>📚 Day Book — Transaction Register</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+                    </div>
+                    <div id="daybookContent"></div>
+                </div>
+            </div>
+
+            <!-- PURCHASE VIEW -->
+            <div class="view" id="view-purchase">
+                <div class="stat-grid" id="purchaseCards"></div>
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>🛒 Purchase Register (PR / PO / PB)</h3>
+                        <button class="btn btn-teal btn-sm" onclick="openPurchaseModal()">+ New Entry</button>
+                    </div>
+                    <div id="purchaseContent" style="overflow-x:auto"></div>
+                </div>
+            </div>
+
+            <!-- ATTENDANCE VIEW -->
+            <div class="view" id="view-attendance">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>📅 Attendance Tracking</h3>
+                        <button class="btn btn-teal btn-sm" onclick="openAttendanceModal()">+ Mark Attendance</button>
+                    </div>
+                    <div id="attendanceContent" style="overflow-x:auto"></div>
+                </div>
+            </div>
+
+            <!-- TRAVEL VIEW -->
+            <div class="view" id="view-travel">
+                <div class="tbl-card">
+                    <div class="tbl-card-hdr">
+                        <h3>🚌 Travel Allowance</h3>
+                        <button class="btn btn-teal btn-sm" onclick="openTravelModal()">+ Add Allowance</button>
+                    </div>
+                    <div id="travelContent" style="overflow-x:auto"></div>
+                </div>
+            </div>
+
+        </div><!-- /app-content -->
+    </div><!-- /appWrap -->
+
+    <!-- ══ MODALS ══════════════════════════════════════════════ -->
+    <div class="modal-bg" id="addCatModal">
+        <div class="modal">
+            <h3 id="addCatTitle">Add New Category</h3>
+            <div class="fi" style="margin-bottom:14px"><label>Category Name</label><input type="text" id="addCatName"
+                    placeholder="e.g. Timber, Roofing..." onkeydown="if(event.key==='Enter')confirmAddCat()"></div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-teal" style="flex:1" onclick="confirmAddCat()">Add</button>
+                <button class="btn btn-ghost" onclick="closeModal('addCatModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="tenderModal">
+        <div class="modal">
+            <h3 id="tenderModalTitle">New Tender</h3>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Tender No</label><input type="text" id="tm-no" placeholder="TND-001"></div>
+                <div class="fi"><label>Date</label><input type="date" id="tm-date"></div>
+            </div>
+            <div class="fi" style="margin-bottom:10px"><label>Project / Description</label><input type="text"
+                    id="tm-desc" placeholder="Name of work"></div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Issuing Authority</label><input type="text" id="tm-auth"
+                        placeholder="Authority name"></div>
+                <div class="fi"><label>Bid Type</label>
+                    <select id="tm-type">
+                        <option>Open Bid</option>
+                        <option>Limited Bid</option>
+                        <option>Single Tender</option>
+                        <option>Two-Stage Bid</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Category</label>
+                    <select id="tm-cat">
+                        <option>Civil Works</option>
+                        <option>Electrical</option>
+                        <option>Plumbing</option>
+                        <option>Interior</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="fi"><label>Estimated Value (₹)</label><input type="number" id="tm-val" placeholder="0"
+                        min="0"></div>
+            </div>
+            <div class="fi" style="margin-bottom:14px"><label>Status</label>
+                <select id="tm-status">
+                    <option>Active</option>
+                    <option>Submitted</option>
+                    <option>Won</option>
+                    <option>Lost</option>
+                    <option>Cancelled</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-teal" style="flex:1" onclick="saveTender()">Save Tender</button>
+                <button class="btn btn-ghost" onclick="closeModal('tenderModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="assetModal">
+        <div class="modal">
+            <h3>Add Asset / Security Deposit</h3>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Asset Name</label><input type="text" id="am-name"
+                        placeholder="Asset description"></div>
+                <div class="fi"><label>Type</label>
+                    <select id="am-type">
+                        <option>Equipment</option>
+                        <option>Vehicle</option>
+                        <option>Tool</option>
+                        <option>Security Deposit</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Date</label><input type="date" id="am-date"></div>
+                <div class="fi"><label>Value (₹)</label><input type="number" id="am-val" placeholder="0" min="0"></div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Location / Site</label><input type="text" id="am-loc" placeholder="Site name">
+                </div>
+                <div class="fi"><label>Status</label>
+                    <select id="am-status">
+                        <option>Active</option>
+                        <option>In Use</option>
+                        <option>Damaged</option>
+                        <option>Disposed</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-teal" style="flex:1" onclick="saveAsset()">Save Asset</button>
+                <button class="btn btn-ghost" onclick="closeModal('assetModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="stockModal">
+        <div class="modal">
+            <h3>Stock Transfer</h3>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Material</label><input type="text" id="stm-mat" placeholder="Material name">
+                </div>
+                <div class="fi"><label>Date</label><input type="date" id="stm-date"></div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>From Site</label><input type="text" id="stm-from" placeholder="Source"></div>
+                <div class="fi"><label>To Site</label><input type="text" id="stm-to" placeholder="Destination"></div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Qty / Unit</label><input type="text" id="stm-qty" placeholder="e.g. 50 bags">
+                </div>
+                <div class="fi"><label>Value (₹)</label><input type="number" id="stm-val" placeholder="0"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-teal" style="flex:1" onclick="saveStock()">Save Transfer</button>
+                <button class="btn btn-ghost" onclick="closeModal('stockModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="purchaseModal">
+        <div class="modal">
+            <h3>New Purchase Entry</h3>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Date</label><input type="date" id="pm-date"></div>
+                <div class="fi"><label>Type</label>
+                    <select id="pm-type">
+                        <option value="PR">Purchase Request (PR)</option>
+                        <option value="PO">Purchase Order (PO)</option>
+                        <option value="PB">Purchase Bill (PB)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Ref No</label><input type="text" id="pm-ref" placeholder="PR/PO/Bill No"></div>
+                <div class="fi"><label>Vendor Name</label><input type="text" id="pm-vendor"
+                        placeholder="Vendor / Supplier"></div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Description</label><input type="text" id="pm-desc" placeholder="Items / Work">
+                </div>
+                <div class="fi"><label>Amount (₹)</label><input type="number" id="pm-amt" placeholder="0" min="0"></div>
+            </div>
+            <div class="fi" style="margin-bottom:14px"><label>Site</label>
+                <select id="pm-site"></select>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-teal" style="flex:1" onclick="savePurchase()">Save Entry</button>
+                <button class="btn btn-ghost" onclick="closeModal('purchaseModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="attendanceModal">
+        <div class="modal">
+            <h3>Mark Attendance</h3>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Date</label><input type="date" id="attm-date"></div>
+                <div class="fi"><label>Site</label><select id="attm-site"></select></div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Staff Name</label><input type="text" id="attm-name"
+                        placeholder="Worker / Staff name"></div>
+                <div class="fi"><label>Designation</label><input type="text" id="attm-desig"
+                        placeholder="Role / Designation"></div>
+            </div>
+            <div class="form-grid fg3" style="margin-bottom:10px">
+                <div class="fi"><label>Status</label>
+                    <select id="attm-status">
+                        <option value="P">Present</option>
+                        <option value="A">Absent</option>
+                        <option value="H">Half Day</option>
+                        <option value="L">Leave</option>
+                    </select>
+                </div>
+                <div class="fi"><label>Days</label><input type="number" id="attm-days" value="1" min="0.5" max="1"
+                        step="0.5"></div>
+                <div class="fi"><label>Daily Wage (₹)</label><input type="number" id="attm-wage" placeholder="0"
+                        min="0"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-teal" style="flex:1" onclick="saveAttendance()">Save</button>
+                <button class="btn btn-ghost" onclick="closeModal('attendanceModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="travelModal">
+        <div class="modal">
+            <h3>Travel Allowance</h3>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Date</label><input type="date" id="trm-date"></div>
+                <div class="fi"><label>Site</label><select id="trm-site"></select></div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Staff Name</label><input type="text" id="trm-name" placeholder="Name"></div>
+                <div class="fi"><label>From → To</label><input type="text" id="trm-route"
+                        placeholder="e.g. Kozhikode → Site A"></div>
+            </div>
+            <div class="form-grid fg2" style="margin-bottom:10px">
+                <div class="fi"><label>Mode</label>
+                    <select id="trm-mode">
+                        <option>Bus</option>
+                        <option>Auto</option>
+                        <option>Bike</option>
+                        <option>Car</option>
+                        <option>Train</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="fi"><label>Amount (₹)</label><input type="number" id="trm-amt" placeholder="0" min="0">
+                </div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-teal" style="flex:1" onclick="saveTravel()">Save</button>
+                <button class="btn btn-ghost" onclick="closeModal('travelModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-bg" id="qrModal">
+        <div class="modal" style="text-align:center;max-width:320px">
+            <h3 id="qrTitle">Pay via UPI</h3>
+            <p id="qrVendor" style="color:var(--dim);margin-bottom:10px"></p>
+            <div style="background:white;padding:10px;border-radius:8px;display:inline-block;margin-bottom:10px">
+                <img id="qrImg" src="" alt="QR Code" style="display:block;width:200px;height:200px">
+            </div>
+            <div class="stat-value" id="qrAmt" style="font-size:24px;margin-bottom:14px"></div>
+            <p style="font-size:12px;color:var(--dim);margin-bottom:14px">Scan this QR code using Google Pay, PhonePe, or any UPI app to pay.</p>
+            <button class="btn btn-teal" style="width:100%" onclick="closeModal('qrModal')">Done / Close</button>
+        </div>
+    </div>
+    <script>
+        // ══ CONSTANTS & STATE ════════════════════════════════════════════
+        const STORE_KEY = "meridian_builders_v1";
+        const PASS = "Xa#M1";
+        const SESSION_KEY = "mb_unlocked";
+        const DEF_MAT = ["Stone", "Cement", "Sand", "Metal", "Steel"];
+        const DEF_LAB = ["Stone Masonry", "Concrete Mason", "Man Labor", "Plastering"];
+
+        let sites = [];
+        let tenders = [];
+        let assets = [];
+        let stocks = [];
+        let purchases = [];
+        let attendance = [];
+        let travels = [];
+        let vendors = [];
+        let labourers = [];
+        let bankAccounts = [];
+        let bankDeposits = [];
+        let openSite = null;
+        let openSec = {};
+        let openCat = {};
+        let addCatCtx = null;
+        let fbConnected = false;
+        let saveTimer = null;
+        let sbCollapsed = false;
+        let activeNav = "dashboard";
+        let vsFilters = { site: "", type: "", cat: "" };
+        let dbFilters = { from: "", to: "", site: "", type: "" };
+        let editTenderIdx = -1;

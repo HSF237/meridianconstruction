@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meridian Construction — IE Manager</title>
+    <title>Meridian Construction - IE Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Firebase SDKs -->
@@ -46,6 +46,10 @@
             background: #F0F2F5;
             color: #1a1a1a;
             font-size: 13px
+        }
+
+        body.lock-scroll {
+            overflow: hidden
         }
 
         .topbar {
@@ -194,35 +198,37 @@
 
         .main {
             padding: 16px 18px;
-            max-width: 1200px
+            max-width: 100%
         }
 
         .dash-cards {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 10px;
             margin-bottom: 16px
         }
 
         .dcard {
-            background: #fff;
+            background: #f9f9f9;
             border-radius: 8px;
-            padding: 14px 16px;
-            border: 1px solid #e0e0e0
+            padding: 18px 16px;
+            border: 1px solid #e8e8e8;
+            transition: all .2s ease
         }
 
         .dcard .dl {
-            font-size: 11px;
-            color: #888;
-            margin-bottom: 4px;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: .4px
+            letter-spacing: .5px
         }
 
         .dcard .dv {
-            font-size: 20px;
-            font-weight: 700
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.2
         }
 
         .dv-green {
@@ -350,6 +356,23 @@
             overflow: hidden
         }
 
+        .site-card.expanded-view {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            border-radius: 0;
+            overflow-y: auto;
+            background: #F0F2F5
+        }
+
+        .site-card.expanded-view .site-hdr {
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            padding: 14px 18px;
+            border-radius: 0
+        }
+
         .site-hdr {
             display: flex;
             align-items: center;
@@ -438,8 +461,8 @@
         }
 
         .sec-tab {
-            padding: 9px 12px;
-            font-size: 12px;
+            padding: 12px 20px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             color: #666;
@@ -459,8 +482,10 @@
         }
 
         .sec-panel {
-            padding: 16px;
-            display: none
+            padding: 20px;
+            display: none;
+            background: #fff;
+            min-height: calc(100vh - 120px)
         }
 
         .sec-panel.on {
@@ -690,7 +715,7 @@
 
         .sum-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-bottom: 14px
         }
@@ -857,7 +882,7 @@
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, .45);
-            z-index: 200;
+            z-index: 1500;
             align-items: center;
             justify-content: center
         }
@@ -902,6 +927,15 @@
             font-size: 11px;
             color: #666;
             margin-top: 2px
+        }
+
+        @media(max-width:1100px) {
+            .dash-cards {
+                grid-template-columns: repeat(3, 1fr)
+            }
+            .sum-grid {
+                grid-template-columns: 1fr 1fr
+            }
         }
 
         @media(max-width:700px) {
@@ -984,7 +1018,8 @@
             .add-cat-btn,
             .del-btn,
             .mode-toggle,
-            .cloud-status {
+            .cloud-status,
+            .db-stats {
                 display: none !important
             }
 
@@ -992,6 +1027,11 @@
                 border: none;
                 box-shadow: none;
                 break-inside: avoid
+            }
+
+            /* Hide all site cards except the one being printed */
+            .site-card:not(.print-target) {
+                display: none !important
             }
 
             .site-hdr {
@@ -1008,8 +1048,34 @@
                 border: none
             }
 
+            /* Fix: only show the active section, not all four */
             .sec-panel {
-                display: block !important
+                display: none !important
+            }
+
+            .sec-panel.on {
+                display: block !important;
+                min-height: 0 !important
+            }
+
+            /* Fix: expanded-view uses position:fixed which clips scrolled content */
+            .site-card.expanded-view {
+                position: static !important;
+                overflow: visible !important;
+                height: auto !important;
+                z-index: auto !important;
+                background: #fff !important
+            }
+
+            .site-card.expanded-view .site-hdr {
+                position: static !important;
+                z-index: auto !important
+            }
+
+            /* Allow body to scroll so all content reaches the print engine */
+            body.lock-scroll {
+                overflow: auto !important;
+                height: auto !important
             }
 
             body {
@@ -1029,17 +1095,26 @@
             .ctab .rm {
                 display: none
             }
+
+            /* Print-friendly summary cards */
+            .sum-grid {
+                break-inside: avoid
+            }
+
+            .tbl-wrap {
+                break-inside: avoid
+            }
         }
 
-        /* ── Elevation & depth ───────────────────────── */
+        /* -- Elevation & depth ------------------------- */
         .dcard {
-            box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
-            transition: box-shadow .18s, transform .18s
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+            transition: box-shadow .2s, transform .2s
         }
 
         .dcard:hover {
-            box-shadow: 0 4px 14px rgba(0, 0, 0, .11);
-            transform: translateY(-2px)
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+            transform: translateY(-1px)
         }
 
         .site-card {
@@ -1055,13 +1130,13 @@
             box-shadow: 0 1px 4px rgba(0, 0, 0, .06)
         }
 
-        /* ── Topbar gradient accent ──────────────────── */
+        /* -- Topbar gradient accent -------------------- */
         .topbar {
             background: linear-gradient(135deg, #152F4A 0%, #1A3C5E 60%, #21527F 100%);
             border-bottom: 2px solid #0D2439
         }
 
-        /* ── Dashboard stat card left-border accents ─── */
+        /* -- Dashboard stat card left-border accents --- */
         .dcard.dv-green-card {
             border-left: 4px solid #1D9E75
         }
@@ -1078,13 +1153,13 @@
             border-left: 4px solid #185FA5
         }
 
-        /* ── Button press feedback ───────────────────── */
+        /* -- Button press feedback --------------------- */
         .btn:active {
             transform: scale(.97);
             opacity: 1
         }
 
-        /* ── Input improvements ──────────────────────── */
+        /* -- Input improvements ------------------------ */
         .fi input,
         .fi select {
             transition: border-color .15s, box-shadow .15s
@@ -1095,7 +1170,7 @@
             border-color: #999
         }
 
-        /* ── Striped table rows ──────────────────────── */
+        /* -- Striped table rows ------------------------ */
         .etbl tbody tr:nth-child(even) td {
             background: #FAFBFD
         }
@@ -1112,7 +1187,7 @@
             background: #F0F4FA
         }
 
-        /* ── Smooth tab underline transition ─────────── */
+        /* -- Smooth tab underline transition ----------- */
         .nav-tab,
         .sec-tab {
             transition: color .15s, background .15s, border-bottom-color .15s
@@ -1126,7 +1201,7 @@
             box-shadow: 0 1px 5px rgba(26, 60, 94, .25)
         }
 
-        /* ── Notification animation ──────────────────── */
+        /* -- Notification animation -------------------- */
         .notif {
             bottom: 24px;
             right: 24px;
@@ -1143,7 +1218,7 @@
             transform: translateY(8px)
         }
 
-        /* ── Cloud-sync pill pulse ───────────────────── */
+        /* -- Cloud-sync pill pulse --------------------- */
         @keyframes pulse-dot {
 
             0%,
@@ -1167,7 +1242,7 @@
             margin-right: 2px
         }
 
-        /* ── Modal polish ────────────────────────────── */
+        /* -- Modal polish ------------------------------ */
         .modal {
             box-shadow: 0 8px 32px rgba(0, 0, 0, .22);
             animation: modal-in .18s ease
@@ -1189,7 +1264,7 @@
             backdrop-filter: blur(2px)
         }
 
-        /* ── Summary cards ───────────────────────────── */
+        /* -- Summary cards ----------------------------- */
         .scard {
             box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
             transition: box-shadow .18s
@@ -1199,7 +1274,7 @@
             box-shadow: 0 3px 10px rgba(0, 0, 0, .10)
         }
 
-        /* ── Scrollbar (Webkit) ──────────────────────── */
+        /* -- Scrollbar (Webkit) ------------------------ */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px
@@ -1218,7 +1293,7 @@
             background: #78909C
         }
 
-        /* ── Nav tab active indicator dot ────────────── */
+        /* -- Nav tab active indicator dot -------------- */
         .nav-tab.on::after {
             content: "";
             display: block;
@@ -1229,7 +1304,7 @@
             margin: 2px auto 0
         }
 
-        /* ── Empty-row style ─────────────────────────── */
+        /* -- Empty-row style --------------------------- */
         .empty-row td {
             background: #FAFBFD;
             border-radius: 6px;
@@ -1237,7 +1312,7 @@
             font-size: 12px
         }
 
-        /* ── Delete button transition ────────────────── */
+        /* -- Delete button transition ------------------ */
         .etbl .del-btn {
             transition: color .15s, transform .15s
         }
@@ -1246,7 +1321,7 @@
             transform: scale(1.2)
         }
 
-        /* ── Password lock screen ────────────────────── */
+        /* -- Password lock screen ---------------------- */
         #lockScreen {
             position: fixed;
             inset: 0;
@@ -1388,6 +1463,57 @@
                 transform: translateX(5px)
             }
         }
+
+        /* -- Daybook tab amber highlight -------------- */
+        .nav-tab.daybook-tab {
+            color: #9A6010;
+            font-weight: 700
+        }
+
+        .nav-tab.daybook-tab:hover {
+            color: #BA7517;
+            background: #FFFBF0
+        }
+
+        .nav-tab.daybook-tab.on {
+            color: #BA7517;
+            border-bottom-color: #F0A500;
+            background: #FFFBF0
+        }
+
+        .nav-tab.daybook-tab.on::after {
+            background: #BA7517
+        }
+
+        /* -- View sub-tabs (inside a top-level tab) --- */
+        .view-subtabs {
+            background: #F8F9FB;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            padding: 0 16px;
+            gap: 2px
+        }
+
+        .view-subtab {
+            padding: 9px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap
+        }
+
+        .view-subtab:hover {
+            color: #1A3C5E;
+            background: #F0F3F8
+        }
+
+        .view-subtab.on {
+            color: #1A3C5E;
+            border-bottom-color: #1A3C5E;
+            background: #fff
+        }
     </style>
 </head>
 
@@ -1414,7 +1540,7 @@
         <div class="topbar">
             <div class="tb-left">
                 <h1>&#127959; Meridian Construction Company</h1>
-                <p>Income &amp; Expenditure — Site Manager</p>
+                <p>Income &amp; Expenditure - Site Manager</p>
             </div>
             <div class="tb-right">
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
@@ -1426,15 +1552,16 @@
 
         <div class="nav-tabs">
             <div class="nav-tab on" id="nt-dash" onclick="showTab('dash')">&#9632; Dashboard</div>
-            <div class="nav-tab" id="nt-sites" onclick="showTab('sites')">&#9776; All Sites</div>
-            <div class="nav-tab" id="nt-vsummary" onclick="showTab('vsummary')">&#128200; Vendor & Labour Summary</div>
-            <div class="nav-tab" id="nt-daybook" onclick="showTab('daybook')">&#128218; Day Book</div>
+            <div class="nav-tab" id="nt-accts" onclick="showTab('accts')">&#127981; Bank Account Statements</div>
+            <div class="nav-tab" id="nt-vendors" onclick="showTab('vendors')">&#128722; Suppliers</div>
+            <div class="nav-tab" id="nt-labours" onclick="showTab('labours')">&#128119; Workers</div>
+            <div class="nav-tab daybook-tab" id="nt-daybook" onclick="showTab('daybook')">&#128218; Daybook</div>
         </div>
 
         <div class="main">
             <div class="add-site-bar" id="addSiteBar">
                 <div class="fi" style="flex:1;min-width:200px"><label>New Site Name</label><input type="text"
-                        id="newSiteName" placeholder="e.g. Site 21 — Kavya Residency"
+                        id="newSiteName" placeholder="e.g. Site 21 - Kavya Residency"
                         onkeydown="if(event.key==='Enter')addSite()"></div>
                 <button class="btn btn-green" onclick="addSite()">Add</button>
                 <button class="btn btn-grey" onclick="toggleAddSite()">Cancel</button>
@@ -1442,60 +1569,26 @@
 
             <div id="view-dash">
                 <div class="dash-cards" id="dashCards"></div>
-                <div class="dash-tbl-wrap">
-                    <div class="dash-tbl-hdr">
-                        <span>All Sites — Income &amp; Expenditure Summary</span>
-                        <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
-                            onclick="window.print()">&#128424; Print</button>
-                    </div>
-                    <div class="print-header">
-                        <h2>Meridian Construction Company</h2>
-                        <p>Dashboard — All Sites Summary</p>
-                    </div>
-                    <table class="dash-tbl">
-                        <thead>
-                            <tr>
-                                <th style="width:28%">Site</th>
-                                <th>Receipts (&#8377;)</th>
-                                <th>Expense (&#8377;)</th>
-                                <th>Profit 15% (&#8377;)</th>
-                                <th>Balance (&#8377;)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dashBody"></tbody>
-                    </table>
-                </div>
+                <div class="sites-list" id="dashSitesList" style="margin-top:16px"></div>
             </div>
 
             <div id="view-sites" style="display:none">
                 <div class="sites-list" id="sitesList"></div>
             </div>
+            <div id="view-accts" style="display:none"></div>
+            <div id="view-vendors" style="display:none"></div>
+            <div id="view-labours" style="display:none"></div>
 
-            <div id="view-vsummary" style="display:none">
+<div id="view-daybook" style="display:none">
                 <div class="dash-tbl-wrap">
                     <div class="dash-tbl-hdr">
-                        <span>&#128200; Vendor &amp; Labour Summary — All Sites</span>
+                        <span>&#128218; Day Book - Transaction Register</span>
                         <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
                             onclick="window.print()">&#128424; Print</button>
                     </div>
                     <div class="print-header">
                         <h2>Meridian Construction Company</h2>
-                        <p>Vendor &amp; Labour Summary — All Sites</p>
-                    </div>
-                    <div id="vsummaryContent"></div>
-                </div>
-            </div>
-
-            <div id="view-daybook" style="display:none">
-                <div class="dash-tbl-wrap">
-                    <div class="dash-tbl-hdr">
-                        <span>&#128218; Day Book — Transaction Register</span>
-                        <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
-                            onclick="window.print()">&#128424; Print</button>
-                    </div>
-                    <div class="print-header">
-                        <h2>Meridian Construction Company</h2>
-                        <p>Day Book — Transaction Register</p>
+                        <p>Day Book - Transaction Register</p>
                     </div>
                     <div id="daybookContent"></div>
                 </div>
@@ -1503,13 +1596,60 @@
         </div>
 
         <div class="modal-bg" id="addCatModal">
-            <div class="modal">
+            <div class="modal" style="width:440px">
                 <h3 id="addCatTitle">Add New Category</h3>
-                <div class="fi"><label>Category Name</label><input type="text" id="addCatName"
-                        placeholder="e.g. Timber, Roofing..." onkeydown="if(event.key==='Enter')confirmAddCat()"></div>
+                <div class="fi" style="margin-bottom:10px">
+                    <label>Category Name <span style="color:#C00000">*</span></label>
+                    <input type="text" id="addCatName" placeholder="e.g. Stone Masonry, Plastering..." onkeydown="if(event.key==='Enter')confirmAddCat()">
+                </div>
+                <div id="addCatSCSection" style="display:none">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:#F5F3FF;border:1px solid #C4B5FD;border-radius:7px">
+                        <input type="checkbox" id="addCatIsSC" onchange="toggleAddCatSC()" style="width:16px;height:16px;cursor:pointer">
+                        <label for="addCatIsSC" style="font-weight:600;color:#4C1D95;cursor:pointer;margin:0">This is a Subcontract category</label>
+                    </div>
+                    <div id="addCatSCFields" style="display:none">
+                        <div class="fi" style="margin-bottom:10px">
+                            <label>Subcontractor Name <span style="color:#C00000">*</span></label>
+                            <input type="text" id="addCatSCName" placeholder="Contractor / firm name">
+                        </div>
+                        <div class="fi" style="margin-bottom:10px">
+                            <label>Contract Amount (₹) <span style="color:#C00000">*</span></label>
+                            <input type="number" id="addCatSCAmt" placeholder="Total contract value" min="0">
+                        </div>
+                        <div class="fi" style="margin-bottom:10px">
+                            <label>Work Description</label>
+                            <input type="text" id="addCatSCDesc" placeholder="Scope of work (optional)">
+                        </div>
+                    </div>
+                </div>
                 <div style="display:flex;gap:8px;margin-top:14px">
                     <button class="btn btn-blue" style="flex:1" onclick="confirmAddCat()">Add</button>
                     <button class="btn btn-grey" onclick="closeModal('addCatModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-bg" id="addPartyModal">
+            <div class="modal" style="width:420px">
+                <h3 id="addPartyTitle">Add New Supplier</h3>
+                <div class="fi" style="margin-bottom:10px">
+                    <label>Name <span style="color:#C00000">*</span></label>
+                    <input type="text" id="addPartyName" placeholder="Full name" onkeydown="if(event.key==='Enter')confirmAddParty()">
+                    <div id="addPartyNameErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">Name is required</div>
+                </div>
+                <div class="fi" style="margin-bottom:10px">
+                    <label>Phone Number <span style="color:#C00000">*</span></label>
+                    <input type="tel" id="addPartyPhone" placeholder="10-digit mobile number" onkeydown="if(event.key==='Enter')confirmAddParty()">
+                    <div id="addPartyPhoneErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">Phone number is required</div>
+                </div>
+                <div class="fi" style="margin-bottom:10px">
+                    <label>UPI / GPay ID <span style="color:#C00000">*</span></label>
+                    <input type="text" id="addPartyUPI" placeholder="e.g. name@upi or 9876543210@ybl" onkeydown="if(event.key==='Enter')confirmAddParty()">
+                    <div id="addPartyUPIErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">UPI ID is required for payment</div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:16px">
+                    <button class="btn btn-green" style="flex:1" onclick="confirmAddParty()">&#10003; Add</button>
+                    <button class="btn btn-grey" onclick="closeModal('addPartyModal')">Cancel</button>
                 </div>
             </div>
         </div>
@@ -1524,14 +1664,21 @@
             const DEF_LAB = ["Stone Masonry", "Concrete Mason", "Man Labor", "Plastering"];
 
             let sites = [];
+            let vendors = [];
+            let labourers = [];
+            let bankAccounts = [];
             let openSite = null;
             let openSec = {};
             let openCat = {};
             let addCatCtx = null;
+            let addPartyCtx = null;
+            let acctSite = 0;
+            let vendSite = 0;
+            let labSite = 0;
             let fbConnected = false;
             let saveTimer = null;
 
-            // ── SITE FACTORY ──
+            // -- SITE FACTORY --
             function mkSite(name) {
                 return {
                     name,
@@ -1549,23 +1696,33 @@
                 if (!s.mat) s.mat = {};
                 if (!s.lab) s.lab = {};
                 if (!s.cash) s.cash = [];
-                s.matCats.forEach(c => { if (!s.mat[c]) s.mat[c] = []; });
+                s.matCats.forEach(c => {
+                    if (!s.mat[c]) s.mat[c] = [];
+                    s.mat[c].forEach(r => {
+                        if (r.vendor && !r.det) r.det = r.vendor;
+                        if (r.paid === undefined || r.paid === null) r.paid = r.amt || 0;
+                    });
+                });
                 s.labCats.forEach(c => {
                     if (!s.lab[c]) s.lab[c] = { daily: [], contract: null, scName: "", scDesc: "" };
                     if (Array.isArray(s.lab[c])) s.lab[c] = { daily: s.lab[c], contract: null, scName: "", scDesc: "" };
                     if (!s.lab[c].daily) s.lab[c].daily = [];
+                    s.lab[c].daily.forEach(r => {
+                        if (r.worker && !r.part) r.part = r.worker;
+                        if (r.paid === undefined || r.paid === null) r.paid = r.amt || 0;
+                    });
                 });
                 return s;
             }
 
-            // ── CLOUD STATUS ──
+            // -- CLOUD STATUS --
             function setCloudStatus(state, text) {
                 const el = document.getElementById("cloudStatus");
                 el.className = "cloud-status cloud-" + state;
                 el.innerHTML = text;
             }
 
-            // ── LOAD ──
+            // -- LOAD --
             async function loadData() {
                 // Try Firebase first
                 if (window.firebaseReady && window.db) {
@@ -1577,14 +1734,17 @@
                             const d = snap.data();
                             if (d.sites && d.sites.length > 0) {
                                 sites = d.sites.map(migrateSite);
+                                vendors = d.vendors || [];
+                                labourers = d.labourers || [];
+                                bankAccounts = d.bankAccounts || [];
                                 fbConnected = true;
                                 setCloudStatus("synced", "&#9728; Cloud Synced");
                                 // Also save to localStorage as backup
-                                localStorage.setItem(STORE_KEY, JSON.stringify({ sites }));
+                                localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts }));
                                 return;
                             }
                         }
-                        // No cloud data yet — load local or default, then push to cloud
+                        // No cloud data yet - load local or default, then push to cloud
                         loadLocal();
                         fbConnected = true;
                         saveData();
@@ -1607,19 +1767,28 @@
                     if (raw) {
                         const d = JSON.parse(raw);
                         sites = (d.sites || []).map(migrateSite);
+                        vendors = d.vendors || [];
+                        labourers = d.labourers || [];
+                        bankAccounts = d.bankAccounts || [];
                     } else {
                         for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
+                        vendors = [];
+                        labourers = [];
+                        bankAccounts = [];
                     }
                 } catch (e) {
                     sites = [];
+                    vendors = [];
+                    labourers = [];
+                    bankAccounts = [];
                     for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                 }
             }
 
-            // ── SAVE (local instant + cloud debounced) ──
+            // -- SAVE (local instant + cloud debounced) --
             function saveData() {
                 // Always save locally instantly
-                try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites })); } catch (e) { }
+                try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts })); } catch (e) { }
 
                 // Debounce cloud save
                 if (saveTimer) clearTimeout(saveTimer);
@@ -1631,7 +1800,7 @@
                     try {
                         setCloudStatus("syncing", "&#9881; Saving...");
                         const ref = window.fsDoc(window.db, "meridian", "main");
-                        await window.fsSetDoc(ref, { sites, updated: new Date().toISOString() });
+                        await window.fsSetDoc(ref, { sites, vendors, labourers, bankAccounts, updated: new Date().toISOString() });
                         setCloudStatus("synced", "&#9728; Cloud Synced");
                     } catch (e) {
                         console.error("Cloud save error:", e);
@@ -1640,29 +1809,49 @@
                 }, 800);
             }
 
-            // ── CALC ──
+            // -- CALC --
             function calc(i) {
                 const s = sites[i];
                 const rec = s.cash.reduce((a, r) => a + (r.amt || 0), 0);
-                let matExp = 0;
-                s.matCats.forEach(c => { matExp += (s.mat[c] || []).reduce((a, r) => a + (r.amt || 0), 0); });
-                let labExp = 0;
+                let matExp = 0, matPaid = 0;
+                s.matCats.forEach(c => { 
+                    (s.mat[c] || []).forEach(r => {
+                        matExp += (r.amt || 0);
+                        matPaid += (r.paid || 0);
+                    });
+                });
+                let labExp = 0, labPaid = 0;
                 s.labCats.forEach(c => {
                     const lb = s.lab[c] || { daily: [], contract: null };
-                    labExp += (lb.contract !== null ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0));
+                    if (lb.contract !== null) {
+                        labExp += lb.contract;
+                        labPaid += lb.contract; // Contracts assumed paid
+                    } else {
+                        (lb.daily || []).forEach(r => {
+                            labExp += (r.amt || 0);
+                            labPaid += (r.paid || 0);
+                        });
+                    }
                 });
                 const exp = matExp + labExp;
+                const paid = matPaid + labPaid;
+                const pending = exp - paid;
                 const prof = Math.round(exp * PT);
                 const bal = Math.round(rec - exp - prof);
-                return { rec, matExp, labExp, exp, prof, bal };
+                return { rec, matExp, labExp, exp, prof, bal, paid, pending };
             }
 
             function fmt(n) {
-                if (n === null || n === undefined || isNaN(n)) return "—";
+                if (n === null || n === undefined || isNaN(n)) return "-";
                 return "\u20B9" + Math.round(n).toLocaleString("en-IN");
             }
+            function fmtSigned(n) {
+                if (n === null || n === undefined || isNaN(n)) return "-";
+                const s = fmt(Math.abs(n));
+                return n < 0 ? "(" + s + ")" : s;
+            }
             function fmtDate(d) {
-                if (!d) return "—";
+                if (!d) return "-";
                 try { const p = d.split("-"); return p[2] + "-" + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+p[1] - 1] + "-" + p[0]; }
                 catch { return d; }
             }
@@ -1670,201 +1859,105 @@
                 if (s === null || s === undefined) return "";
                 return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\\/g, "&#92;").replace(/'/g, "&#39;");
             }
+            function jsq(s) {
+                return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/\r/g, "");
+            }
 
-            // ── NAVIGATION ──
+            // -- NAVIGATION --
             function showTab(t) {
-                ["dash", "sites", "vsummary", "daybook"].forEach(v => {
-                    document.getElementById("view-" + v).style.display = t === v ? "block" : "none";
-                    document.getElementById("nt-" + v).className = "nav-tab" + (t === v ? " on" : "");
+                ["dash", "sites", "accts", "vendors", "labours", "daybook"].forEach(v => {
+                    const el = document.getElementById("view-" + v);
+                    if (el) el.style.display = t === v ? "block" : "none";
+                });
+                ["dash", "accts", "vendors", "labours", "daybook"].forEach(v => {
+                    const el = document.getElementById("nt-" + v);
+                    if (el) {
+                        const extra = v === "daybook" ? " daybook-tab" : "";
+                        el.className = "nav-tab" + extra + (t === v ? " on" : "");
+                    }
                 });
                 if (t === "dash") renderDash();
                 if (t === "sites") renderSites();
-                if (t === "vsummary") renderVendorSummary();
+                if (t === "accts") renderAccounts();
+                if (t === "vendors") renderVendors();
+                if (t === "labours") renderLabours();
                 if (t === "daybook") renderDayBook();
             }
 
-            // ── DASHBOARD ──
+            // -- DASHBOARD --
             function renderDash() {
-                let tR = 0, tE = 0, tP = 0, tB = 0;
-                sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; });
+                let tR = 0, tE = 0, tP = 0, tB = 0, tPend = 0;
+                sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; tPend += c.pending; });
+                const { cashInHand } = calcCashInHand();
+                const balBank = bankAccounts.reduce((a, acc) => a + calcBankAcc(acc).balance, 0);
+                const balTotal = cashInHand + balBank;
+                
                 document.getElementById("dashCards").innerHTML = `
-    <div class="dcard"><div class="dl">Total Receipts</div><div class="dv dv-green">${fmt(tR)}</div></div>
-    <div class="dcard"><div class="dl">Total Expenditure</div><div class="dv dv-red">${fmt(tE)}</div></div>
-    <div class="dcard"><div class="dl">Total Profit (15%)</div><div class="dv dv-amber">${fmt(tP)}</div></div>
-    <div class="dcard"><div class="dl">Net Balance</div><div class="dv dv-blue">${fmt(tB)}</div></div>`;
-                let rows = "";
-                sites.forEach((s, i) => {
-                    const c = calc(i);
-                    const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
-                    const bc = c.bal >= 0 ? "bal-p" : "bal-n";
-                    rows += `<tr><td><span class="site-lnk" onclick="goSite(${i})">${esc(s.name)}</span>${hasSC ? '<span class="sc-pill">SC</span>' : ''}</td><td>${fmt(c.rec)}</td><td>${fmt(c.exp)}</td><td>${fmt(c.prof)}</td><td class="${bc}">${fmt(c.bal)}</td></tr>`;
-                });
-                rows += `<tr class="gt"><td>GRAND TOTAL — ALL SITES</td><td>${fmt(tR)}</td><td>${fmt(tE)}</td><td>${fmt(tP)}</td><td>${fmt(tB)}</td></tr>`;
-                document.getElementById("dashBody").innerHTML = rows;
+    <div class="dcard"><div class="dl">Total Income</div><div class="dv dv-green">${fmt(tR)}</div></div>
+    <div class="dcard"><div class="dl">Total Expense</div><div class="dv dv-red">${fmt(tE)}</div></div>
+    <div class="dcard"><div class="dl">Payment Pending</div><div class="dv dv-amber">${fmt(tPend)}</div></div>
+    <div class="dcard"><div class="dl">Cash in Hand</div><div class="dv dv-blue">${fmt(cashInHand)}</div></div>
+    <div class="dcard"><div class="dl">Balance in Bank</div><div class="dv dv-blue">${fmt(balBank)}</div></div>
+    <div class="dcard"><div class="dl">Total Balance</div><div class="dv dv-green">${fmt(balTotal)}</div></div>`;
+
+                renderSitesInto("dashSitesList");
+            }
+            
+            function calcCashInHand() {
+                const totalReceipts = sites.reduce((a, s) => a + s.cash.reduce((b, r) => b + (r.amt || 0), 0), 0);
+                const totalDeposited = bankAccounts.reduce((a, acc) => a + (acc.transactions || []).filter(t => t.type === "cr").reduce((b, t) => b + (t.amt || 0), 0), 0);
+                return { totalReceipts, totalDeposited, cashInHand: totalReceipts - totalDeposited };
+            }
+            
+            function calcBankAcc(acc) {
+                const txns = acc.transactions || [];
+                const totalCredits = txns.filter(t => t.type === "cr").reduce((a, t) => a + (t.amt || 0), 0);
+                const totalDebits = txns.filter(t => t.type === "dr").reduce((a, t) => a + (t.amt || 0), 0);
+                return { totalCredits, totalDebits, balance: (acc.openingBal || 0) + totalCredits - totalDebits };
             }
 
             function goSite(i) {
-                showTab("sites"); openSite = i; renderSites();
-                setTimeout(() => { const el = document.getElementById("sc-" + i); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 80);
+                openSite = i;
+                showTab("dash");
+                setTimeout(() => {
+                    const el = document.getElementById("sc-" + i);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 50);
             }
 
-            // ── VENDOR SUMMARY ──
-            let vsFilters = { site: "", type: "", cat: "" };
+            let vsFilters = { site: "" };
+            let wkFilters = { site: "" };
 
-            function vsFilter() {
-                ["vs-site", "vs-type", "vs-cat"].forEach((id, k) => {
-                    const el = document.getElementById(id);
-                    if (el) vsFilters[["site", "type", "cat"][k]] = el.value;
-                });
-                renderVendorSummary();
-            }
-
-            function vsTypeChange() {
-                const el = document.getElementById("vs-type");
-                if (el) vsFilters.type = el.value;
-                vsFilters.cat = "";
-                renderVendorSummary();
-            }
-
-            function clearVsFilters() {
-                vsFilters = { site: "", type: "", cat: "" };
-                renderVendorSummary();
-            }
-
-            function renderVendorSummary() {
-                const siteIdx = vsFilters.site !== "" ? parseInt(vsFilters.site) : -1;
-                const typeF = vsFilters.type;
-                const catF = vsFilters.cat;
-
-                // Collect available categories scoped to site filter
-                const scopedMatCats = new Set();
-                const scopedLabCats = new Set();
-                sites.forEach((s, i) => {
-                    if (siteIdx >= 0 && siteIdx !== i) return;
-                    s.matCats.forEach(c => scopedMatCats.add(c));
-                    s.labCats.forEach(c => scopedLabCats.add(c));
-                });
-
-                // Build dropdowns
-                const siteOptions = `<option value="">All Sites</option>` +
-                    sites.map((s, i) => `<option value="${i}"${vsFilters.site === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
-
-                let catOptions = `<option value="">All Categories</option>`;
-                if (!typeF || typeF === "mat") scopedMatCats.forEach(c => { catOptions += `<option value="mat:${esc(c)}"${catF === "mat:" + c ? " selected" : ""}>Material: ${esc(c)}</option>`; });
-                if (!typeF || typeF === "lab") scopedLabCats.forEach(c => { catOptions += `<option value="lab:${esc(c)}"${catF === "lab:" + c ? " selected" : ""}>Labour: ${esc(c)}</option>`; });
-
-                let html = "";
-                let grandTotal = 0;
-
-                // Materials
-                if (!typeF || typeF === "mat") {
-                    scopedMatCats.forEach(cat => {
-                        if (catF && catF !== "mat:" + cat) return;
-                        let catTotal = 0;
-                        let siteRows = "";
-                        sites.forEach((s, i) => {
-                            if (siteIdx >= 0 && siteIdx !== i) return;
-                            const entries = s.mat[cat] || [];
-                            if (entries.length === 0) return;
-                            const sub = entries.reduce((a, r) => a + (r.amt || 0), 0);
-                            catTotal += sub;
-                            const vendors = {};
-                            entries.forEach(r => {
-                                const v = r.det || "(No vendor name)";
-                                if (!vendors[v]) vendors[v] = { amt: 0, bills: [] };
-                                vendors[v].amt += (r.amt || 0);
-                                if (r.bill) vendors[v].bills.push(r.bill);
-                            });
-                            Object.entries(vendors).forEach(([v, info]) => {
-                                const billStr = info.bills.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.bills.join(", "))}]</span>` : "";
-                                siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(v)}${billStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
-                            });
-                        });
-                        if (!siteRows) return;
-                        grandTotal += catTotal;
-                        html += `<div class="vsec-hdr">&#129521; Material: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Vendor / Bills</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)}</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
-                    });
-                }
-
-                // Labour
-                if (!typeF || typeF === "lab") {
-                    scopedLabCats.forEach(cat => {
-                        if (catF && catF !== "lab:" + cat) return;
-                        let catTotal = 0;
-                        let siteRows = "";
-                        sites.forEach((s, i) => {
-                            if (siteIdx >= 0 && siteIdx !== i) return;
-                            const lb = s.lab[cat];
-                            if (!lb) return;
-                            const isSC = lb.contract !== null;
-                            const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
-                            if (!sub) return;
-                            catTotal += sub;
-                            if (isSC) {
-                                siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(lb.scName) || "Subcontractor"} <span class="sc-pill">SC</span></td><td class="r">${fmt(sub)}</td></tr>`;
-                            } else {
-                                const workers = {};
-                                (lb.daily || []).forEach(r => {
-                                    const w = r.part || "(No name)";
-                                    if (!workers[w]) workers[w] = { amt: 0, vouchers: [] };
-                                    workers[w].amt += (r.amt || 0);
-                                    if (r.voucher) workers[w].vouchers.push(r.voucher);
-                                });
-                                Object.entries(workers).forEach(([w, info]) => {
-                                    const vchStr = info.vouchers.length > 0 ? ` <span style="color:#888;font-size:10px">[${esc(info.vouchers.join(", "))}]</span>` : "";
-                                    siteRows += `<tr class="vend-site-row"><td style="padding-left:24px">${esc(s.name)}</td><td>${esc(w)}${vchStr}</td><td class="r">${fmt(info.amt)}</td></tr>`;
-                                });
-                            }
-                        });
-                        if (!siteRows) return;
-                        grandTotal += catTotal;
-                        html += `<div class="vsec-hdr">&#128119; Labour: ${esc(cat)}</div><table class="etbl"><thead><tr><th style="width:32%">Site</th><th>Worker / Contractor / Vouchers</th><th class="r" style="width:22%">Amount (&#8377;)</th></tr></thead><tbody>${siteRows}<tr class="sub-row"><td colspan="2">Total — ${esc(cat)}</td><td class="r">${fmt(catTotal)}</td></tr></tbody></table>`;
-                    });
-                }
-
-                const emptyMsg = '<p style="text-align:center;color:#aaa;padding:40px">No entries found for the selected filters.</p>';
-
-                document.getElementById("vsummaryContent").innerHTML = `
-            <div class="db-filter-bar">
-              <div class="form-row fg3" style="margin-bottom:0">
-                <div class="fi"><label>Site</label><select id="vs-site" onchange="vsFilter()">${siteOptions}</select></div>
-                <div class="fi"><label>Type</label><select id="vs-type" onchange="vsTypeChange()">
-                  <option value=""${!typeF ? " selected" : ""}>All Types</option>
-                  <option value="mat"${typeF === "mat" ? " selected" : ""}>Materials Only</option>
-                  <option value="lab"${typeF === "lab" ? " selected" : ""}>Labour Only</option>
-                </select></div>
-                <div class="fi"><label>Category</label><select id="vs-cat" onchange="vsFilter()">${catOptions}</select></div>
-              </div>
-              <div class="db-stats">
-                <span>Filtered Total: <strong style="color:#185FA5">${fmt(grandTotal)}</strong></span>
-                <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearVsFilters()">Clear Filters</button>
-              </div>
-            </div>
-            <div style="padding:14px">${html || emptyMsg}</div>`;
-            }
-
-            // ── SITES LIST ──
+            // -- SITES LIST --
             function renderSites() {
-                const wrap = document.getElementById("sitesList");
+                renderSitesInto("sitesList");
+            }
+
+            function renderSitesInto(targetId) {
+                const wrap = document.getElementById(targetId);
+                if (!wrap) return;
                 wrap.innerHTML = "";
                 sites.forEach((s, i) => {
-                    const { rec, exp, bal } = calc(i);
+                    const { rec, exp, paid, pending, bal } = calc(i);
                     const isOpen = openSite === i;
                     const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
                     const bc = bal >= 0 ? "bal-p" : "bal-n";
                     const div = document.createElement("div");
-                    div.className = "site-card"; div.id = "sc-" + i;
+                    div.className = "site-card" + (isOpen ? " expanded-view" : ""); 
+                    div.id = "sc-" + i;
                     div.innerHTML = `
       <div class="site-hdr${isOpen ? " open" : ""}" onclick="toggleSite(${i})">
         <div class="snum">${String(i + 1).padStart(2, "0")}</div>
         <div class="sinfo">
           <div class="sname">${esc(s.name)}${hasSC ? '<span class="sc-pill">Subcontract</span>' : ''}</div>
-          <div class="smeta">Receipts: ${fmt(rec)} &nbsp;|&nbsp; Expense: ${fmt(exp)} &nbsp;|&nbsp; <span class="${bc}">Balance: ${fmt(bal)}</span></div>
+          <div class="smeta">Receipts: ${fmt(rec)} &nbsp;|&nbsp; Expense: ${fmt(exp)} &nbsp;|&nbsp; Paid: ${fmt(paid)} &nbsp;|&nbsp; Pending: ${fmt(pending)} &nbsp;|&nbsp; <span class="${bc}">Balance: ${fmt(bal)}</span></div>
         </div>
+        ${isOpen ? `<button class="btn btn-red" style="font-size:16px;padding:6px 12px;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center" onclick="event.stopPropagation();toggleSite(${i})" title="Close">✕</button>` : `
         <div style="display:flex;gap:5px" onclick="event.stopPropagation()">
           <button class="btn btn-outline" style="font-size:10px;padding:4px 8px" onclick="renameSite(${i})">Rename</button>
+          <button class="btn btn-red" style="font-size:10px;padding:4px 8px" onclick="deleteSite(${i})">Delete</button>
         </div>
-        <span class="sarr">&#9654;</span>
+        <span class="sarr">&#9654;</span>`}
       </div>
       <div class="site-body${isOpen ? " open" : ""}" id="sb-${i}">${isOpen ? bodyHTML(i) : ""}</div>`;
                     wrap.appendChild(div);
@@ -1872,11 +1965,19 @@
             }
 
             function toggleSite(i) {
-                openSite = (openSite === i) ? null : i;
+                if (openSite === i) {
+                    openSite = null;
+                    document.body.classList.remove("lock-scroll");
+                } else {
+                    openSite = i;
+                    document.body.classList.add("lock-scroll");
+                }
                 renderSites();
+                const dash = document.getElementById("view-dash");
+                if (dash && dash.style.display !== "none") renderSitesInto("dashSitesList");
             }
 
-            // ── BODY ──
+            // -- BODY --
             function bodyHTML(i) {
                 const sec = openSec[i] || "cash";
                 return `
@@ -1894,12 +1995,12 @@
                 document.getElementById("sb-" + i).innerHTML = bodyHTML(i);
             }
 
-            // ── CASH ──
+            // -- CASH --
             function cashHTML(i) {
                 const rows = sites[i].cash;
                 const tot = rows.reduce((a, r) => a + (r.amt || 0), 0);
                 return `
-    <div class="print-header"><h2>${esc(sites[i].name)} — Cash Receipts</h2><p>Meridian Construction Company</p></div>
+    <div class="print-header"><h2>${esc(sites[i].name)} - Cash Receipts</h2><p>Meridian Construction Company</p></div>
     <div class="sec-toolbar">
       <div></div>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'cash')">&#128424; Print</button>
@@ -1914,7 +2015,7 @@
       <thead><tr><th style="width:4%">#</th><th style="width:16%">Date</th><th>Particulars</th><th class="r" style="width:20%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
       <tbody>
         ${rows.length === 0 ? '<tr class="empty-row"><td colspan="5">No receipts entered yet</td></tr>' : ""}
-        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "—"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'cash',${j})">&#10005;</button></td></tr>`).join("")}
+        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "-"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'cash',${j})">&#10005;</button></td></tr>`).join("")}
         ${rows.length > 0 ? `<tr class="sub-row"><td colspan="3">Total Receipts</td><td class="r">${fmt(tot)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
@@ -1924,119 +2025,130 @@
                 const d = val("cd-" + i), p = val("cp-" + i), a = num("ca-" + i);
                 if (!a) { notif("Enter an amount"); return; }
                 sites[i].cash.push({ date: d, part: p, amt: a });
-                saveData(); refreshBody(i, "cash"); refreshHdr(i); notif("Receipt added");
+                saveData(); refreshBody(i, "cash"); refreshHdr(i); renderDash(); notif("Receipt added");
             }
 
-            // ── MATERIALS ──
+            // -- MATERIALS --
             function matHTML(i) {
                 const s = sites[i];
                 const cat = openCat["m" + i] || s.matCats[0] || "";
-                if (!cat) return `
-    <div class="sec-toolbar">
-      <div class="cat-tabs"><div class="add-cat-btn" onclick="openAddCat(${i},'mat')">+ Add Category</div></div>
-    </div>
-    <p style="color:#aaa;padding:20px;text-align:center">No material categories. Add one above.</p>`;
+                if (!cat) return `<div class="sec-toolbar"><div class="cat-tabs"><div class="add-cat-btn" onclick="openAddCat(${i},'mat')">+ Add Category</div></div></div><p style="color:#aaa;padding:20px;text-align:center">No material categories. Add one above.</p>`;
                 const rows = s.mat[cat] || [];
                 const sub = rows.reduce((a, r) => a + (r.amt || 0), 0);
+                const paidSub = rows.reduce((a, r) => a + (r.paid || 0), 0);
                 return `
-    <div class="print-header"><h2>${esc(s.name)} — Materials: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
+    <div class="print-header"><h2>${esc(s.name)} - Materials: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
     <div class="sec-toolbar">
       <div class="cat-tabs">
-        ${s.matCats.map(c => `<div class="ctab${cat === c ? " on" : ""}" onclick="setCat(${i},'m','${esc(c).replace(/'/g, "&#39;")}')">${esc(c)}<button class="rm" onclick="event.stopPropagation();removeCat(${i},'mat','${esc(c).replace(/'/g, "&#39;")}')" title="Remove">&#10005;</button></div>`).join("")}
+        ${s.matCats.map(c => `<div class="ctab${cat === c ? " on" : ""}" onclick="setCat(${i},'m','${jsq(c)}')">${esc(c)}<button class="rm" onclick="event.stopPropagation();removeCat(${i},'mat','${jsq(c)}')" title="Remove">&#10005;</button></div>`).join("")}
         <div class="add-cat-btn" onclick="openAddCat(${i},'mat')">+ Add</div>
       </div>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'mat')">&#128424; Print</button>
     </div>
-    <div class="form-row fg5">
+    <div class="form-row" style="grid-template-columns:repeat(8,1fr)">
       <div class="fi"><label>Date</label><input type="date" id="md-${i}"></div>
-      <div class="fi"><label>Details / Vendor</label><input type="text" id="mdt-${i}" placeholder="Vendor name"></div>
+      <div class="fi"><label>Supplier</label><div style="display:flex;gap:4px"><input type="text" id="mdt-${i}" list="sup-dl-${i}" placeholder="Select or add supplier" autocomplete="off" style="flex:1"><datalist id="sup-dl-${i}">${vendors.map(v => `<option value="${esc(v.name)}">`).join("")}</datalist><button class="btn btn-blue" style="font-size:11px;padding:5px 9px;white-space:nowrap;flex-shrink:0" onclick="openAddPartyModal('vendor',${i})">+ New</button></div></div>
+      <div class="fi"><label>Material</label><input type="text" id="mitem-${i}" value="${esc(cat)}" placeholder="Material"></div>
       <div class="fi"><label>Bill No</label><input type="text" id="mbn-${i}" placeholder="Bill / Invoice"></div>
-      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ma-${i}" placeholder="0" min="0"></div>
-      <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addMat(${i},'${esc(cat).replace(/'/g, "&#39;")}')">+ Add</button></div>
+      <div class="fi"><label>Total</label><input type="number" id="ma-${i}" placeholder="0" min="0" oninput="updMatPending(${i})"></div>
+      <div class="fi"><label>Paid</label><input type="number" id="mp-${i}" placeholder="0" min="0" oninput="updMatPending(${i})"></div>
+      <div class="fi"><label>Pending</label><input type="number" id="mrem-${i}" placeholder="0" readonly></div>
+      <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addMat(${i},'${jsq(cat)}')">+ Add</button></div>
     </div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th style="width:4%">#</th><th style="width:14%">Date</th><th>Details / Vendor</th><th style="width:14%">Bill No</th><th class="r" style="width:18%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
+      <thead><tr><th>#</th><th>Date</th><th>Vendor</th><th>Material</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
       <tbody>
-        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="6">No ${esc(cat)} entries yet</td></tr>` : ""}
-        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "—"}</td><td class="muted">${esc(r.bill) || "—"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'mat-${esc(cat).replace(/'/g, "&#39;")}',${j})">&#10005;</button></td></tr>`).join("")}
-        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total — ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td></td></tr>` : ""}
+        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="9">No ${esc(cat)} entries yet</td></tr>` : ""}
+        ${rows.map((r, j) => { const pending = (r.amt || 0) - (r.paid || 0); return `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "-"}</td><td>${esc(r.item || cat)}</td><td class="muted">${esc(r.bill) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td><td><button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td></tr>`; }).join("")}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="5">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
             }
 
-            function addMat(i, cat) {
-                const d = val("md-" + i), dt = val("mdt-" + i), bn = val("mbn-" + i), a = num("ma-" + i);
-                if (!a) { notif("Enter an amount"); return; }
-                if (!sites[i].mat[cat]) sites[i].mat[cat] = [];
-                sites[i].mat[cat].push({ date: d, det: dt, bill: bn, amt: a });
-                saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); notif(cat + " entry added");
+            function updMatPending(i) {
+                const el = document.getElementById("mrem-" + i);
+                if (el) el.value = num("ma-" + i) - num("mp-" + i);
             }
 
-            // ── LABOUR ──
+            function addMat(i, cat) {
+                const d = val("md-" + i), dt = val("mdt-" + i), item = val("mitem-" + i), bn = val("mbn-" + i), a = num("ma-" + i), p = num("mp-" + i);
+                if (!a) { notif("Enter an amount"); return; }
+                if (!dt) { notif("Select or add a supplier first"); return; }
+                const supplier = vendors.find(v => v.name.toLowerCase() === dt.toLowerCase());
+                if (!supplier) { notif("Unknown supplier — use + New to add them with contact details"); return; }
+                const detName = supplier.name;
+                if (!sites[i].mat[cat]) sites[i].mat[cat] = [];
+                sites[i].mat[cat].push({ date: d, det: detName, item: item || cat, bill: bn, amt: a, paid: p });
+                saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); renderDash(); notif(cat + " entry added");
+            }
+            // -- LABOUR --
             function labHTML(i) {
                 const s = sites[i];
                 const cat = openCat["l" + i] || s.labCats[0] || "";
-                if (!cat) return `
-    <div class="sec-toolbar">
-      <div class="cat-tabs"><div class="add-cat-btn" onclick="openAddCat(${i},'lab')">+ Add Category</div></div>
-    </div>
-    <p style="color:#aaa;padding:20px;text-align:center">No labour categories. Add one above.</p>`;
+                if (!cat) return `<div class="sec-toolbar"><div class="cat-tabs"><div class="add-cat-btn" onclick="openAddCat(${i},'lab')">+ Add Category</div></div></div><p style="color:#aaa;padding:20px;text-align:center">No labour categories. Add one above.</p>`;
                 const lb = s.lab[cat] || { daily: [], contract: null, scName: "", scDesc: "" };
                 const isSC = lb.contract !== null;
                 const sub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
+                const paidSub = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.paid || 0), 0);
                 return `
-    <div class="print-header"><h2>${esc(s.name)} — Labour: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
+    <div class="print-header"><h2>${esc(s.name)} - Labour: ${esc(cat)}</h2><p>Meridian Construction Company</p></div>
     <div class="sec-toolbar">
       <div class="cat-tabs">
-        ${s.labCats.map(c => { const hsc = s.lab[c] && s.lab[c].contract !== null; return `<div class="ctab${cat === c ? " on" : ""}" onclick="setCat(${i},'l','${esc(c).replace(/'/g, "&#39;")}')">${esc(c)}${hsc ? '<span class="sc-pill" style="font-size:9px">SC</span>' : ''}<button class="rm" onclick="event.stopPropagation();removeCat(${i},'lab','${esc(c).replace(/'/g, "&#39;")}')" title="Remove">&#10005;</button></div>`; }).join("")}
+        ${s.labCats.map(c => { const hsc = s.lab[c] && s.lab[c].contract !== null; return `<div class="ctab${cat === c ? " on" : ""}" onclick="setCat(${i},'l','${jsq(c)}')">${esc(c)}${hsc ? '<span class="sc-pill" style="font-size:9px">SC</span>' : ''}<button class="rm" onclick="event.stopPropagation();removeCat(${i},'lab','${jsq(c)}')" title="Remove">&#10005;</button></div>`; }).join("")}
         <div class="add-cat-btn" onclick="openAddCat(${i},'lab')">+ Add</div>
       </div>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'lab')">&#128424; Print</button>
     </div>
-    <div class="mode-toggle">
-      <button class="mtbtn${!isSC ? " on" : ""}" onclick="setMode(${i},'${esc(cat).replace(/'/g, "&#39;")}',false)">&#128467; Daily Entry</button>
-      <button class="mtbtn${isSC ? " on-sc" : ""}" onclick="setMode(${i},'${esc(cat).replace(/'/g, "&#39;")}',true)">&#128196; Subcontract</button>
-    </div>
     ${isSC ? `
       <div class="sc-box">
-        <div class="sc-box-title">&#128196; Subcontract — ${esc(cat)}</div>
+        <div class="sc-box-title">&#128196; Subcontract - ${esc(cat)}</div>
         <div class="form-row fg3">
           <div class="fi"><label>Subcontractor Name</label><input type="text" id="scn-${i}" value="${esc(lb.scName || "")}" placeholder="Contractor name"></div>
-          <div class="fi"><label>Contract Amount (&#8377;)</label><input type="number" id="sca-${i}" value="${lb.contract || ""}" placeholder="Total value" min="0"></div>
+          <div class="fi"><label>Contract Amount</label><input type="number" id="sca-${i}" value="${lb.contract || ""}" placeholder="Total value" min="0"></div>
           <div class="fi"><label>Work Description</label><input type="text" id="scd-${i}" value="${esc(lb.scDesc || "")}" placeholder="Scope"></div>
         </div>
-        <button class="btn btn-purple" onclick="saveContract(${i},'${esc(cat).replace(/'/g, "&#39;")}')">Save Contract</button>
-        <div class="sc-note">&#9432; Contract amount is taken as total labour cost.</div>
+        <button class="btn btn-purple" onclick="saveContract(${i},'${jsq(cat)}')">Save Contract</button>
+        <div class="sc-note">Contract amount is taken as total labour cost.</div>
       </div>
       <div class="tbl-wrap"><table class="etbl">
-        <thead><tr><th>Item</th><th>Subcontractor</th><th class="r">Amount (&#8377;)</th></tr></thead>
-        <tbody>${lb.contract ? `<tr class="sc-row"><td>Subcontract — ${esc(cat)}</td><td>${esc(lb.scName) || "—"}</td><td class="r">${fmt(lb.contract)}</td></tr>` : '<tr class="empty-row"><td colspan="3">Enter contract details above and click Save</td></tr>'}</tbody>
+        <thead><tr><th>Item</th><th>Subcontractor</th><th class="r">Amount</th></tr></thead>
+        <tbody>${lb.contract ? `<tr class="sc-row"><td>Subcontract - ${esc(cat)}</td><td>${esc(lb.scName) || "-"}</td><td class="r">${fmt(lb.contract)}</td></tr>` : '<tr class="empty-row"><td colspan="3">Enter contract details above and click Save</td></tr>'}</tbody>
       </table></div>`: `
-      <div class="form-row fg5">
+      <div class="form-row" style="grid-template-columns:repeat(7,1fr)">
         <div class="fi"><label>Date</label><input type="date" id="ld-${i}"></div>
-        <div class="fi"><label>Particulars / Worker</label><input type="text" id="lp-${i}" placeholder="Worker / details"></div>
+        <div class="fi"><label>Worker</label><div style="display:flex;gap:4px"><input type="text" id="lp-${i}" list="wkr-dl-${i}" placeholder="Select or add worker" autocomplete="off" style="flex:1"><datalist id="wkr-dl-${i}">${labourers.map(l => `<option value="${esc(l.name)}">`).join("")}</datalist><button class="btn btn-blue" style="font-size:11px;padding:5px 9px;white-space:nowrap;flex-shrink:0" onclick="openAddPartyModal('worker',${i})">+ New</button></div></div>
         <div class="fi"><label>Voucher No</label><input type="text" id="lvn-${i}" placeholder="Voucher No"></div>
-        <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="la-${i}" placeholder="0" min="0"></div>
-        <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addLab(${i},'${esc(cat).replace(/'/g, "&#39;")}')">+ Add</button></div>
+        <div class="fi"><label>Total</label><input type="number" id="la-${i}" placeholder="0" min="0" oninput="updLabPending(${i})"></div>
+        <div class="fi"><label>Paid</label><input type="number" id="lpaid-${i}" placeholder="0" min="0" oninput="updLabPending(${i})"></div>
+        <div class="fi"><label>Pending</label><input type="number" id="lrem-${i}" placeholder="0" readonly></div>
+        <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addLab(${i},'${jsq(cat)}')">+ Add</button></div>
       </div>
       <div class="tbl-wrap"><table class="etbl">
-        <thead><tr><th style="width:4%">#</th><th style="width:14%">Date</th><th>Particulars</th><th style="width:14%">Voucher No</th><th class="r" style="width:18%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
+        <thead><tr><th>#</th><th>Date</th><th>Worker</th><th>Voucher No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
         <tbody>
-          ${(lb.daily || []).length === 0 ? `<tr class="empty-row"><td colspan="6">No ${esc(cat)} entries yet</td></tr>` : ""}
-          ${(lb.daily || []).map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "—"}</td><td class="muted">${esc(r.voucher) || "—"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'lab-${esc(cat).replace(/'/g, "&#39;")}',${j})">&#10005;</button></td></tr>`).join("")}
-          ${(lb.daily || []).length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total — ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td></td></tr>` : ""}
+          ${(lb.daily || []).length === 0 ? `<tr class="empty-row"><td colspan="8">No ${esc(cat)} entries yet</td></tr>` : ""}
+          ${(lb.daily || []).map((r, j) => { const pending = (r.amt || 0) - (r.paid || 0); return `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "-"}</td><td class="muted">${esc(r.voucher) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td><td><button class="del-btn" onclick="delEntry(${i},'lab-${jsq(cat)}',${j})">&#10005;</button></td></tr>`; }).join("")}
+          ${(lb.daily || []).length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
         </tbody>
       </table></div>`}`;
             }
 
-            function addLab(i, cat) {
-                const d = val("ld-" + i), p = val("lp-" + i), vn = val("lvn-" + i), a = num("la-" + i);
-                if (!a) { notif("Enter an amount"); return; }
-                if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
-                sites[i].lab[cat].daily.push({ date: d, part: p, voucher: vn, amt: a });
-                saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); notif(cat + " entry added");
+            function updLabPending(i) {
+                const el = document.getElementById("lrem-" + i);
+                if (el) el.value = num("la-" + i) - num("lpaid-" + i);
             }
 
+            function addLab(i, cat) {
+                const d = val("ld-" + i), p = val("lp-" + i), vn = val("lvn-" + i), a = num("la-" + i), paid = num("lpaid-" + i);
+                if (!a) { notif("Enter an amount"); return; }
+                if (!p) { notif("Select or add a worker first"); return; }
+                const worker = labourers.find(w => w.name.toLowerCase() === p.toLowerCase());
+                if (!worker) { notif("Unknown worker — use + New to add them with contact details"); return; }
+                const workerName = worker.name;
+                if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
+                sites[i].lab[cat].daily.push({ date: d, part: workerName, voucher: vn, amt: a, paid });
+                saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); renderDash(); notif(cat + " entry added");
+            }
             function setMode(i, cat, isSC) {
                 if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
                 const lb = sites[i].lab[cat];
@@ -2051,10 +2163,10 @@
                 lb.scName = val("scn-" + i);
                 lb.contract = num("sca-" + i);
                 lb.scDesc = val("scd-" + i);
-                saveData(); refreshBody(i, "lab"); refreshHdr(i); notif("Contract saved");
+                saveData(); refreshBody(i, "lab"); refreshHdr(i); renderDash(); notif("Contract saved");
             }
 
-            // ── SUMMARY ──
+            // -- SUMMARY --
             function sumHTML(i) {
                 const s = sites[i];
                 const { rec, matExp, labExp, exp, prof, bal } = calc(i);
@@ -2069,7 +2181,7 @@
                     return `<tr><td>${esc(c)}${isSC ? '<span class="sc-pill">SC</span>' : ''}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
                 }).join("");
                 return `
-    <div class="print-header"><h2>${esc(s.name)} — Summary</h2><p>Meridian Construction Company</p></div>
+    <div class="print-header"><h2>${esc(s.name)} - Summary</h2><p>Meridian Construction Company</p></div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'sum')">&#128424; Print</button>
     </div>
@@ -2089,19 +2201,33 @@
     </table></div>`;
             }
 
-            // ── ADD/REMOVE CATEGORIES ──
+            // -- ADD/REMOVE CATEGORIES --
             function openAddCat(siteIdx, type) {
                 addCatCtx = { siteIdx, type };
                 document.getElementById("addCatTitle").textContent = "Add New " + (type === "mat" ? "Material" : "Labour") + " Category";
                 document.getElementById("addCatName").value = "";
+                const scSection = document.getElementById("addCatSCSection");
+                const scFields = document.getElementById("addCatSCFields");
+                const scCheck = document.getElementById("addCatIsSC");
+                scCheck.checked = false;
+                scFields.style.display = "none";
+                scSection.style.display = type === "lab" ? "block" : "none";
+                document.getElementById("addCatSCName").value = "";
+                document.getElementById("addCatSCAmt").value = "";
+                document.getElementById("addCatSCDesc").value = "";
                 document.getElementById("addCatModal").classList.add("open");
                 setTimeout(() => document.getElementById("addCatName").focus(), 50);
+            }
+
+            function toggleAddCatSC() {
+                const checked = document.getElementById("addCatIsSC").checked;
+                document.getElementById("addCatSCFields").style.display = checked ? "block" : "none";
             }
 
             function confirmAddCat() {
                 if (!addCatCtx) return;
                 const nm = document.getElementById("addCatName").value.trim();
-                if (!nm) { notif("Enter a name"); return; }
+                if (!nm) { notif("Enter a category name"); return; }
                 const { siteIdx, type } = addCatCtx;
                 const s = sites[siteIdx];
                 if (type === "mat") {
@@ -2112,8 +2238,19 @@
                     saveData(); closeModal("addCatModal"); refreshBody(siteIdx, "mat"); notif(nm + " added");
                 } else {
                     if (s.labCats.includes(nm)) { notif("Already exists"); return; }
-                    s.labCats.push(nm);
-                    if (!s.lab[nm]) s.lab[nm] = { daily: [], contract: null, scName: "", scDesc: "" };
+                    const isSC = document.getElementById("addCatIsSC").checked;
+                    if (isSC) {
+                        const scName = document.getElementById("addCatSCName").value.trim();
+                        const scAmt = parseFloat(document.getElementById("addCatSCAmt").value) || 0;
+                        if (!scName) { notif("Enter subcontractor name"); document.getElementById("addCatSCName").focus(); return; }
+                        if (!scAmt) { notif("Enter contract amount"); document.getElementById("addCatSCAmt").focus(); return; }
+                        const scDesc = document.getElementById("addCatSCDesc").value.trim();
+                        s.labCats.push(nm);
+                        s.lab[nm] = { daily: [], contract: scAmt, scName, scDesc };
+                    } else {
+                        s.labCats.push(nm);
+                        s.lab[nm] = { daily: [], contract: null, scName: "", scDesc: "" };
+                    }
                     openCat["l" + siteIdx] = nm;
                     saveData(); closeModal("addCatModal"); refreshBody(siteIdx, "lab"); notif(nm + " added");
                 }
@@ -2143,14 +2280,73 @@
 
             function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-            // ── PRINT ──
+            function openAddPartyModal(type, siteIdx) {
+                addPartyCtx = { type, siteIdx };
+                document.getElementById("addPartyTitle").textContent = type === "vendor" ? "Add New Supplier" : "Add New Worker";
+                document.getElementById("addPartyName").value = "";
+                document.getElementById("addPartyPhone").value = "";
+                document.getElementById("addPartyUPI").value = "";
+                document.getElementById("addPartyNameErr").textContent = "Name is required";
+                document.getElementById("addPartyNameErr").style.display = "none";
+                document.getElementById("addPartyPhoneErr").style.display = "none";
+                document.getElementById("addPartyUPIErr").style.display = "none";
+                document.getElementById("addPartyModal").classList.add("open");
+                setTimeout(() => document.getElementById("addPartyName").focus(), 50);
+            }
+
+            function confirmAddParty() {
+                if (!addPartyCtx) return;
+                const name = document.getElementById("addPartyName").value.trim();
+                const phone = document.getElementById("addPartyPhone").value.trim();
+                const upi = document.getElementById("addPartyUPI").value.trim();
+                let valid = true;
+                if (!name) { document.getElementById("addPartyNameErr").style.display = "block"; document.getElementById("addPartyName").focus(); valid = false; }
+                else document.getElementById("addPartyNameErr").style.display = "none";
+                if (!phone) { document.getElementById("addPartyPhoneErr").style.display = "block"; if (valid) { document.getElementById("addPartyPhone").focus(); valid = false; } }
+                else document.getElementById("addPartyPhoneErr").style.display = "none";
+                if (!upi) { document.getElementById("addPartyUPIErr").style.display = "block"; if (valid) { document.getElementById("addPartyUPI").focus(); valid = false; } }
+                else document.getElementById("addPartyUPIErr").style.display = "none";
+                if (!valid) return;
+                const { type, siteIdx } = addPartyCtx;
+                const arr = type === "vendor" ? vendors : labourers;
+                if (arr.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+                    document.getElementById("addPartyNameErr").textContent = name + " already exists";
+                    document.getElementById("addPartyNameErr").style.display = "block";
+                    return;
+                }
+                arr.push({ name, phone, upi });
+                saveData();
+                // Set the field value and update datalist without full body re-render
+                const inputId = type === "vendor" ? "mdt-" + siteIdx : "lp-" + siteIdx;
+                const dlId = type === "vendor" ? "sup-dl-" + siteIdx : "wkr-dl-" + siteIdx;
+                const inp = document.getElementById(inputId);
+                const dl = document.getElementById(dlId);
+                if (inp) inp.value = name;
+                if (dl) { const opt = document.createElement("option"); opt.value = name; dl.appendChild(opt); }
+                closeModal("addPartyModal");
+                notif(name + " added — contact details saved");
+            }
+
+            // -- PRINT --
             function printSec(siteIdx, sec) {
                 openSite = siteIdx; openSec[siteIdx] = sec;
                 renderSites();
-                setTimeout(() => window.print(), 300);
+                // Give the DOM time to fully render, then print
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const card = document.getElementById("sc-" + siteIdx);
+                        if (card) {
+                            card.classList.add("print-target");
+                            // Scroll card to top so print starts from the beginning
+                            card.scrollTop = 0;
+                        }
+                        window.print();
+                        if (card) card.classList.remove("print-target");
+                    });
+                });
             }
 
-            // ── HELPERS ──
+            // -- HELPERS --
             function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
             function num(id) { const e = document.getElementById(id); return e ? parseFloat(e.value) || 0 : 0; }
 
@@ -2160,11 +2356,385 @@
             }
 
             function refreshBody(i, sec) {
+                const acctBody = document.getElementById("acct-body");
+                if (acctBody && acctSite === i && sec === "cash") { acctBody.innerHTML = cashHTML(i); return; }
+                const vendBody = document.getElementById("vend-body");
+                if (vendBody && vendSite === i && sec === "mat") { vendBody.innerHTML = matHTML(i); return; }
+                const labBody = document.getElementById("lab-body");
+                if (labBody && labSite === i && sec === "lab") { labBody.innerHTML = labHTML(i); return; }
                 openSec[i] = sec || openSec[i] || "cash";
                 const sb = document.getElementById("sb-" + i);
                 if (sb) sb.innerHTML = bodyHTML(i);
             }
 
+            // -- ACCOUNTS / VENDORS / LABOURS VIEWS --
+            let openBankAcc = null;
+            function renderAccounts() {
+                const v = document.getElementById("view-accts");
+                const { totalReceipts, totalDeposited, cashInHand } = calcCashInHand();
+                const bankTotal = bankAccounts.reduce((a, acc) => a + calcBankAcc(acc).balance, 0);
+
+                const summaryCards = `<div class="dash-cards">
+                    <div class="dcard"><div class="dl">Total Site Receipts</div><div class="dv dv-blue">${fmt(totalReceipts)}</div></div>
+                    <div class="dcard"><div class="dl">Deposited to Bank</div><div class="dv dv-amber">${fmt(totalDeposited)}</div></div>
+                    <div class="dcard"><div class="dl">Cash in Hand</div><div class="dv ${cashInHand >= 0 ? 'dv-green' : 'dv-red'}">${fmtSigned(cashInHand)}</div></div>
+                    <div class="dcard"><div class="dl">Total Bank Balance</div><div class="dv dv-green">${fmt(bankTotal)}</div></div>
+                </div>`;
+
+                const accCards = bankAccounts.length ? bankAccounts.map((acc, idx) => {
+                    const c = calcBankAcc(acc);
+                    const isOpen = openBankAcc === idx;
+                    // Build rows with running balance
+                    let runBal = acc.openingBal || 0;
+                    const txRows = (acc.transactions || []).map((t, j) => {
+                        runBal += t.type === "cr" ? (t.amt || 0) : -(t.amt || 0);
+                        const balColor = runBal >= 0 ? "#185FA5" : "#C00000";
+                        return `<tr>
+                            <td>${fmtDate(t.date)}</td>
+                            <td>${esc(t.desc) || "-"}</td>
+                            <td class="r" style="color:#C00000">${t.type === "dr" ? fmt(t.amt) : "-"}</td>
+                            <td class="r" style="color:#1D9E75">${t.type === "cr" ? fmt(t.amt) : "-"}</td>
+                            <td class="r" style="font-weight:600;color:${balColor}">${fmt(runBal)}</td>
+                            <td><button class="del-btn" onclick="delBankTxn(${idx},${j})">&#10005;</button></td>
+                        </tr>`;
+                    }).join("") || `<tr class="empty-row"><td colspan="6">No transactions yet — add manually or import a statement</td></tr>`;
+
+                    const openingRow = (acc.openingBal || 0) > 0
+                        ? `<tr style="background:#F5F7FA;font-style:italic;color:#888;font-size:11px"><td colspan="4">Opening Balance</td><td class="r" style="font-weight:600;color:#185FA5">${fmt(acc.openingBal)}</td><td></td></tr>`
+                        : "";
+
+                    const body = isOpen ? `
+                    <div class="site-body open" style="padding:16px">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+
+                            <div style="background:#F0F7FF;border:1px solid #B5D3F0;border-radius:8px;padding:14px">
+                                <div style="font-size:12px;font-weight:700;color:#1A3C5E;margin-bottom:12px">&#9998; Manual Entry</div>
+                                <div class="fi" style="margin-bottom:8px">
+                                    <label>Date</label>
+                                    <input type="date" id="bt-date-${idx}">
+                                </div>
+                                <div class="fi" style="margin-bottom:8px">
+                                    <label>Description</label>
+                                    <input type="text" id="bt-desc-${idx}" placeholder="e.g. Deposit, NEFT, Withdrawal...">
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+                                    <div class="fi">
+                                        <label>Type</label>
+                                        <select id="bt-type-${idx}">
+                                            <option value="cr">&#11044; Credit (Money In)</option>
+                                            <option value="dr">&#11044; Debit (Money Out)</option>
+                                        </select>
+                                    </div>
+                                    <div class="fi">
+                                        <label>Amount (&#8377;)</label>
+                                        <input type="number" id="bt-amt-${idx}" placeholder="0" min="0">
+                                    </div>
+                                </div>
+                                <button class="btn btn-blue" style="width:100%" onclick="addBankTxn(${idx})">+ Add Transaction</button>
+                            </div>
+
+                            <div style="background:#FFFBEE;border:1px solid #FACF5A;border-radius:8px;padding:14px">
+                                <div style="font-size:12px;font-weight:700;color:#7A4F00;margin-bottom:8px">&#128229; Import Bank Statement</div>
+                                <div style="font-size:11px;color:#888;line-height:1.6;margin-bottom:12px">
+                                    Upload an Excel or CSV file exported from your bank.<br>
+                                    <strong style="color:#555">Required columns:</strong> Date &amp; Description<br>
+                                    <strong style="color:#555">Plus one of:</strong> Debit/Credit columns, or Amount + Type column
+                                </div>
+                                <div class="fi" style="margin-bottom:12px">
+                                    <label>Select File (.xlsx / .csv)</label>
+                                    <input type="file" id="bs-file-${idx}" accept=".xlsx,.xls,.csv" style="font-size:11px;padding:5px 6px;border:1px solid #ddd;border-radius:5px;width:100%;box-sizing:border-box">
+                                </div>
+                                <button class="btn btn-amber" style="width:100%" onclick="importBankStatement(${idx})">&#128196; Import Statement</button>
+                            </div>
+                        </div>
+
+                        <div style="font-size:12px;font-weight:700;color:#1A3C5E;margin-bottom:8px">
+                            &#128203; Statement
+                            ${acc.transactions && acc.transactions.length ? `<span style="font-size:11px;font-weight:400;color:#888">(${acc.transactions.length} transactions)</span>` : ""}
+                        </div>
+                        <div class="tbl-wrap">
+                            <table class="etbl">
+                                <thead><tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th class="r">Debit (Out)</th>
+                                    <th class="r">Credit (In)</th>
+                                    <th class="r">Balance</th>
+                                    <th></th>
+                                </tr></thead>
+                                ${openingRow}
+                                <tbody>${txRows}</tbody>
+                                <tfoot><tr style="background:#F0F2F5;font-weight:700">
+                                    <td colspan="2">Closing Balance</td>
+                                    <td class="r" style="color:#C00000">${fmt(c.totalDebits)}</td>
+                                    <td class="r" style="color:#1D9E75">${fmt(c.totalCredits)}</td>
+                                    <td class="r" style="color:${c.balance >= 0 ? '#185FA5' : '#C00000'}">${fmt(c.balance)}</td>
+                                    <td></td>
+                                </tr></tfoot>
+                            </table>
+                        </div>
+                    </div>` : "";
+
+                    return `<div class="site-card" style="margin-bottom:10px">
+                        <div class="site-hdr${isOpen ? " open" : ""}" onclick="openBankAcc=openBankAcc===${idx}?null:${idx};renderAccounts()">
+                            <div class="snum">${String(idx + 1).padStart(2, "0")}</div>
+                            <div class="sinfo">
+                                <div class="sname">&#127981; ${esc(acc.bkName)}${acc.accName ? " &mdash; " + esc(acc.accName) : ""}</div>
+                                <div class="smeta">A/c: ${esc(acc.accNo)} &nbsp;|&nbsp; Credits: ${fmt(c.totalCredits)} &nbsp;|&nbsp; Debits: ${fmt(c.totalDebits)} &nbsp;|&nbsp; <strong>Balance: ${fmt(c.balance)}</strong></div>
+                            </div>
+                            <button class="btn btn-red" style="font-size:10px;padding:4px 8px" onclick="event.stopPropagation();delBankAccount(${idx})">Delete</button>
+                            <span class="sarr">&#9654;</span>
+                        </div>
+                        ${body}
+                    </div>`;
+                }).join("") : `<div style="text-align:center;padding:36px;color:#aaa">
+                    <div style="font-size:36px;margin-bottom:10px">&#127981;</div>
+                    <div style="font-size:14px;font-weight:600;color:#888;margin-bottom:4px">No bank accounts yet</div>
+                    <div style="font-size:12px">Add your first account using the form below</div>
+                </div>`;
+
+                const addForm = `<div style="background:#F5F7FA;border:1px solid #D5DBE5;border-radius:8px;padding:16px;margin-top:16px">
+                    <div style="font-size:12px;font-weight:700;color:#1A3C5E;margin-bottom:12px">&#10133; Add Bank Account</div>
+                    <div class="form-row fg5">
+                        <div class="fi"><label>Bank Name</label><input id="ba-bank" placeholder="SBI / HDFC / ICICI..."></div>
+                        <div class="fi"><label>Account Holder Name</label><input id="ba-name" placeholder="Name on account"></div>
+                        <div class="fi"><label>Account Number</label><input id="ba-no" placeholder="Account number"></div>
+                        <div class="fi"><label>Opening Balance (&#8377;)</label><input id="ba-open" type="number" placeholder="0" min="0"></div>
+                        <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%" onclick="addBankAccount()">+ Add Account</button></div>
+                    </div>
+                </div>`;
+
+                v.innerHTML = `<div style="padding:14px">${summaryCards}<div class="dash-tbl-wrap"><div class="dash-tbl-hdr"><span>&#127981; Bank Account Statements</span></div><div style="padding:14px">${accCards}${addForm}</div></div></div>`;
+            }
+
+            function addBankAccount() {
+                const bkName = val("ba-bank"), accName = val("ba-name"), accNo = val("ba-no"), openingBal = num("ba-open");
+                if (!bkName || !accNo) { notif("Enter bank name and account number"); return; }
+                bankAccounts.push({ bkName, accName, accNo, openingBal, transactions: [] });
+                openBankAcc = bankAccounts.length - 1;
+                saveData(); renderAccounts(); notif("Bank account added");
+            }
+            function delBankAccount(i) { if (!confirm("Delete this bank account and all its transactions?")) return; bankAccounts.splice(i, 1); openBankAcc = null; saveData(); renderAccounts(); renderDash(); }
+            function addBankTxn(i) {
+                const date = val("bt-date-" + i), desc = val("bt-desc-" + i), type = val("bt-type-" + i), amt = num("bt-amt-" + i);
+                if (!amt) { notif("Enter transaction amount"); return; }
+                if (!bankAccounts[i].transactions) bankAccounts[i].transactions = [];
+                bankAccounts[i].transactions.push({ date, desc, type, amt });
+                bankAccounts[i].transactions.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+                saveData(); renderAccounts(); renderDash(); notif("Transaction added");
+            }
+            function delBankTxn(i, j) { bankAccounts[i].transactions.splice(j, 1); saveData(); renderAccounts(); renderDash(); }
+
+            function importBankStatement(accIdx) {
+                const fileInput = document.getElementById("bs-file-" + accIdx);
+                if (!fileInput || !fileInput.files.length) { notif("Select a file first"); return; }
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const wb = XLSX.read(e.target.result, { type: "binary", cellDates: true });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+                        if (!rows.length) { notif("No data found in file"); return; }
+                        let imported = 0;
+                        rows.forEach(row => {
+                            const keys = Object.keys(row).map(k => k.toLowerCase().trim());
+                            const get = names => {
+                                const k = Object.keys(row).find(k => names.includes(k.toLowerCase().trim()));
+                                return k ? String(row[k] || "").trim() : "";
+                            };
+                            const rawDate = get(["date", "txn date", "transaction date", "value date", "posting date"]);
+                            const desc = get(["description", "particulars", "narration", "details", "remarks"]);
+                            const debitStr = get(["debit", "dr", "withdrawal", "debit amount"]);
+                            const creditStr = get(["credit", "cr", "deposit", "credit amount"]);
+                            const amtStr = get(["amount", "amt"]);
+                            const typeStr = get(["type", "dr/cr", "txn type"]).toLowerCase();
+                            let drAmt = parseFloat(debitStr.replace(/[^0-9.]/g,"")) || 0;
+                            let crAmt = parseFloat(creditStr.replace(/[^0-9.]/g,"")) || 0;
+                            if (!drAmt && !crAmt && amtStr) {
+                                const a = parseFloat(amtStr.replace(/[^0-9.]/g,"")) || 0;
+                                if (typeStr.includes("dr") || typeStr.includes("debit") || typeStr.includes("withdrawal")) drAmt = a;
+                                else crAmt = a;
+                            }
+                            if (!drAmt && !crAmt) return;
+                            let dateStr = "";
+                            if (rawDate) {
+                                try {
+                                    const d = new Date(rawDate);
+                                    if (!isNaN(d)) dateStr = d.toISOString().split("T")[0];
+                                    else dateStr = rawDate;
+                                } catch { dateStr = rawDate; }
+                            }
+                            if (!bankAccounts[accIdx].transactions) bankAccounts[accIdx].transactions = [];
+                            if (drAmt > 0) bankAccounts[accIdx].transactions.push({ date: dateStr, desc, type: "dr", amt: drAmt });
+                            if (crAmt > 0) bankAccounts[accIdx].transactions.push({ date: dateStr, desc, type: "cr", amt: crAmt });
+                            imported++;
+                        });
+                        bankAccounts[accIdx].transactions.sort((a,b) => (a.date||"").localeCompare(b.date||""));
+                        saveData(); renderAccounts(); renderDash(); notif(imported + " transactions imported");
+                    } catch(err) { notif("Import error: " + err.message); console.error(err); }
+                };
+                reader.readAsBinaryString(file);
+            }
+            function buildPartyMap(type) {
+                const map = {};
+                const baseArr = type === "vendor" ? vendors : labourers;
+                baseArr.forEach(p => { map[p.name] = { name: p.name, sites: new Set(), entries: [], total: 0, paid: 0, pending: 0, phone: p.phone || "", upi: p.upi || "" }; });
+                sites.forEach((s, siteIdx) => {
+                    if (type === "vendor") {
+                        s.matCats.forEach(cat => {
+                            (s.mat[cat] || []).forEach((entry, entIdx) => {
+                                const nm = entry.det || "(Unknown)";
+                                if (!map[nm]) map[nm] = { name: nm, sites: new Set(), entries: [], total: 0, paid: 0, pending: 0, phone: "", upi: "" };
+                                const pend = (entry.amt || 0) - (entry.paid || 0);
+                                map[nm].sites.add(s.name);
+                                map[nm].entries.push({ ...entry, siteIdx, cat, entIdx, siteName: s.name, pending: pend });
+                                map[nm].total += entry.amt || 0; map[nm].paid += entry.paid || 0; map[nm].pending += pend;
+                            });
+                        });
+                    } else {
+                        s.labCats.forEach(cat => {
+                            const lb = s.lab[cat] || {};
+                            (lb.daily || []).forEach((entry, entIdx) => {
+                                const nm = entry.part || "(Unknown)";
+                                if (!map[nm]) map[nm] = { name: nm, sites: new Set(), entries: [], total: 0, paid: 0, pending: 0, phone: "", upi: "" };
+                                const pend = (entry.amt || 0) - (entry.paid || 0);
+                                map[nm].sites.add(s.name);
+                                map[nm].entries.push({ ...entry, siteIdx, cat, entIdx, siteName: s.name, pending: pend });
+                                map[nm].total += entry.amt || 0; map[nm].paid += entry.paid || 0; map[nm].pending += pend;
+                            });
+                        });
+                    }
+                });
+                return Object.values(map).sort((a, b) => b.pending - a.pending || a.name.localeCompare(b.name));
+            }
+
+            function renderPartyPage(type) {
+                const container = document.getElementById(type === "vendor" ? "view-vendors" : "view-labours");
+                const label = type === "vendor" ? "&#128722; Supplier Ledger &amp; Payables" : "&#128119; Worker Ledger &amp; Payables";
+                const detailCols = type === "vendor"
+                    ? `<th>Date</th><th>Site</th><th>Material</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th>`
+                    : `<th>Date</th><th>Site</th><th>Category</th><th>Voucher</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th>`;
+                const list = buildPartyMap(type);
+                const siteIdx = type === "vendor" ? (vsFilters.site !== "" ? parseInt(vsFilters.site) : -1) : (wkFilters.site !== "" ? parseInt(wkFilters.site) : -1);
+                const filtered = siteIdx >= 0 ? list.filter(p => p.sites.has(sites[siteIdx]?.name)) : list;
+                const siteOptions = `<option value="">All Sites</option>` + sites.map((s, i) => `<option value="${i}"${String(type==="vendor"?vsFilters.site:wkFilters.site)===String(i)?" selected":""}>${esc(s.name)}</option>`).join("");
+                const filterChange = type === "vendor" ? "vsFilters.site=this.value;renderVendors()" : "wkFilters.site=this.value;renderLabours()";
+                const grandTotal = filtered.reduce((a, p) => a + p.total, 0);
+                const grandPaid = filtered.reduce((a, p) => a + p.paid, 0);
+                const grandPending = filtered.reduce((a, p) => a + p.pending, 0);
+                let html = `<div class="dash-tbl-wrap">
+                  <div class="dash-tbl-hdr"><span>${label}</span><button class="btn btn-grey" style="font-size:11px;padding:4px 10px" onclick="window.print()">&#128424; Print</button></div>
+                  <div class="db-filter-bar"><div class="form-row fg3" style="margin-bottom:0;align-items:center">
+                    <div class="fi"><label>Filter by Site</label><select onchange="${filterChange}">${siteOptions}</select></div>
+                    <div class="db-stats">
+                      <span>Total: <strong style="color:#185FA5">${fmt(grandTotal)}</strong></span>
+                      <span style="color:#1D9E75">Paid: <strong>${fmt(grandPaid)}</strong></span>
+                      <span style="color:#BA7517">Pending: <strong>${fmt(grandPending)}</strong></span>
+                    </div>
+                  </div></div>`;
+                if (filtered.length === 0) {
+                    html += `<p style="text-align:center;color:#aaa;padding:40px">No data yet. ${type==="vendor"?"Add material entries in sites.":"Add labour entries in sites."}</p>`;
+                } else {
+                    html += `<div class="tbl-wrap"><table class="etbl"><thead><tr><th>${type==="vendor"?"Supplier":"Worker"}</th><th>Sites</th><th class="r">Entries</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th style="width:160px">UPI / Phone</th><th class="r">Action</th></tr></thead><tbody>`;
+                    filtered.forEach((p, idx) => {
+                        const dtRows = p.entries.length
+                            ? p.entries.map(e => type === "vendor"
+                                ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item||e.cat)}</td><td>${esc(e.bill)||'-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid||0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
+                                : `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.cat)}</td><td>${esc(e.voucher)||'-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid||0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
+                            ).join("")
+                            : `<tr class="empty-row"><td colspan="7">No entries</td></tr>`;
+                        html += `<tr style="cursor:pointer" onclick="togglePartyDetails('${type}',${idx})">
+                          <td><strong>${esc(p.name)}</strong></td>
+                          <td style="font-size:11px;color:#888">${esc([...p.sites].join(", "))||'-'}</td>
+                          <td class="r">${p.entries.length}</td>
+                          <td class="r">${fmt(p.total)}</td>
+                          <td class="r" style="color:#1D9E75">${fmt(p.paid)}</td>
+                          <td class="r" style="color:${p.pending>0?'#BA7517':'#1D9E75'};font-weight:700">${fmt(p.pending)}</td>
+                          <td style="font-size:11px">${esc(p.upi)||'<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone)||''}</span></td>
+                          <td class="r" style="white-space:nowrap">
+                            ${p.pending>0?`<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${p.pending})">&#128242; Pay</button>`:'<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                          </td>
+                        </tr>
+                        <tr id="pd-${type}-${idx}" style="display:none"><td colspan="8" style="padding:10px;background:#f5f5f5">
+                          <table class="etbl" style="margin:0"><thead><tr>${detailCols}</tr></thead><tbody>${dtRows}</tbody></table>
+                        </td></tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
+                html += `</div>`;
+                container.innerHTML = html;
+            }
+
+            function renderVendors() { renderPartyPage("vendor"); }
+            function renderLabours() { renderPartyPage("worker"); }
+
+            function togglePartyDetails(type, idx) {
+                const el = document.getElementById("pd-" + type + "-" + idx);
+                if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+            }
+            function toggleVendorDetails(idx) { togglePartyDetails("vendor", idx); }
+            function toggleWorkerDetails(idx) { togglePartyDetails("worker", idx); }
+
+            function editPartyContact(type, name) {
+                const arr = type === "vendor" ? vendors : labourers;
+                let p = arr.find(v => v.name === name);
+                if (!p) { p = { name, phone: "", upi: "" }; arr.push(p); }
+                const newUpi = prompt("UPI / GPay ID for " + name + ":", p.upi || "");
+                if (newUpi === null) return;
+                const newPhone = prompt("Phone for " + name + ":", p.phone || "");
+                if (newPhone === null) return;
+                p.upi = newUpi.trim(); p.phone = newPhone.trim();
+                saveData();
+                if (type === "vendor") renderVendors(); else renderLabours();
+                notif("Contact updated for " + name);
+            }
+
+            function payParty(type, name, amount) {
+                const arr = type === "vendor" ? vendors : labourers;
+                let party = arr.find(v => v.name === name);
+                if (!party || !party.upi) {
+                    const upi = prompt("No UPI saved for " + name + ". Enter UPI ID to pay:", "");
+                    if (!upi) return;
+                    if (!party) { party = { name, phone: "", upi }; arr.push(party); } else party.upi = upi;
+                    saveData();
+                }
+                const upiUrl = `upi://pay?pa=${encodeURIComponent(party.upi)}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${encodeURIComponent("Payment - Meridian Construction")}`;
+                payCtx = { type, name };
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (isMobile) window.location.href = upiUrl;
+                showQRModal(name, amount, upiUrl, party.phone || "", party.upi || "");
+            }
+
+            let payCtx = null;
+            function showQRModal(name, amount, upiUrl, phone, upi) {
+                let modal = document.getElementById("qrModal");
+                if (!modal) {
+                    document.body.insertAdjacentHTML("beforeend", `<div id="qrModal" class="modal-overlay" onclick="closeQR()"><div class="modal-box" onclick="event.stopPropagation()"><h3 id="qrTitle">Pay via UPI</h3><p id="qrVendor" style="color:#666;margin:8px 0"></p><div style="text-align:center;margin:16px 0"><img id="qrImg" src="" style="width:240px;height:240px"></div><p style="font-size:12px;color:#666;text-align:center">Scan with Google Pay, PhonePe, or any UPI app.</p><div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-green" style="flex:1" onclick="markPayCtxPaid()">Mark as Paid</button><button class="btn btn-grey" style="flex:1" onclick="closeQR()">Close</button></div></div></div>`);
+                    const style = document.createElement('style');
+                    style.textContent = `.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:9999}.modal-box{background:white;padding:24px;border-radius:12px;max-width:380px;color:#000;box-shadow:0 16px 48px rgba(0,0,0,.35)}`;
+                    document.head.appendChild(style);
+                    modal = document.getElementById("qrModal");
+                }
+                document.getElementById("qrTitle").textContent = "Pay " + name;
+                document.getElementById("qrVendor").textContent = fmt(amount) + (upi ? " • " + upi : "") + (phone ? " • " + phone : "");
+                document.getElementById("qrImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiUrl)}`;
+                modal.style.display = "flex";
+            }
+
+            function closeQR() { const el = document.getElementById("qrModal"); if (el) el.style.display = "none"; }
+
+            function markPayCtxPaid() {
+                if (!payCtx) { closeQR(); return; }
+                sites.forEach(s => {
+                    if (payCtx.type === "vendor") {
+                        s.matCats.forEach(cat => (s.mat[cat] || []).forEach(e => { if (e.det === payCtx.name) e.paid = e.amt || 0; }));
+                    } else {
+                        s.labCats.forEach(cat => { const lb = s.lab[cat]; (lb?.daily || []).forEach(e => { if (e.part === payCtx.name) e.paid = e.amt || 0; }); });
+                    }
+                });
+                saveData(); closeQR(); renderDash(); renderVendors(); renderLabours(); notif("All entries marked paid for " + payCtx.name); payCtx = null;
+            }
             function refreshHdr(i) {
                 const { rec, exp, bal } = calc(i);
                 const card = document.getElementById("sc-" + i);
@@ -2184,7 +2754,7 @@
                 else if (type.startsWith("lab-")) { const c = type.slice(4); if (sites[i].lab[c]) sites[i].lab[c].daily.splice(j, 1); }
                 saveData();
                 const sec = type === "cash" ? "cash" : type.startsWith("mat") ? "mat" : "lab";
-                refreshBody(i, sec); refreshHdr(i);
+                refreshBody(i, sec); refreshHdr(i); renderDash();
             }
 
             function toggleAddSite() {
@@ -2199,17 +2769,28 @@
                 sites.push(mkSite(nm));
                 document.getElementById("newSiteName").value = "";
                 document.getElementById("addSiteBar").classList.remove("open");
-                saveData(); renderSites(); notif(nm + " added");
+                saveData(); renderDash(); renderSites(); notif(nm + " added");
             }
 
             function renameSite(i) {
                 const nm = prompt("Rename site:", sites[i].name);
-                if (nm && nm.trim()) { sites[i].name = nm.trim(); saveData(); renderSites(); }
+                if (nm && nm.trim()) { sites[i].name = nm.trim(); saveData(); renderDash(); renderSites(); }
+            }
+
+            function deleteSite(i) {
+                if (!confirm(`Delete "${sites[i].name}" and all its entries?`)) return;
+                sites.splice(i, 1);
+                if (openSite === i) openSite = null;
+                else if (openSite > i) openSite--;
+                saveData();
+                renderDash();
+                renderSites();
+                notif("Site deleted");
             }
 
             function clearAllData() {
                 if (!confirm("DELETE ALL DATA permanently?")) return;
-                if (!confirm("Last chance — all entries will be lost!")) return;
+                if (!confirm("Last chance - all entries will be lost!")) return;
                 sites = []; for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                 openSite = null; openSec = {}; openCat = {};
                 saveData(); renderSites(); renderDash(); notif("All data cleared");
@@ -2222,11 +2803,11 @@
                 notif._t = setTimeout(() => el.classList.remove("show"), 2200);
             }
 
-            // ── EXCEL EXPORT ──
+            // -- EXCEL EXPORT --
             function exportExcel() {
                 const wb = XLSX.utils.book_new();
                 // Dashboard
-                const dashData = [["MERIDIAN CONSTRUCTION — DASHBOARD"], [""], ["Site", "Receipts (\u20B9)", "Expense (\u20B9)", "Profit 15% (\u20B9)", "Balance (\u20B9)"]];
+                const dashData = [["MERIDIAN CONSTRUCTION - DASHBOARD"], [""], ["Site", "Receipts (\u20B9)", "Expense (\u20B9)", "Profit 15% (\u20B9)", "Balance (\u20B9)"]];
                 let tR = 0, tE = 0, tP = 0, tB = 0;
                 sites.forEach((s, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; dashData.push([s.name, c.rec, c.exp, c.prof, c.bal]); });
                 dashData.push(["GRAND TOTAL", tR, tE, tP, tB]);
@@ -2235,7 +2816,7 @@
                 XLSX.utils.book_append_sheet(wb, ws0, "Dashboard");
 
                 // Vendor Summary
-                const vData = [["VENDOR & LABOUR SUMMARY — ALL SITES"], [""], ["Type", "Category", "Site", "Vendor / Worker", "Bill/Voucher", "Amount (\u20B9)"]];
+                const vData = [["VENDOR & LABOUR SUMMARY - ALL SITES"], [""], ["Type", "Category", "Site", "Vendor / Worker", "Bill/Voucher", "Amount (\u20B9)"]];
                 sites.forEach(s => {
                     s.matCats.forEach(cat => {
                         (s.mat[cat] || []).forEach(r => vData.push(["Material", cat, s.name, r.det || "", r.bill || "", r.amt || 0]));
@@ -2253,7 +2834,7 @@
                 // Per site
                 sites.forEach((s, i) => {
                     const { rec, exp, prof, bal } = calc(i);
-                    const rows = [[s.name.toUpperCase() + " — INCOME & EXPENDITURE"], [""]];
+                    const rows = [[s.name.toUpperCase() + " - INCOME & EXPENDITURE"], [""]];
                     rows.push(["CASH RECEIPTS", "", "", ""]);
                     rows.push(["Date", "Particulars", "Amount (\u20B9)", ""]);
                     s.cash.forEach(r => rows.push([r.date || "", r.part || "", r.amt || 0, ""]));
@@ -2265,7 +2846,7 @@
                         rows.push([cat, "", "", ""]);
                         rows.push(["Date", "Details/Vendor", "Bill No", "Amount (\u20B9)"]);
                         entries.forEach(r => rows.push([r.date || "", r.det || "", r.bill || "", r.amt || 0]));
-                        rows.push(["Sub Total — " + cat, "", "", sub]); rows.push([""]);
+                        rows.push(["Sub Total - " + cat, "", "", sub]); rows.push([""]);
                     });
                     rows.push(["LABOUR COSTS", "", "", ""]);
                     s.labCats.forEach(cat => {
@@ -2278,7 +2859,7 @@
                             rows.push(["Date", "Particulars", "Voucher No", "Amount (\u20B9)"]);
                             (lb.daily || []).forEach(r => rows.push([r.date || "", r.part || "", r.voucher || "", r.amt || 0]));
                         }
-                        rows.push(["Sub Total — " + cat, "", "", sub]); rows.push([""]);
+                        rows.push(["Sub Total - " + cat, "", "", sub]); rows.push([""]);
                     });
                     rows.push(["SUMMARY", "", "", ""]);
                     rows.push(["Total Receipts", "", "", rec]);
@@ -2297,7 +2878,7 @@
                 notif("Excel exported!");
             }
 
-            // ── DAY BOOK ──
+            // -- DAY BOOK --
             let dbFilters = { from: "", to: "", site: "", type: "" };
 
             function inDbRange(date) {
@@ -2339,7 +2920,7 @@
                     s.matCats.forEach(cat => {
                         (s.mat[cat] || []).forEach(r => {
                             if (!inDbRange(r.date)) return;
-                            entries.push({ date: r.date || "", site: s.name, type: "Material — " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0 });
+                            entries.push({ date: r.date || "", site: s.name, type: "Material - " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0 });
                         });
                     });
 
@@ -2348,11 +2929,11 @@
                         if (!lb) return;
                         if (lb.contract !== null) {
                             if (!inDbRange("")) return;
-                            entries.push({ date: "", site: s.name, type: "Labour — " + cat + " (SC)", typeKey: "labour", part: lb.scName || "Subcontractor", ref: "", dr: lb.contract || 0, cr: 0 });
+                            entries.push({ date: "", site: s.name, type: "Labour - " + cat + " (SC)", typeKey: "labour", part: lb.scName || "Subcontractor", ref: "", dr: lb.contract || 0, cr: 0 });
                         } else {
                             (lb.daily || []).forEach(r => {
                                 if (!inDbRange(r.date)) return;
-                                entries.push({ date: r.date || "", site: s.name, type: "Labour — " + cat, typeKey: "labour", part: r.part || "", ref: r.voucher || "", dr: r.amt || 0, cr: 0 });
+                                entries.push({ date: r.date || "", site: s.name, type: "Labour - " + cat, typeKey: "labour", part: r.part || "", ref: r.voucher || "", dr: r.amt || 0, cr: 0 });
                             });
                         }
                     });
@@ -2371,7 +2952,7 @@
                 const groups = {};
                 const groupOrder = [];
                 filtered.forEach(e => {
-                    const key = e.date || "—";
+                    const key = e.date || "-";
                     if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
                     groups[key].push(e);
                 });
@@ -2390,22 +2971,22 @@
                             grpDr += e.dr; grpCr += e.cr;
                             const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : "db-type-lab";
                             tableRows += `<tr>
-                            <td>${j === 0 ? (dateKey === "—" ? "<span style='color:#aaa'>—</span>" : `<span class="db-date-cell">${fmtDate(dateKey)}</span>`) : ""}</td>
+                            <td>${j === 0 ? (dateKey === "-" ? "<span style='color:#aaa'>-</span>" : `<span class="db-date-cell">${fmtDate(dateKey)}</span>`) : ""}</td>
                             <td style="font-size:11px">${esc(e.site)}</td>
                             <td class="${typeClass}" style="font-size:11px">${esc(e.type)}</td>
-                            <td>${esc(e.part) || "—"}</td>
-                            <td class="muted">${esc(e.ref) || "—"}</td>
-                            <td class="r">${e.dr > 0 ? fmt(e.dr) : "<span style='color:#ddd'>—</span>"}</td>
-                            <td class="r" style="color:#1D9E75">${e.cr > 0 ? fmt(e.cr) : "<span style='color:#ddd'>—</span>"}</td>
+                            <td>${esc(e.part) || "-"}</td>
+                            <td class="muted">${esc(e.ref) || "-"}</td>
+                            <td class="r">${e.dr > 0 ? fmt(e.dr) : "<span style='color:#ddd'>-</span>"}</td>
+                            <td class="r" style="color:#1D9E75">${e.cr > 0 ? fmt(e.cr) : "<span style='color:#ddd'>-</span>"}</td>
                         </tr>`;
                         });
 
                         totalDr += grpDr; totalCr += grpCr;
 
                         tableRows += `<tr class="sub-row">
-                        <td colspan="5" style="text-align:right">${dateKey === "—" ? "Subtotal (No Date)" : fmtDate(dateKey) + " — Daily Total"}</td>
-                        <td class="r">${grpDr > 0 ? fmt(grpDr) : "—"}</td>
-                        <td class="r">${grpCr > 0 ? fmt(grpCr) : "—"}</td>
+                        <td colspan="5" style="text-align:right">${dateKey === "-" ? "Subtotal (No Date)" : fmtDate(dateKey) + " - Daily Total"}</td>
+                        <td class="r">${grpDr > 0 ? fmt(grpDr) : "-"}</td>
+                        <td class="r">${grpCr > 0 ? fmt(grpCr) : "-"}</td>
                     </tr>`;
                     });
 
@@ -2416,7 +2997,7 @@
                     <td class="r">${fmt(totalCr)}</td>
                 </tr>`;
                     tableRows += `<tr class="db-net-row">
-                    <td colspan="5" style="text-align:right;color:#1A3C5E">Net Balance (Receipts − Expenses)</td>
+                    <td colspan="5" style="text-align:right;color:#1A3C5E">Net Balance (Receipts - Expenses)</td>
                     <td colspan="2" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td>
                 </tr>`;
                 }
@@ -2457,7 +3038,7 @@
             </div>`;
             }
 
-            // ── BOOT ──
+            // -- BOOT --
             async function boot() {
                 await loadData();
                 renderDash();
@@ -2472,7 +3053,7 @@
 
     <script>
         (function () {
-            const PASS = "Meridian@A/c#";
+            const PASS = "Xa#M1";
             const SESSION_KEY = "mc_unlocked";
 
             function unlock() {
