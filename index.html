@@ -2317,15 +2317,15 @@
             function sumHTML(i) {
                 const s = sites[i];
                 const { rec, matExp, labExp, exp, prof, bal } = calc(i);
-                const mRows = s.matCats.map(c => {
+                const mRows = s.matCats.map((c, idx) => {
                     const v = (s.mat[c] || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    return `<tr><td>${esc(c)}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
+                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(c)}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
                 }).join("");
-                const lRows = s.labCats.map(c => {
+                const lRows = s.labCats.map((c, idx) => {
                     const lb = s.lab[c] || { daily: [], contract: null };
                     const isSC = lb.contract !== null;
                     const v = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    return `<tr><td>${esc(c)}${isSC ? '<span class="sc-pill">SC</span>' : ''}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
+                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(c)}${isSC ? '<span class="sc-pill">SC</span>' : ''}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
                 }).join("");
                 return `
     <div class="print-header"><h2>${esc(s.name)} - Summary</h2><p>Meridian Construction Company</p></div>
@@ -2340,12 +2340,12 @@
       <div class="scard sb"><div class="sl">Net Balance</div><div class="sv">${fmt(bal)}</div></div>
     </div>
     <div class="tbl-wrap" style="margin-bottom:12px"><table class="etbl">
-      <thead><tr><th>Material</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
-      <tbody>${mRows}<tr class="sub-row"><td>Total Materials</td><td class="r">${fmt(matExp)}</td><td class="r">${fmt(Math.round(matExp * (1 + PT)))}</td></tr></tbody>
+      <thead><tr><th style="width:36px">#</th><th>Material</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
+      <tbody>${mRows}<tr class="sub-row"><td></td><td>Total Materials</td><td class="r">${fmt(matExp)}</td><td class="r">${fmt(Math.round(matExp * (1 + PT)))}</td></tr></tbody>
     </table></div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th>Labour</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
-      <tbody>${lRows}<tr class="sub-row"><td>Total Labour</td><td class="r">${fmt(labExp)}</td><td class="r">${fmt(Math.round(labExp * (1 + PT)))}</td></tr></tbody>
+      <thead><tr><th style="width:36px">#</th><th>Labour</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
+      <tbody>${lRows}<tr class="sub-row"><td></td><td>Total Labour</td><td class="r">${fmt(labExp)}</td><td class="r">${fmt(Math.round(labExp * (1 + PT)))}</td></tr></tbody>
     </table></div>`;
             }
 
