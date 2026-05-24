@@ -1688,6 +1688,28 @@
 
         <div class="notif" id="notif"></div>
 
+        <!-- Password confirmation modal -->
+        <div class="modal-bg" id="pwdConfirmModal">
+            <div class="modal" style="width:340px">
+                <h3 id="pwdConfirmTitle">Confirm Action</h3>
+                <p id="pwdConfirmDesc" style="font-size:12px;color:#666;margin-bottom:14px"></p>
+                <div class="fi" style="margin-bottom:14px">
+                    <label>Enter Password</label>
+                    <div style="position:relative">
+                        <input type="password" id="pwdConfirmInput" placeholder="Password"
+                            style="width:100%;padding:8px 36px 8px 10px;border:1.5px solid #ccc;border-radius:7px;font-size:13px;font-family:Arial,sans-serif"
+                            onkeydown="if(event.key==='Enter')pwdConfirmSubmit()">
+                        <button onclick="const i=document.getElementById('pwdConfirmInput');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:#aaa">&#128065;</button>
+                    </div>
+                    <div id="pwdConfirmErr" style="color:#C00000;font-size:11px;font-weight:600;min-height:16px;margin-top:5px"></div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-red" style="flex:1" onclick="pwdConfirmSubmit()">Confirm</button>
+                    <button class="btn btn-grey" onclick="pwdConfirmCancel()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <script>
             const PT = 0.15;
             const STORE_KEY = "meridian_v3";
@@ -2662,7 +2684,13 @@
                 openBankAcc = bankAccounts.length - 1;
                 saveData(); renderAccounts(); notif("Bank account added");
             }
-            function delBankAccount(i) { if (!confirm("Delete this bank account and all its transactions?")) return; bankAccounts.splice(i, 1); openBankAcc = null; saveData(); renderAccounts(); renderDash(); }
+            function delBankAccount(i) {
+                pwdConfirm(
+                    "Delete Bank Account",
+                    `Delete "${bankAccounts[i].bkName} - ${bankAccounts[i].accNo}" and all its transactions? This cannot be undone.`,
+                    () => { bankAccounts.splice(i, 1); openBankAcc = null; saveData(); renderAccounts(); renderDash(); notif("Bank account deleted"); }
+                );
+            }
             function addBankTxn(i) {
                 const date = val("bt-date-" + i), desc = val("bt-desc-" + i), type = val("bt-type-" + i), amt = num("bt-amt-" + i);
                 if (!amt) { notif("Enter transaction amount"); return; }
@@ -2940,23 +2968,60 @@
                 if (nm && nm.trim()) { sites[i].name = nm.trim(); saveData(); renderDash(); renderSites(); }
             }
 
+            let _pwdPending = null;
+
+            function pwdConfirm(title, desc, onConfirmed) {
+                _pwdPending = onConfirmed;
+                document.getElementById("pwdConfirmTitle").textContent = title;
+                document.getElementById("pwdConfirmDesc").textContent = desc;
+                document.getElementById("pwdConfirmInput").value = "";
+                document.getElementById("pwdConfirmErr").textContent = "";
+                document.getElementById("pwdConfirmModal").classList.add("open");
+                setTimeout(() => document.getElementById("pwdConfirmInput").focus(), 60);
+            }
+
+            function pwdConfirmSubmit() {
+                const val = document.getElementById("pwdConfirmInput").value;
+                const err = document.getElementById("pwdConfirmErr");
+                if (val !== "Xa#M1") {
+                    err.textContent = "Incorrect password.";
+                    const inp = document.getElementById("pwdConfirmInput");
+                    inp.value = "";
+                    inp.focus();
+                    return;
+                }
+                document.getElementById("pwdConfirmModal").classList.remove("open");
+                if (_pwdPending) { const fn = _pwdPending; _pwdPending = null; fn(); }
+            }
+
+            function pwdConfirmCancel() {
+                document.getElementById("pwdConfirmModal").classList.remove("open");
+                _pwdPending = null;
+            }
+
             function deleteSite(i) {
-                if (!confirm(`Delete "${sites[i].name}" and all its entries?`)) return;
-                sites.splice(i, 1);
-                if (openSite === i) openSite = null;
-                else if (openSite > i) openSite--;
-                saveData();
-                renderDash();
-                renderSites();
-                notif("Site deleted");
+                pwdConfirm(
+                    "Delete Site",
+                    `Delete "${sites[i].name}" and all its entries? This cannot be undone.`,
+                    () => {
+                        sites.splice(i, 1);
+                        if (openSite === i) openSite = null;
+                        else if (openSite > i) openSite--;
+                        saveData(); renderDash(); renderSites(); notif("Site deleted");
+                    }
+                );
             }
 
             function clearAllData() {
-                if (!confirm("DELETE ALL DATA permanently?")) return;
-                if (!confirm("Last chance - all entries will be lost!")) return;
-                sites = []; for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
-                openSite = null; openSec = {}; openCat = {};
-                saveData(); renderSites(); renderDash(); notif("All data cleared");
+                pwdConfirm(
+                    "Reset All Data",
+                    "This will permanently delete ALL sites and entries and reset to 20 blank sites. This cannot be undone.",
+                    () => {
+                        sites = []; for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
+                        openSite = null; openSec = {}; openCat = {};
+                        saveData(); renderSites(); renderDash(); notif("All data cleared");
+                    }
+                );
             }
 
             function notif(msg) {
