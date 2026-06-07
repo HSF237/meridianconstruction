@@ -933,6 +933,7 @@
             .dash-cards {
                 grid-template-columns: repeat(3, 1fr)
             }
+
             .sum-grid {
                 grid-template-columns: 1fr 1fr
             }
@@ -1002,6 +1003,10 @@
             border-bottom: none
         }
 
+        @page {
+            margin: 0;
+        }
+
         @media print {
 
             .topbar,
@@ -1017,9 +1022,14 @@
             .sarr,
             .add-cat-btn,
             .del-btn,
+            .edit-btn,
             .mode-toggle,
             .cloud-status,
-            .db-stats {
+            .db-stats,
+            .dash-cards,
+            #dashCards,
+            .profit-edit-bar,
+            .site-hdr {
                 display: none !important
             }
 
@@ -1032,15 +1042,6 @@
             /* Hide all site cards except the one being printed */
             .site-card:not(.print-target) {
                 display: none !important
-            }
-
-            .site-hdr {
-                background: none !important;
-                color: #000 !important
-            }
-
-            .site-hdr .sname {
-                color: #000 !important
             }
 
             .site-body {
@@ -1067,11 +1068,6 @@
                 background: #fff !important
             }
 
-            .site-card.expanded-view .site-hdr {
-                position: static !important;
-                z-index: auto !important
-            }
-
             /* Allow body to scroll so all content reaches the print engine */
             body.lock-scroll {
                 overflow: auto !important;
@@ -1080,7 +1076,8 @@
 
             body {
                 background: #fff;
-                font-size: 11px
+                font-size: 11px;
+                padding: 10mm
             }
 
             .main {
@@ -1321,6 +1318,21 @@
             transform: scale(1.2)
         }
 
+        .etbl .edit-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+            transition: color .15s, transform .15s
+        }
+
+        .etbl .edit-btn:hover {
+            color: #2E75B6;
+            transform: scale(1.2)
+        }
+
         /* -- Password lock screen ---------------------- */
         #lockScreen {
             position: fixed;
@@ -1550,26 +1562,62 @@
             padding: 2px 6px;
             transition: background .15s
         }
-        .pay-hist-btn:hover { background: #B5D4F4 }
-        .pay-hist-btn.has-pmts { background: #EAF3DE; border-color: #C0DD97; color: #3B6D11 }
-        .pay-hist-btn.has-pmts:hover { background: #C0DD97 }
-        .pay-hist-row td { padding: 0 !important }
+
+        .pay-hist-btn:hover {
+            background: #B5D4F4
+        }
+
+        .pay-hist-btn.has-pmts {
+            background: #EAF3DE;
+            border-color: #C0DD97;
+            color: #3B6D11
+        }
+
+        .pay-hist-btn.has-pmts:hover {
+            background: #C0DD97
+        }
+
+        .pay-hist-row td {
+            padding: 0 !important
+        }
+
         .pay-hist-wrap {
             background: #F5F8FF;
             border-top: 2px solid #B5D4F4;
             padding: 12px 16px 14px
         }
+
         .pay-hist-title {
             font-size: 11px;
             font-weight: 700;
             color: #1A3C5E;
             margin-bottom: 8px
         }
-        .ph-pending { color: #BA7517; font-weight: 700 }
-        .ph-paid { color: #1D9E75; font-weight: 700 }
-        .pay-hist-tbl { margin-bottom: 10px }
-        .pay-hist-tbl th { background: #2E75B6 !important }
-        .pay-hist-empty { color: #aaa; font-size: 11px; font-style: italic; margin: 0 0 8px }
+
+        .ph-pending {
+            color: #BA7517;
+            font-weight: 700
+        }
+
+        .ph-paid {
+            color: #1D9E75;
+            font-weight: 700
+        }
+
+        .pay-hist-tbl {
+            margin-bottom: 10px
+        }
+
+        .pay-hist-tbl th {
+            background: #2E75B6 !important
+        }
+
+        .pay-hist-empty {
+            color: #aaa;
+            font-size: 11px;
+            font-style: italic;
+            margin: 0 0 8px
+        }
 
         /* -- Daybook tab amber highlight -------------- */
         .nav-tab.daybook-tab {
@@ -1669,6 +1717,8 @@
                 <div class="fi" style="flex:1;min-width:200px"><label>New Site Name</label><input type="text"
                         id="newSiteName" placeholder="e.g. Site 21 - Kavya Residency"
                         onkeydown="if(event.key==='Enter')addSite()"></div>
+                <div class="fi" style="width:150px"><label>Profit % (default 15)</label><input type="number"
+                        id="newSiteProfit" value="15" min="0" max="100" step="0.1" placeholder="15"></div>
                 <button class="btn btn-green" onclick="addSite()">Add</button>
                 <button class="btn btn-grey" onclick="toggleAddSite()">Cancel</button>
             </div>
@@ -1686,7 +1736,7 @@
             <div id="view-vendors" style="display:none"></div>
             <div id="view-labours" style="display:none"></div>
 
-<div id="view-daybook" style="display:none">
+            <div id="view-daybook" style="display:none">
                 <div class="dash-tbl-wrap">
                     <div class="dash-tbl-hdr">
                         <span>&#128218; Day Book - Transaction Register</span>
@@ -1707,12 +1757,16 @@
                 <h3 id="addCatTitle">Add New Category</h3>
                 <div class="fi" style="margin-bottom:10px">
                     <label>Category Name <span style="color:#C00000">*</span></label>
-                    <input type="text" id="addCatName" placeholder="e.g. Stone Masonry, Plastering..." onkeydown="if(event.key==='Enter')confirmAddCat()">
+                    <input type="text" id="addCatName" placeholder="e.g. Stone Masonry, Plastering..."
+                        onkeydown="if(event.key==='Enter')confirmAddCat()">
                 </div>
                 <div id="addCatSCSection" style="display:none">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:#F5F3FF;border:1px solid #C4B5FD;border-radius:7px">
-                        <input type="checkbox" id="addCatIsSC" onchange="toggleAddCatSC()" style="width:16px;height:16px;cursor:pointer">
-                        <label for="addCatIsSC" style="font-weight:600;color:#4C1D95;cursor:pointer;margin:0">This is a Subcontract category</label>
+                    <div
+                        style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:#F5F3FF;border:1px solid #C4B5FD;border-radius:7px">
+                        <input type="checkbox" id="addCatIsSC" onchange="toggleAddCatSC()"
+                            style="width:16px;height:16px;cursor:pointer">
+                        <label for="addCatIsSC" style="font-weight:600;color:#4C1D95;cursor:pointer;margin:0">This is a
+                            Subcontract category</label>
                     </div>
                     <div id="addCatSCFields" style="display:none">
                         <div class="fi" style="margin-bottom:10px">
@@ -1741,18 +1795,23 @@
                 <h3 id="addPartyTitle">Add New Supplier</h3>
                 <div class="fi" style="margin-bottom:10px">
                     <label>Name <span style="color:#C00000">*</span></label>
-                    <input type="text" id="addPartyName" placeholder="Full name" onkeydown="if(event.key==='Enter')confirmAddParty()">
-                    <div id="addPartyNameErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">Name is required</div>
+                    <input type="text" id="addPartyName" placeholder="Full name"
+                        onkeydown="if(event.key==='Enter')confirmAddParty()">
+                    <div id="addPartyNameErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">Name is
+                        required</div>
                 </div>
                 <div class="fi" style="margin-bottom:10px">
                     <label>Phone Number <span style="color:#C00000">*</span></label>
-                    <input type="tel" id="addPartyPhone" placeholder="10-digit mobile number" onkeydown="if(event.key==='Enter')confirmAddParty()">
-                    <div id="addPartyPhoneErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">Phone number is required</div>
+                    <input type="tel" id="addPartyPhone" placeholder="10-digit mobile number"
+                        onkeydown="if(event.key==='Enter')confirmAddParty()">
+                    <div id="addPartyPhoneErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">Phone
+                        number is required</div>
                 </div>
                 <div class="fi" style="margin-bottom:10px">
-                    <label>UPI / GPay ID <span style="color:#C00000">*</span></label>
-                    <input type="text" id="addPartyUPI" placeholder="e.g. name@upi or 9876543210@ybl" onkeydown="if(event.key==='Enter')confirmAddParty()">
-                    <div id="addPartyUPIErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none">UPI ID is required for payment</div>
+                    <label>UPI / GPay ID <span style="color:#888;font-weight:400">(optional)</span></label>
+                    <input type="text" id="addPartyUPI" placeholder="e.g. name@upi or 9876543210@ybl"
+                        onkeydown="if(event.key==='Enter')confirmAddParty()">
+                    <div id="addPartyUPIErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none"></div>
                 </div>
                 <div style="display:flex;gap:8px;margin-top:16px">
                     <button class="btn btn-green" style="flex:1" onclick="confirmAddParty()">&#10003; Add</button>
@@ -1762,6 +1821,18 @@
         </div>
 
         <div class="notif" id="notif"></div>
+
+        <!-- Edit Entry Modal -->
+        <div class="modal-bg" id="editEntryModal">
+            <div class="modal" style="width:460px">
+                <h3 id="editEntryTitle">Edit Entry</h3>
+                <div id="editEntryFields"></div>
+                <div style="display:flex;gap:8px;margin-top:14px">
+                    <button class="btn btn-green" style="flex:1" onclick="saveEditEntry()">&#10003; Save Changes</button>
+                    <button class="btn btn-grey" onclick="closeModal('editEntryModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Password confirmation modal -->
         <div class="modal-bg" id="pwdConfirmModal">
@@ -1774,9 +1845,12 @@
                         <input type="password" id="pwdConfirmInput" placeholder="Password"
                             style="width:100%;padding:8px 36px 8px 10px;border:1.5px solid #ccc;border-radius:7px;font-size:13px;font-family:Arial,sans-serif"
                             onkeydown="if(event.key==='Enter')pwdConfirmSubmit()">
-                        <button onclick="const i=document.getElementById('pwdConfirmInput');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:#aaa">&#128065;</button>
+                        <button
+                            onclick="const i=document.getElementById('pwdConfirmInput');i.type=i.type==='password'?'text':'password'"
+                            style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:#aaa">&#128065;</button>
                     </div>
-                    <div id="pwdConfirmErr" style="color:#C00000;font-size:11px;font-weight:600;min-height:16px;margin-top:5px"></div>
+                    <div id="pwdConfirmErr"
+                        style="color:#C00000;font-size:11px;font-weight:600;min-height:16px;margin-top:5px"></div>
                 </div>
                 <div style="display:flex;gap:8px">
                     <button class="btn btn-red" style="flex:1" onclick="pwdConfirmSubmit()">Confirm</button>
@@ -1814,10 +1888,13 @@
             let saveTimer = null;
 
             // -- SITE FACTORY --
-            function mkSite(name) {
+            function mkSite(name, profitPct) {
                 return {
                     name,
+                    profitPct: (profitPct !== undefined && !isNaN(profitPct)) ? profitPct : 15,
                     cash: [],
+                    other: [],
+                    addWork: [],
                     matCats: [...DEF_MAT],
                     mat: Object.fromEntries(DEF_MAT.map(c => [c, []])),
                     labCats: [...DEF_LAB],
@@ -1831,6 +1908,9 @@
                 if (!s.mat) s.mat = {};
                 if (!s.lab) s.lab = {};
                 if (!s.cash) s.cash = [];
+                if (!s.other) s.other = [];
+                if (!s.addWork) s.addWork = [];
+                if (s.profitPct === undefined || s.profitPct === null) s.profitPct = 15;
                 s.matCats.forEach(c => {
                     if (!s.mat[c]) s.mat[c] = [];
                     s.mat[c].forEach(r => {
@@ -1959,9 +2039,10 @@
             // -- CALC --
             function calc(i) {
                 const s = sites[i];
+                const pt = (s.profitPct !== undefined && s.profitPct !== null ? s.profitPct : 15) / 100;
                 const rec = s.cash.reduce((a, r) => a + (r.amt || 0), 0);
                 let matExp = 0, matPaid = 0;
-                s.matCats.forEach(c => { 
+                s.matCats.forEach(c => {
                     (s.mat[c] || []).forEach(r => {
                         matExp += (r.amt || 0);
                         matPaid += (r.paid || 0);
@@ -1972,7 +2053,7 @@
                     const lb = s.lab[c] || { daily: [], contract: null };
                     if (lb.contract !== null) {
                         labExp += lb.contract;
-                        labPaid += lb.contract; // Contracts assumed paid
+                        labPaid += lb.contract;
                     } else {
                         (lb.daily || []).forEach(r => {
                             labExp += (r.amt || 0);
@@ -1980,12 +2061,14 @@
                         });
                     }
                 });
-                const exp = matExp + labExp;
+                const otherExp = (s.other || []).reduce((a, r) => a + (r.amt || 0), 0);
+                const addWorkExp = (s.addWork || []).reduce((a, r) => a + (r.amt || 0), 0);
+                const exp = matExp + labExp + otherExp + addWorkExp;
                 const paid = matPaid + labPaid;
                 const pending = exp - paid;
-                const prof = Math.round(exp * PT);
+                const prof = Math.round(exp * pt);
                 const bal = Math.round(rec - exp - prof);
-                return { rec, matExp, labExp, exp, prof, bal, paid, pending };
+                return { rec, matExp, labExp, otherExp, addWorkExp, exp, prof, bal, paid, pending };
             }
 
             function fmt(n) {
@@ -2092,13 +2175,13 @@
                 renderOffice();
                 renderSitesInto("dashSitesList");
             }
-            
+
             function calcCashInHand() {
                 const totalReceipts = sites.reduce((a, s) => a + s.cash.reduce((b, r) => b + (r.amt || 0), 0), 0);
                 const totalDeposited = bankAccounts.reduce((a, acc) => a + (acc.transactions || []).filter(t => t.type === "cr").reduce((b, t) => b + (t.amt || 0), 0), 0);
                 return { totalReceipts, totalDeposited, cashInHand: totalReceipts - totalDeposited };
             }
-            
+
             function calcBankAcc(acc) {
                 const txns = acc.transactions || [];
                 const totalCredits = txns.filter(t => t.type === "cr").reduce((a, t) => a + (t.amt || 0), 0);
@@ -2372,7 +2455,7 @@
                     const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
                     const bc = bal >= 0 ? "bal-p" : "bal-n";
                     const div = document.createElement("div");
-                    div.className = "site-card" + (isOpen ? " expanded-view" : ""); 
+                    div.className = "site-card" + (isOpen ? " expanded-view" : "");
                     div.id = "sc-" + i;
                     div.innerHTML = `
       <div class="site-hdr${isOpen ? " open" : ""}" onclick="toggleSite(${i})">
@@ -2411,11 +2494,13 @@
                 const sec = openSec[i] || "cash";
                 return `
     <div class="sec-tabs">
-      ${["cash", "mat", "lab", "sum"].map((s, j) => `<div class="sec-tab${sec === s ? " on" : ""}" onclick="setSec(${i},'${s}')">${["&#128176; Cash", "&#129521; Materials", "&#128119; Labour", "&#128202; Summary"][j]}</div>`).join("")}
+      ${["cash", "mat", "lab", "other", "addwork", "sum"].map((s, j) => `<div class="sec-tab${sec === s ? " on" : ""}" onclick="setSec(${i},'${s}')">${["&#128176; Cash", "&#129521; Materials", "&#128119; Labour", "&#128196; Other Expense", "&#128295; Additional Work", "&#128202; Summary"][j]}</div>`).join("")}
     </div>
     <div class="sec-panel${sec === "cash" ? " on" : ""}">${sec === "cash" ? cashHTML(i) : ""}</div>
     <div class="sec-panel${sec === "mat" ? " on" : ""}">${sec === "mat" ? matHTML(i) : ""}</div>
     <div class="sec-panel${sec === "lab" ? " on" : ""}">${sec === "lab" ? labHTML(i) : ""}</div>
+    <div class="sec-panel${sec === "other" ? " on" : ""}">${sec === "other" ? otherHTML(i) : ""}</div>
+    <div class="sec-panel${sec === "addwork" ? " on" : ""}">${sec === "addwork" ? addWorkHTML(i) : ""}</div>
     <div class="sec-panel${sec === "sum" ? " on" : ""}">${sec === "sum" ? sumHTML(i) : ""}</div>`;
             }
 
@@ -2425,6 +2510,20 @@
             }
 
             // -- CASH --
+            function rcvdInOpts(sel) {
+                let html = `<option value="Cash"${!sel || sel === "Cash" ? " selected" : ""}>&#128181; Cash</option>`;
+                bankAccounts.forEach(acc => {
+                    const label = esc(acc.bkName) + (acc.accNo ? " (··" + String(acc.accNo).slice(-4) + ")" : "");
+                    html += `<option value="${label}"${sel === label ? " selected" : ""}>${label}</option>`;
+                });
+                return html;
+            }
+
+            function rcvdInBadge(val) {
+                if (!val || val === "Cash") return `<span style="background:#EAF3DE;color:#3B6D11;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px">&#128181; Cash</span>`;
+                return `<span style="background:#E6F1FB;color:#185FA5;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px">&#127981; ${val}</span>`;
+            }
+
             function cashHTML(i) {
                 const rows = sites[i].cash;
                 const tot = rows.reduce((a, r) => a + (r.amt || 0), 0);
@@ -2434,27 +2533,101 @@
       <div></div>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'cash')">&#128424; Print</button>
     </div>
-    <div class="form-row fg4">
+    <div class="form-row" style="grid-template-columns:repeat(6,1fr)">
       <div class="fi"><label>Date</label><input type="date" id="cd-${i}"></div>
+      <div class="fi"><label>Receipt No</label><input type="text" id="cr-${i}" placeholder="Rcpt / Bill No"></div>
       <div class="fi"><label>Particulars</label><input type="text" id="cp-${i}" placeholder="Running bill, advance..."></div>
+      <div class="fi"><label>Received In</label><select id="cri-${i}">${rcvdInOpts("")}</select></div>
       <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ca-${i}" placeholder="0" min="0"></div>
       <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%" onclick="addCash(${i})">+ Add</button></div>
     </div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th style="width:4%">#</th><th style="width:16%">Date</th><th>Particulars</th><th class="r" style="width:20%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
+      <thead><tr><th style="width:4%">#</th><th style="width:11%">Date</th><th style="width:11%">Receipt No</th><th>Particulars</th><th style="width:14%">Received In</th><th class="r" style="width:14%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
       <tbody>
-        ${rows.length === 0 ? '<tr class="empty-row"><td colspan="5">No receipts entered yet</td></tr>' : ""}
-        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "-"}</td><td class="r">${fmt(r.amt)}</td><td><button class="del-btn" onclick="delEntry(${i},'cash',${j})">&#10005;</button></td></tr>`).join("")}
-        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="3">Total Receipts</td><td class="r">${fmt(tot)}</td><td></td></tr>` : ""}
+        ${rows.length === 0 ? '<tr class="empty-row"><td colspan="7">No receipts entered yet</td></tr>' : ""}
+        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td class="muted">${esc(r.rcpt) || "-"}</td><td>${esc(r.part) || "-"}</td><td>${rcvdInBadge(r.receivedIn)}</td><td class="r">${fmt(r.amt)}</td><td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'cash',${j},'')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'cash',${j})">&#10005;</button></td></tr>`).join("")}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="5">Total Receipts</td><td class="r">${fmt(tot)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
             }
 
             function addCash(i) {
-                const d = val("cd-" + i), p = val("cp-" + i), a = num("ca-" + i);
+                const d = val("cd-" + i), rcpt = val("cr-" + i), p = val("cp-" + i), a = num("ca-" + i);
+                const receivedIn = val("cri-" + i) || "Cash";
                 if (!a) { notif("Enter an amount"); return; }
-                sites[i].cash.push({ date: d, part: p, amt: a });
-                saveData(); refreshBody(i, "cash"); refreshHdr(i); renderDash(); notif("Receipt added");
+                const entry = { date: d, rcpt, part: p, receivedIn, amt: a };
+                linkCashToBank(entry);
+                sites[i].cash.push(entry);
+                saveData(); refreshBody(i, "cash"); refreshHdr(i); renderDash();
+                notif(receivedIn === "Cash" ? "Receipt added" : "Receipt added & linked to " + receivedIn);
+            }
+
+            // -- OTHER EXPENSE --
+            function otherHTML(i) {
+                const rows = sites[i].other || [];
+                const tot = rows.reduce((a, r) => a + (r.amt || 0), 0);
+                return `
+    <div class="print-header"><h2>${esc(sites[i].name)} - Other Expenses</h2><p>Meridian Construction Company</p></div>
+    <div class="sec-toolbar">
+      <div></div>
+      <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'other')">&#128424; Print</button>
+    </div>
+    <div class="form-row fg4">
+      <div class="fi"><label>Date</label><input type="date" id="oe-d-${i}"></div>
+      <div class="fi"><label>Purpose</label><input type="text" id="oe-p-${i}" placeholder="Reason / purpose..."></div>
+      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="oe-a-${i}" placeholder="0" min="0"></div>
+      <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-amber" style="width:100%" onclick="addOther(${i})">+ Add</button></div>
+    </div>
+    <div class="tbl-wrap"><table class="etbl">
+      <thead><tr><th style="width:4%">#</th><th style="width:16%">Date</th><th>Purpose</th><th class="r" style="width:20%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
+      <tbody>
+        ${rows.length === 0 ? '<tr class="empty-row"><td colspan="5">No other expenses entered yet</td></tr>' : ""}
+        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.purpose) || "-"}</td><td class="r">${fmt(r.amt)}</td><td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'other',${j},'')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'other',${j})">&#10005;</button></td></tr>`).join("")}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="3">Total Other Expenses</td><td class="r">${fmt(tot)}</td><td></td></tr>` : ""}
+      </tbody>
+    </table></div>`;
+            }
+
+            function addOther(i) {
+                const d = val("oe-d-" + i), p = val("oe-p-" + i), a = num("oe-a-" + i);
+                if (!a) { notif("Enter an amount"); return; }
+                if (!sites[i].other) sites[i].other = [];
+                sites[i].other.push({ date: d, purpose: p, amt: a });
+                saveData(); refreshBody(i, "other"); refreshHdr(i); renderDash(); notif("Other expense added");
+            }
+
+            // -- ADDITIONAL WORK --
+            function addWorkHTML(i) {
+                const rows = sites[i].addWork || [];
+                const tot = rows.reduce((a, r) => a + (r.amt || 0), 0);
+                return `
+    <div class="print-header"><h2>${esc(sites[i].name)} - Additional Work</h2><p>Meridian Construction Company</p></div>
+    <div class="sec-toolbar">
+      <div></div>
+      <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'addwork')">&#128424; Print</button>
+    </div>
+    <div class="form-row fg4">
+      <div class="fi"><label>Date</label><input type="date" id="aw-d-${i}"></div>
+      <div class="fi"><label>Work Description</label><input type="text" id="aw-w-${i}" placeholder="Description of work..."></div>
+      <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="aw-a-${i}" placeholder="0" min="0"></div>
+      <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-purple" style="width:100%" onclick="addAddWork(${i})">+ Add</button></div>
+    </div>
+    <div class="tbl-wrap"><table class="etbl">
+      <thead><tr><th style="width:4%">#</th><th style="width:16%">Date</th><th>Work Description</th><th class="r" style="width:20%">Amount (&#8377;)</th><th style="width:4%"></th></tr></thead>
+      <tbody>
+        ${rows.length === 0 ? '<tr class="empty-row"><td colspan="5">No additional work entries yet</td></tr>' : ""}
+        ${rows.map((r, j) => `<tr><td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.work) || "-"}</td><td class="r">${fmt(r.amt)}</td><td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'addwork',${j},'')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'addwork',${j})">&#10005;</button></td></tr>`).join("")}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="3">Total Additional Work</td><td class="r">${fmt(tot)}</td><td></td></tr>` : ""}
+      </tbody>
+    </table></div>`;
+            }
+
+            function addAddWork(i) {
+                const d = val("aw-d-" + i), w = val("aw-w-" + i), a = num("aw-a-" + i);
+                if (!a) { notif("Enter an amount"); return; }
+                if (!sites[i].addWork) sites[i].addWork = [];
+                sites[i].addWork.push({ date: d, work: w, amt: a });
+                saveData(); refreshBody(i, "addwork"); refreshHdr(i); renderDash(); notif("Additional work added");
             }
 
             // -- MATERIALS --
@@ -2475,10 +2648,11 @@
       </div>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'mat')">&#128424; Print</button>
     </div>
-    <div class="form-row" style="grid-template-columns:repeat(8,1fr)">
+    <div class="form-row" style="grid-template-columns:repeat(9,1fr)">
       <div class="fi"><label>Date</label><input type="date" id="md-${i}"></div>
       <div class="fi"><label>Supplier</label><div style="display:flex;gap:4px"><input type="text" id="mdt-${i}" list="sup-dl-${i}" placeholder="Select or add supplier" autocomplete="off" style="flex:1"><datalist id="sup-dl-${i}">${vendors.map(v => `<option value="${esc(v.name)}">`).join("")}</datalist><button class="btn btn-blue" style="font-size:11px;padding:5px 9px;white-space:nowrap;flex-shrink:0" onclick="openAddPartyModal('vendor',${i})">+ New</button></div></div>
       <div class="fi"><label>Material</label><input type="text" id="mitem-${i}" value="${esc(cat)}" placeholder="Material"></div>
+      <div class="fi"><label>Qty</label><input type="text" id="mqty-${i}" placeholder="e.g. 10 bags"></div>
       <div class="fi"><label>Bill No</label><input type="text" id="mbn-${i}" placeholder="Bill / Invoice"></div>
       <div class="fi"><label>Total</label><input type="number" id="ma-${i}" placeholder="0" min="0" oninput="updMatPending(${i})"></div>
       <div class="fi"><label>Paid</label><input type="number" id="mp-${i}" placeholder="0" min="0" oninput="updMatPending(${i})"></div>
@@ -2486,30 +2660,17 @@
       <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addMat(${i},'${jsq(cat)}')">+ Add</button></div>
     </div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th>#</th><th>Date</th><th>Vendor</th><th>Material</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Date</th><th>Vendor</th><th>Material</th><th>Qty</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
       <tbody>
-        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="9">No ${esc(cat)} entries yet</td></tr>` : ""}
+        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="10">No ${esc(cat)} entries yet</td></tr>` : ""}
         ${rows.map((r, j) => {
-            const pending = (r.amt || 0) - (r.paid || 0);
-            const pmts = r.payments || [];
-            const phId = `ph-mat-${i}-${catIdx}-${j}`;
-            const pRows = pmts.map((p, k) => `<tr><td>${fmtDate(p.date)}</td><td>${esc(p.note)||'-'}</td><td class="r" style="color:#1D9E75">${fmt(p.amount)}</td><td><button class="del-btn" onclick="delMatPayment(${i},${catIdx},${j},${k})">&#10005;</button></td></tr>`).join("");
-            return `<tr>
-              <td class="muted">${j+1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det)||"-"}</td><td>${esc(r.item||cat)}</td><td class="muted">${esc(r.bill)||"-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid||0)}</td><td class="r" style="color:${pending>0?'#BA7517':'#1D9E75'}">${pending>0?fmt(pending):'Paid'}</td>
-              <td style="white-space:nowrap"><button class="pay-hist-btn${pmts.length>0?' has-pmts':''}" onclick="togglePayHist('${phId}')" title="Payment history">&#128179;${pmts.length>0?' '+pmts.length:''}</button> <button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td>
-            </tr>
-            <tr id="${phId}" class="pay-hist-row" style="display:none"><td colspan="9"><div class="pay-hist-wrap">
-              <div class="pay-hist-title">Payment History &nbsp; ${pending>0?`<span class="ph-pending">Remaining: ${fmt(pending)}</span>`:`<span class="ph-paid">&#10003; Fully Paid</span>`}</div>
-              ${pmts.length>0?`<table class="etbl pay-hist-tbl"><thead><tr><th>Date</th><th>Note</th><th class="r">Amount</th><th></th></tr></thead><tbody>${pRows}</tbody></table>`:'<p class="pay-hist-empty">No payments recorded yet.</p>'}
-              ${pending>0?`<div class="form-row" style="grid-template-columns:130px 130px 1fr 120px;gap:6px;margin:8px 0 0">
-                <div class="fi"><label>Date</label><input type="date" id="mpd-${i}-${catIdx}-${j}"></div>
-                <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="mpa-${i}-${catIdx}-${j}" placeholder="0" max="${pending}" min="0"></div>
-                <div class="fi"><label>Note</label><input type="text" id="mpn-${i}-${catIdx}-${j}" placeholder="Advance, Final..."></div>
-                <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%;font-size:11px" onclick="addMatPayment(${i},${catIdx},${j})">+ Add Payment</button></div>
-              </div>`:''}
-            </div></td></tr>`;
-        }).join("")}
-        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="5">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
+                    const pending = (r.amt || 0) - (r.paid || 0);
+                    return `<tr>
+              <td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "-"}</td><td>${esc(r.item || cat)}</td><td class="muted">${esc(r.qty) || "-"}</td><td class="muted">${esc(r.bill) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td>
+              <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'mat-${jsq(cat)}',${j},'${jsq(cat)}')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td>
+            </tr>`;
+                }).join("")}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="6">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
             }
@@ -2520,15 +2681,15 @@
             }
 
             function addMat(i, cat) {
-                const d = val("md-" + i), dt = val("mdt-" + i), item = val("mitem-" + i), bn = val("mbn-" + i), a = num("ma-" + i), p = num("mp-" + i);
+                const d = val("md-" + i), dt = val("mdt-" + i), item = val("mitem-" + i), qty = val("mqty-" + i), bn = val("mbn-" + i), a = num("ma-" + i), p = num("mp-" + i);
                 if (!a) { notif("Enter an amount"); return; }
                 if (!dt) { notif("Select or add a supplier first"); return; }
                 const supplier = vendors.find(v => v.name.toLowerCase() === dt.toLowerCase());
                 if (!supplier) { notif("Unknown supplier — use + New to add them with contact details"); return; }
                 const detName = supplier.name;
                 if (!sites[i].mat[cat]) sites[i].mat[cat] = [];
-                const initPmts = p > 0 ? [{ date: d || new Date().toISOString().slice(0,10), amount: p, note: "Initial" }] : [];
-                sites[i].mat[cat].push({ date: d, det: detName, item: item || cat, bill: bn, amt: a, paid: p, payments: initPmts });
+                const initPmts = p > 0 ? [{ date: d || new Date().toISOString().slice(0, 10), amount: p, note: "Initial" }] : [];
+                sites[i].mat[cat].push({ date: d, det: detName, item: item || cat, qty, bill: bn, amt: a, paid: p, payments: initPmts });
                 saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); renderDash(); notif(cat + " entry added");
             }
             // -- LABOUR --
@@ -2568,7 +2729,7 @@
       <div class="form-row" style="grid-template-columns:repeat(7,1fr)">
         <div class="fi"><label>Date</label><input type="date" id="ld-${i}"></div>
         <div class="fi"><label>Worker</label><div style="display:flex;gap:4px"><input type="text" id="lp-${i}" list="wkr-dl-${i}" placeholder="Select or add worker" autocomplete="off" style="flex:1"><datalist id="wkr-dl-${i}">${labourers.map(l => `<option value="${esc(l.name)}">`).join("")}</datalist><button class="btn btn-blue" style="font-size:11px;padding:5px 9px;white-space:nowrap;flex-shrink:0" onclick="openAddPartyModal('worker',${i})">+ New</button></div></div>
-        <div class="fi"><label>Voucher No</label><input type="text" id="lvn-${i}" placeholder="Voucher No"></div>
+        <div class="fi"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="lvn-${i}" placeholder="Voucher No" style="flex:1"><button class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genVoucher(${i})" title="Auto-generate voucher number">&#9881; Gen</button></div></div>
         <div class="fi"><label>Total</label><input type="number" id="la-${i}" placeholder="0" min="0" oninput="updLabPending(${i})"></div>
         <div class="fi"><label>Paid</label><input type="number" id="lpaid-${i}" placeholder="0" min="0" oninput="updLabPending(${i})"></div>
         <div class="fi"><label>Pending</label><input type="number" id="lrem-${i}" placeholder="0" readonly></div>
@@ -2579,25 +2740,12 @@
         <tbody>
           ${(lb.daily || []).length === 0 ? `<tr class="empty-row"><td colspan="8">No ${esc(cat)} entries yet</td></tr>` : ""}
           ${(lb.daily || []).map((r, j) => {
-              const pending = (r.amt || 0) - (r.paid || 0);
-              const pmts = r.payments || [];
-              const phId = `ph-lab-${i}-${labCatIdx}-${j}`;
-              const pRows = pmts.map((p, k) => `<tr><td>${fmtDate(p.date)}</td><td>${esc(p.note)||'-'}</td><td class="r" style="color:#1D9E75">${fmt(p.amount)}</td><td><button class="del-btn" onclick="delLabPayment(${i},${labCatIdx},${j},${k})">&#10005;</button></td></tr>`).join("");
-              return `<tr>
-                <td class="muted">${j+1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part)||"-"}</td><td class="muted">${esc(r.voucher)||"-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid||0)}</td><td class="r" style="color:${pending>0?'#BA7517':'#1D9E75'}">${pending>0?fmt(pending):'Paid'}</td>
-                <td style="white-space:nowrap"><button class="pay-hist-btn${pmts.length>0?' has-pmts':''}" onclick="togglePayHist('${phId}')" title="Payment history">&#128179;${pmts.length>0?' '+pmts.length:''}</button> <button class="del-btn" onclick="delEntry(${i},'lab-${jsq(cat)}',${j})">&#10005;</button></td>
-              </tr>
-              <tr id="${phId}" class="pay-hist-row" style="display:none"><td colspan="8"><div class="pay-hist-wrap">
-                <div class="pay-hist-title">Payment History &nbsp; ${pending>0?`<span class="ph-pending">Remaining: ${fmt(pending)}</span>`:`<span class="ph-paid">&#10003; Fully Paid</span>`}</div>
-                ${pmts.length>0?`<table class="etbl pay-hist-tbl"><thead><tr><th>Date</th><th>Note</th><th class="r">Amount</th><th></th></tr></thead><tbody>${pRows}</tbody></table>`:'<p class="pay-hist-empty">No payments recorded yet.</p>'}
-                ${pending>0?`<div class="form-row" style="grid-template-columns:130px 130px 1fr 120px;gap:6px;margin:8px 0 0">
-                  <div class="fi"><label>Date</label><input type="date" id="lpd-${i}-${labCatIdx}-${j}"></div>
-                  <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="lpa-${i}-${labCatIdx}-${j}" placeholder="0" max="${pending}" min="0"></div>
-                  <div class="fi"><label>Note</label><input type="text" id="lpn-${i}-${labCatIdx}-${j}" placeholder="Advance, Final..."></div>
-                  <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%;font-size:11px" onclick="addLabPayment(${i},${labCatIdx},${j})">+ Add Payment</button></div>
-                </div>`:''}
-              </div></td></tr>`;
-          }).join("")}
+                    const pending = (r.amt || 0) - (r.paid || 0);
+                    return `<tr>
+                <td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "-"}</td><td class="muted">${esc(r.voucher) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td>
+                <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'lab-${jsq(cat)}',${j},'${jsq(cat)}')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'lab-${jsq(cat)}',${j})">&#10005;</button></td>
+              </tr>`;
+                }).join("")}
           ${(lb.daily || []).length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
         </tbody>
       </table></div>`}`;
@@ -2616,10 +2764,142 @@
                 if (!worker) { notif("Unknown worker — use + New to add them with contact details"); return; }
                 const workerName = worker.name;
                 if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
-                const initLabPmts = paid > 0 ? [{ date: d || new Date().toISOString().slice(0,10), amount: paid, note: "Initial" }] : [];
+                const initLabPmts = paid > 0 ? [{ date: d || new Date().toISOString().slice(0, 10), amount: paid, note: "Initial" }] : [];
                 sites[i].lab[cat].daily.push({ date: d, part: workerName, voucher: vn, amt: a, paid, payments: initLabPmts });
                 saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); renderDash(); notif(cat + " entry added");
             }
+
+            function nextVoucherSeq(siteIdx) {
+                const s = sites[siteIdx];
+                let maxSeq = 0;
+                s.labCats.forEach(c => {
+                    ((s.lab[c] && s.lab[c].daily) || []).forEach(r => {
+                        if (r.voucher) {
+                            const m = r.voucher.match(/-(\d+)$/);
+                            if (m) maxSeq = Math.max(maxSeq, parseInt(m[1], 10));
+                        }
+                    });
+                });
+                return String(maxSeq + 1).padStart(3, "0");
+            }
+
+            function genVoucher(i) {
+                const dateEl = document.getElementById("ld-" + i);
+                const raw = dateEl ? dateEl.value : "";
+                if (!raw) { notif("Enter the date first, then click Gen"); dateEl && dateEl.focus(); return; }
+                const parts = raw.split("-");          // YYYY-MM-DD
+                const dd = (parts[2] || "").padStart(2, "0");
+                const mm = (parts[1] || "").padStart(2, "0");
+                const yy = (parts[0] || "2000").slice(2);
+                const seq = nextVoucherSeq(i);
+                const vch = `VCH-${dd}${mm}${yy}-${seq}`;
+                const el = document.getElementById("lvn-" + i);
+                if (el) { el.value = vch; el.focus(); }
+            }
+
+            function genVoucherEdit(siteIdx) {
+                const dateEl = document.getElementById("ee-date");
+                const raw = dateEl ? dateEl.value : "";
+                if (!raw) { notif("Enter the date first, then click Gen"); dateEl && dateEl.focus(); return; }
+                const parts = raw.split("-");
+                const dd = (parts[2] || "").padStart(2, "0");
+                const mm = (parts[1] || "").padStart(2, "0");
+                const yy = (parts[0] || "2000").slice(2);
+                const seq = nextVoucherSeq(siteIdx);
+                const el = document.getElementById("ee-voucher");
+                if (el) el.value = `VCH-${dd}${mm}${yy}-${seq}`;
+            }
+
+            // -- EDIT ENTRY --
+            let editCtx = null;
+
+            function openEditEntry(siteIdx, type, entryIdx, catKey) {
+                editCtx = { siteIdx, type, entryIdx, catKey };
+                const s = sites[siteIdx];
+                let entry, title, fields;
+                if (type === "cash") {
+                    entry = s.cash[entryIdx];
+                    title = "Edit Cash Receipt";
+                    fields = `
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Receipt No</label><input type="text" id="ee-rcpt" value="${esc(entry.rcpt||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Particulars</label><input type="text" id="ee-part" value="${esc(entry.part||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Received In</label><select id="ee-rcvdin">${rcvdInOpts(entry.receivedIn||'Cash')}</select></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                } else if (type.startsWith("mat-")) {
+                    entry = s.mat[catKey][entryIdx];
+                    title = "Edit Material Entry";
+                    fields = `
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Vendor</label><input type="text" id="ee-det" value="${esc(entry.det||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Material</label><input type="text" id="ee-item" value="${esc(entry.item||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Qty</label><input type="text" id="ee-qty" value="${esc(entry.qty||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Bill No</label><input type="text" id="ee-bill" value="${esc(entry.bill||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                } else if (type.startsWith("lab-")) {
+                    entry = s.lab[catKey].daily[entryIdx];
+                    title = "Edit Labour Entry";
+                    fields = `
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Worker</label><input type="text" id="ee-part" value="${esc(entry.part||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="ee-voucher" value="${esc(entry.voucher||'')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genVoucherEdit(${siteIdx})">&#9881; Gen</button></div></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                } else if (type === "other") {
+                    entry = s.other[entryIdx];
+                    title = "Edit Other Expense";
+                    fields = `
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Purpose</label><input type="text" id="ee-purpose" value="${esc(entry.purpose||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                } else if (type === "addwork") {
+                    entry = s.addWork[entryIdx];
+                    title = "Edit Additional Work";
+                    fields = `
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Work Description</label><input type="text" id="ee-work" value="${esc(entry.work||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                }
+                document.getElementById("editEntryTitle").textContent = title;
+                document.getElementById("editEntryFields").innerHTML = fields;
+                document.getElementById("editEntryModal").classList.add("open");
+                setTimeout(() => { const f = document.querySelector("#editEntryFields input"); if (f) f.focus(); }, 50);
+            }
+
+            function saveEditEntry() {
+                if (!editCtx) return;
+                const { siteIdx, type, entryIdx, catKey } = editCtx;
+                const s = sites[siteIdx];
+                const gv = id => { const e = document.getElementById(id); return e ? e.value.trim() : ""; };
+                const gn = id => { const e = document.getElementById(id); return e ? parseFloat(e.value) || 0 : 0; };
+                if (type === "cash") {
+                    const e = s.cash[entryIdx];
+                    const newRcvd = gv("ee-rcvdin") || "Cash";
+                    const rcvdChanged = newRcvd !== (e.receivedIn || "Cash");
+                    const amtChanged = gn("ee-amt") !== e.amt;
+                    const dateChanged = gv("ee-date") !== (e.date || "");
+                    if (rcvdChanged || amtChanged || dateChanged) unlinkCashFromBank(e);
+                    e.date = gv("ee-date"); e.rcpt = gv("ee-rcpt"); e.part = gv("ee-part"); e.receivedIn = newRcvd; e.amt = gn("ee-amt");
+                    if (rcvdChanged || amtChanged || dateChanged) linkCashToBank(e);
+                } else if (type.startsWith("mat-")) {
+                    const e = s.mat[catKey][entryIdx];
+                    e.date = gv("ee-date"); e.det = gv("ee-det"); e.item = gv("ee-item"); e.qty = gv("ee-qty"); e.bill = gv("ee-bill"); e.amt = gn("ee-amt");
+                } else if (type.startsWith("lab-")) {
+                    const e = s.lab[catKey].daily[entryIdx];
+                    e.date = gv("ee-date"); e.part = gv("ee-part"); e.voucher = gv("ee-voucher"); e.amt = gn("ee-amt");
+                } else if (type === "other") {
+                    const e = s.other[entryIdx];
+                    e.date = gv("ee-date"); e.purpose = gv("ee-purpose"); e.amt = gn("ee-amt");
+                } else if (type === "addwork") {
+                    const e = s.addWork[entryIdx];
+                    e.date = gv("ee-date"); e.work = gv("ee-work"); e.amt = gn("ee-amt");
+                }
+                saveData();
+                closeModal("editEntryModal");
+                const sec = type === "cash" ? "cash" : type === "other" ? "other" : type === "addwork" ? "addwork" : type.startsWith("mat") ? "mat" : "lab";
+                refreshBody(siteIdx, sec); refreshHdr(siteIdx); renderDash();
+                notif("Entry updated"); editCtx = null;
+            }
+
             function togglePayHist(id) {
                 const el = document.getElementById(id);
                 if (el) el.style.display = el.style.display === "none" ? "table-row" : "none";
@@ -2705,37 +2985,66 @@
             // -- SUMMARY --
             function sumHTML(i) {
                 const s = sites[i];
-                const { rec, matExp, labExp, exp, prof, bal } = calc(i);
+                const ptPct = (s.profitPct !== undefined && s.profitPct !== null) ? s.profitPct : 15;
+                const pt = ptPct / 100;
+                const { rec, matExp, labExp, otherExp, addWorkExp, exp, prof, bal } = calc(i);
                 const mRows = s.matCats.map((c, idx) => {
                     const v = (s.mat[c] || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(c)}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
+                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(c)}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + pt)))}</td></tr>`;
                 }).join("");
                 const lRows = s.labCats.map((c, idx) => {
                     const lb = s.lab[c] || { daily: [], contract: null };
                     const isSC = lb.contract !== null;
                     const v = isSC ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(c)}${isSC ? '<span class="sc-pill">SC</span>' : ''}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + PT)))}</td></tr>`;
+                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(c)}${isSC ? '<span class="sc-pill">SC</span>' : ''}</td><td class="r">${fmt(v)}</td><td class="r">${fmt(Math.round(v * (1 + pt)))}</td></tr>`;
                 }).join("");
+                const oRows = (s.other || []).length > 0 ? (s.other || []).map((r, idx) => {
+                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(r.purpose) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r">${fmt(Math.round(r.amt * (1 + pt)))}</td></tr>`;
+                }).join("") : "";
+                const awRows = (s.addWork || []).length > 0 ? (s.addWork || []).map((r, idx) => {
+                    return `<tr><td class="muted" style="width:36px">${idx + 1}</td><td>${esc(r.work) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r">${fmt(Math.round(r.amt * (1 + pt)))}</td></tr>`;
+                }).join("") : "";
                 return `
     <div class="print-header"><h2>${esc(s.name)} - Summary</h2><p>Meridian Construction Company</p></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px">
       <button class="btn btn-amber" style="font-size:11px;padding:5px 10px" onclick="exportSiteExcel(${i})">&#8595; Export Excel</button>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'sum')">&#128424; Print</button>
     </div>
+    <div class="profit-edit-bar" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#FAEEDA;border:1px solid #FAC775;border-radius:8px;margin-bottom:14px">
+      <span style="font-size:12px;font-weight:700;color:#854F0B">&#9998; Profit %</span>
+      <input type="number" id="sp-pct-${i}" value="${ptPct}" min="0" max="100" step="0.1" style="width:80px;padding:5px 8px;border:1.5px solid #BA7517;border-radius:6px;font-size:13px;font-weight:700;color:#BA7517" onkeydown="if(event.key==='Enter')saveProfitPct(${i})">
+      <button class="btn btn-amber" style="font-size:11px;padding:5px 12px" onclick="saveProfitPct(${i})">Update</button>
+      <span style="font-size:11px;color:#854F0B">Edit here to recalculate all profit for this site</span>
+    </div>
     <div class="sum-grid">
       <div class="scard sg"><div class="sl">Total Receipts</div><div class="sv">${fmt(rec)}</div></div>
       <div class="scard sr"><div class="sl">Total Expenditure</div><div class="sv">${fmt(exp)}</div></div>
-      <div class="scard sa"><div class="sl">Profit @ 15%</div><div class="sv">${fmt(prof)}</div></div>
+      <div class="scard sa"><div class="sl">Profit @ ${ptPct}%</div><div class="sv">${fmt(prof)}</div></div>
       <div class="scard sb"><div class="sl">Net Balance</div><div class="sv">${fmt(bal)}</div></div>
     </div>
     <div class="tbl-wrap" style="margin-bottom:12px"><table class="etbl">
-      <thead><tr><th style="width:36px">#</th><th>Material</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
-      <tbody>${mRows}<tr class="sub-row"><td></td><td>Total Materials</td><td class="r">${fmt(matExp)}</td><td class="r">${fmt(Math.round(matExp * (1 + PT)))}</td></tr></tbody>
+      <thead><tr><th style="width:36px">#</th><th>Material</th><th class="r">Amount (&#8377;)</th><th class="r">With ${ptPct}% Profit (&#8377;)</th></tr></thead>
+      <tbody>${mRows}<tr class="sub-row"><td></td><td>Total Materials</td><td class="r">${fmt(matExp)}</td><td class="r">${fmt(Math.round(matExp * (1 + pt)))}</td></tr></tbody>
     </table></div>
-    <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th style="width:36px">#</th><th>Labour</th><th class="r">Amount (&#8377;)</th><th class="r">With 15% Profit (&#8377;)</th></tr></thead>
-      <tbody>${lRows}<tr class="sub-row"><td></td><td>Total Labour</td><td class="r">${fmt(labExp)}</td><td class="r">${fmt(Math.round(labExp * (1 + PT)))}</td></tr></tbody>
-    </table></div>`;
+    <div class="tbl-wrap" style="margin-bottom:12px"><table class="etbl">
+      <thead><tr><th style="width:36px">#</th><th>Labour</th><th class="r">Amount (&#8377;)</th><th class="r">With ${ptPct}% Profit (&#8377;)</th></tr></thead>
+      <tbody>${lRows}<tr class="sub-row"><td></td><td>Total Labour</td><td class="r">${fmt(labExp)}</td><td class="r">${fmt(Math.round(labExp * (1 + pt)))}</td></tr></tbody>
+    </table></div>
+    ${(s.other || []).length > 0 ? `<div class="tbl-wrap" style="margin-bottom:12px"><table class="etbl">
+      <thead><tr><th style="width:36px">#</th><th>Other Expense</th><th class="r">Amount (&#8377;)</th><th class="r">With ${ptPct}% Profit (&#8377;)</th></tr></thead>
+      <tbody>${oRows}<tr class="sub-row"><td></td><td>Total Other Expenses</td><td class="r">${fmt(otherExp)}</td><td class="r">${fmt(Math.round(otherExp * (1 + pt)))}</td></tr></tbody>
+    </table></div>` : ""}
+    ${(s.addWork || []).length > 0 ? `<div class="tbl-wrap" style="margin-bottom:12px"><table class="etbl">
+      <thead><tr><th style="width:36px">#</th><th>Additional Work</th><th class="r">Amount (&#8377;)</th><th class="r">With ${ptPct}% Profit (&#8377;)</th></tr></thead>
+      <tbody>${awRows}<tr class="sub-row"><td></td><td>Total Additional Work</td><td class="r">${fmt(addWorkExp)}</td><td class="r">${fmt(Math.round(addWorkExp * (1 + pt)))}</td></tr></tbody>
+    </table></div>` : ""}`;
+            }
+
+            function saveProfitPct(i) {
+                const pct = parseFloat(document.getElementById("sp-pct-" + i).value);
+                if (isNaN(pct) || pct < 0) { notif("Enter a valid percentage"); return; }
+                sites[i].profitPct = pct;
+                saveData(); refreshBody(i, "sum"); refreshHdr(i); renderDash(); notif("Profit % updated to " + pct + "%");
             }
 
             // -- ADD/REMOVE CATEGORIES --
@@ -2841,8 +3150,7 @@
                 else document.getElementById("addPartyNameErr").style.display = "none";
                 if (!phone) { document.getElementById("addPartyPhoneErr").style.display = "block"; if (valid) { document.getElementById("addPartyPhone").focus(); valid = false; } }
                 else document.getElementById("addPartyPhoneErr").style.display = "none";
-                if (!upi) { document.getElementById("addPartyUPIErr").style.display = "block"; if (valid) { document.getElementById("addPartyUPI").focus(); valid = false; } }
-                else document.getElementById("addPartyUPIErr").style.display = "none";
+                document.getElementById("addPartyUPIErr").style.display = "none";
                 if (!valid) return;
                 const { type, siteIdx } = addPartyCtx;
                 const arr = type === "vendor" ? vendors : labourers;
@@ -2886,6 +3194,37 @@
             // -- HELPERS --
             function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
             function num(id) { const e = document.getElementById(id); return e ? parseFloat(e.value) || 0 : 0; }
+            function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+            function findBankAcctByLabel(label) {
+                return bankAccounts.findIndex(acc => {
+                    const l = acc.bkName + (acc.accNo ? " (··" + String(acc.accNo).slice(-4) + ")" : "");
+                    return l === label;
+                });
+            }
+
+            function linkCashToBank(entry) {
+                if (!entry.receivedIn || entry.receivedIn === "Cash") return;
+                const accIdx = findBankAcctByLabel(entry.receivedIn);
+                if (accIdx < 0) return;
+                if (!bankAccounts[accIdx].transactions) bankAccounts[accIdx].transactions = [];
+                const txnId = uid();
+                bankAccounts[accIdx].transactions.push({ date: entry.date || "", desc: entry.part || "Site Receipt", type: "cr", amt: entry.amt, _id: txnId, autoLinked: true });
+                bankAccounts[accIdx].transactions.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+                entry.linkedBankAccIdx = accIdx;
+                entry.linkedBankTxnId = txnId;
+            }
+
+            function unlinkCashFromBank(entry) {
+                if (!entry.linkedBankTxnId) return;
+                const acc = bankAccounts[entry.linkedBankAccIdx];
+                if (acc && acc.transactions) {
+                    const idx = acc.transactions.findIndex(t => t._id === entry.linkedBankTxnId);
+                    if (idx >= 0) acc.transactions.splice(idx, 1);
+                }
+                delete entry.linkedBankAccIdx;
+                delete entry.linkedBankTxnId;
+            }
 
             function setCat(i, type, cat) {
                 openCat[type + i] = cat;
@@ -3030,18 +3369,20 @@
                     <div style="font-size:12px">Add your first account using the form below</div>
                 </div>`;
 
-                const addForm = `<div style="background:#F5F7FA;border:1px solid #D5DBE5;border-radius:8px;padding:16px;margin-top:16px">
-                    <div style="font-size:12px;font-weight:700;color:#1A3C5E;margin-bottom:12px">&#10133; Add Bank Account</div>
+                const addForm = `<div id="addBankForm" style="display:none;background:#F5F7FA;border:1px solid #D5DBE5;border-radius:8px;padding:16px;margin-top:12px">
                     <div class="form-row fg5">
                         <div class="fi"><label>Bank Name</label><input id="ba-bank" placeholder="SBI / HDFC / ICICI..."></div>
                         <div class="fi"><label>Account Holder Name</label><input id="ba-name" placeholder="Name on account"></div>
                         <div class="fi"><label>Account Number</label><input id="ba-no" placeholder="Account number"></div>
                         <div class="fi"><label>Opening Balance (&#8377;)</label><input id="ba-open" type="number" placeholder="0" min="0"></div>
-                        <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" style="width:100%" onclick="addBankAccount()">+ Add Account</button></div>
+                        <div class="fi" style="display:flex;align-items:flex-end;gap:6px">
+                            <button class="btn btn-green" style="flex:1" onclick="addBankAccount()">+ Add</button>
+                            <button class="btn btn-grey" onclick="document.getElementById('addBankForm').style.display='none'">Cancel</button>
+                        </div>
                     </div>
                 </div>`;
 
-                v.innerHTML = `<div style="padding:14px">${summaryCards}<div class="dash-tbl-wrap"><div class="dash-tbl-hdr"><span>&#127981; Bank Account Statements</span></div><div style="padding:14px">${accCards}${addForm}</div></div></div>`;
+                v.innerHTML = `<div style="padding:14px">${summaryCards}<div class="dash-tbl-wrap"><div class="dash-tbl-hdr"><span>&#127981; Bank Account Statements</span><button class="btn btn-green" style="font-size:11px;padding:4px 11px" onclick="const f=document.getElementById('addBankForm');f.style.display=f.style.display==='none'?'block':'none';if(f.style.display==='block')f.querySelector('input').focus()">+ Add Account</button></div><div style="padding:14px">${accCards}${addForm}</div></div></div>`;
             }
 
             function addBankAccount() {
@@ -3073,7 +3414,7 @@
                 if (!fileInput || !fileInput.files.length) { notif("Select a file first"); return; }
                 const file = fileInput.files[0];
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     try {
                         const wb = XLSX.read(e.target.result, { type: "binary", cellDates: true });
                         const ws = wb.Sheets[wb.SheetNames[0]];
@@ -3092,10 +3433,10 @@
                             const creditStr = get(["credit", "cr", "deposit", "credit amount"]);
                             const amtStr = get(["amount", "amt"]);
                             const typeStr = get(["type", "dr/cr", "txn type"]).toLowerCase();
-                            let drAmt = parseFloat(debitStr.replace(/[^0-9.]/g,"")) || 0;
-                            let crAmt = parseFloat(creditStr.replace(/[^0-9.]/g,"")) || 0;
+                            let drAmt = parseFloat(debitStr.replace(/[^0-9.]/g, "")) || 0;
+                            let crAmt = parseFloat(creditStr.replace(/[^0-9.]/g, "")) || 0;
                             if (!drAmt && !crAmt && amtStr) {
-                                const a = parseFloat(amtStr.replace(/[^0-9.]/g,"")) || 0;
+                                const a = parseFloat(amtStr.replace(/[^0-9.]/g, "")) || 0;
                                 if (typeStr.includes("dr") || typeStr.includes("debit") || typeStr.includes("withdrawal")) drAmt = a;
                                 else crAmt = a;
                             }
@@ -3113,9 +3454,9 @@
                             if (crAmt > 0) bankAccounts[accIdx].transactions.push({ date: dateStr, desc, type: "cr", amt: crAmt });
                             imported++;
                         });
-                        bankAccounts[accIdx].transactions.sort((a,b) => (a.date||"").localeCompare(b.date||""));
+                        bankAccounts[accIdx].transactions.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
                         saveData(); renderAccounts(); renderDash(); notif(imported + " transactions imported");
-                    } catch(err) { notif("Import error: " + err.message); console.error(err); }
+                    } catch (err) { notif("Import error: " + err.message); console.error(err); }
                 };
                 reader.readAsBinaryString(file);
             }
@@ -3161,7 +3502,7 @@
                 const list = buildPartyMap(type);
                 const siteIdx = type === "vendor" ? (vsFilters.site !== "" ? parseInt(vsFilters.site) : -1) : (wkFilters.site !== "" ? parseInt(wkFilters.site) : -1);
                 const filtered = siteIdx >= 0 ? list.filter(p => p.sites.has(sites[siteIdx]?.name)) : list;
-                const siteOptions = `<option value="">All Sites</option>` + sites.map((s, i) => `<option value="${i}"${String(type==="vendor"?vsFilters.site:wkFilters.site)===String(i)?" selected":""}>${esc(s.name)}</option>`).join("");
+                const siteOptions = `<option value="">All Sites</option>` + sites.map((s, i) => `<option value="${i}"${String(type === "vendor" ? vsFilters.site : wkFilters.site) === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
                 const filterChange = type === "vendor" ? "vsFilters.site=this.value;renderVendors()" : "wkFilters.site=this.value;renderLabours()";
                 const grandTotal = filtered.reduce((a, p) => a + p.total, 0);
                 const grandPaid = filtered.reduce((a, p) => a + p.paid, 0);
@@ -3177,26 +3518,27 @@
                     </div>
                   </div></div>`;
                 if (filtered.length === 0) {
-                    html += `<p style="text-align:center;color:#aaa;padding:40px">No data yet. ${type==="vendor"?"Add material entries in sites.":"Add labour entries in sites."}</p>`;
+                    html += `<p style="text-align:center;color:#aaa;padding:40px">No data yet. ${type === "vendor" ? "Add material entries in sites." : "Add labour entries in sites."}</p>`;
                 } else {
-                    html += `<div class="tbl-wrap"><table class="etbl"><thead><tr><th>${type==="vendor"?"Supplier":"Worker"}</th><th>Sites</th><th class="r">Entries</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th style="width:160px">UPI / Phone</th><th class="r">Action</th></tr></thead><tbody>`;
+                    html += `<div class="tbl-wrap"><table class="etbl"><thead><tr><th>${type === "vendor" ? "Supplier" : "Worker"}</th><th>Sites</th><th class="r">Entries</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th style="width:160px">UPI / Phone</th><th class="r">Action</th></tr></thead><tbody>`;
                     filtered.forEach((p, idx) => {
                         const dtRows = p.entries.length
                             ? p.entries.map(e => type === "vendor"
-                                ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item||e.cat)}</td><td>${esc(e.bill)||'-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid||0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
-                                : `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.cat)}</td><td>${esc(e.voucher)||'-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid||0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
+                                ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item || e.cat)}</td><td>${esc(e.bill) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
+                                : `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.cat)}</td><td>${esc(e.voucher) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
                             ).join("")
                             : `<tr class="empty-row"><td colspan="7">No entries</td></tr>`;
                         html += `<tr style="cursor:pointer" onclick="togglePartyDetails('${type}',${idx})">
                           <td><strong>${esc(p.name)}</strong></td>
-                          <td style="font-size:11px;color:#888">${esc([...p.sites].join(", "))||'-'}</td>
+                          <td style="font-size:11px;color:#888">${esc([...p.sites].join(", ")) || '-'}</td>
                           <td class="r">${p.entries.length}</td>
                           <td class="r">${fmt(p.total)}</td>
                           <td class="r" style="color:#1D9E75">${fmt(p.paid)}</td>
-                          <td class="r" style="color:${p.pending>0?'#BA7517':'#1D9E75'};font-weight:700">${fmt(p.pending)}</td>
-                          <td style="font-size:11px">${esc(p.upi)||'<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone)||''}</span></td>
-                          <td class="r" style="white-space:nowrap">
-                            ${p.pending>0?`<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${p.pending})">&#128242; Pay</button>`:'<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                          <td class="r" style="color:${p.pending > 0 ? '#BA7517' : '#1D9E75'};font-weight:700">${fmt(p.pending)}</td>
+                          <td style="font-size:11px">${esc(p.upi) || '<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone) || ''}</span></td>
+                          <td class="r" style="white-space:nowrap;display:flex;gap:5px;justify-content:flex-end;align-items:center">
+                            ${p.pending > 0 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${p.pending})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                            <button class="btn btn-red" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();deleteParty('${type}','${jsq(p.name)}',${p.entries.length})">&#10005;</button>
                           </td>
                         </tr>
                         <tr id="pd-${type}-${idx}" style="display:none"><td colspan="8" style="padding:10px;background:#f5f5f5">
@@ -3211,6 +3553,20 @@
 
             function renderVendors() { renderPartyPage("vendor"); }
             function renderLabours() { renderPartyPage("worker"); }
+
+            function deleteParty(type, name, entryCount) {
+                const arr = type === "vendor" ? vendors : labourers;
+                const label = type === "vendor" ? "supplier" : "worker";
+                const msg = entryCount > 0
+                    ? `"${name}" has ${entryCount} entries across sites. This only removes the contact record — site entries are kept. Delete?`
+                    : `Remove ${label} "${name}" from contacts?`;
+                if (!confirm(msg)) return;
+                const idx = arr.findIndex(p => p.name === name);
+                if (idx >= 0) arr.splice(idx, 1);
+                saveData();
+                if (type === "vendor") renderVendors(); else renderLabours();
+                notif(name + " removed");
+            }
 
             function togglePartyDetails(type, idx) {
                 const el = document.getElementById("pd-" + type + "-" + idx);
@@ -3281,14 +3637,16 @@
                             e.paid = e.payments.reduce((a, p) => a + (p.amount || 0), 0);
                         }));
                     } else {
-                        s.labCats.forEach(cat => { const lb = s.lab[cat]; (lb?.daily || []).forEach(e => {
-                            if (e.part !== payCtx.name) return;
-                            const rem = (e.amt || 0) - (e.paid || 0);
-                            if (rem <= 0) return;
-                            if (!e.payments) e.payments = [];
-                            e.payments.push({ date: today, amount: rem, note: "UPI Payment" });
-                            e.paid = e.payments.reduce((a, p) => a + (p.amount || 0), 0);
-                        }); });
+                        s.labCats.forEach(cat => {
+                            const lb = s.lab[cat]; (lb?.daily || []).forEach(e => {
+                                if (e.part !== payCtx.name) return;
+                                const rem = (e.amt || 0) - (e.paid || 0);
+                                if (rem <= 0) return;
+                                if (!e.payments) e.payments = [];
+                                e.payments.push({ date: today, amount: rem, note: "UPI Payment" });
+                                e.paid = e.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                            });
+                        });
                     }
                 });
                 saveData(); closeQR(); renderDash(); renderVendors(); renderLabours(); notif("All entries marked paid for " + payCtx.name); payCtx = null;
@@ -3307,11 +3665,13 @@
 
             function delEntry(i, type, j) {
                 if (!confirm("Delete this entry?")) return;
-                if (type === "cash") sites[i].cash.splice(j, 1);
+                if (type === "cash") { unlinkCashFromBank(sites[i].cash[j]); sites[i].cash.splice(j, 1); }
+                else if (type === "other") { if (!sites[i].other) sites[i].other = []; sites[i].other.splice(j, 1); }
+                else if (type === "addwork") { if (!sites[i].addWork) sites[i].addWork = []; sites[i].addWork.splice(j, 1); }
                 else if (type.startsWith("mat-")) { const c = type.slice(4); if (sites[i].mat[c]) sites[i].mat[c].splice(j, 1); }
                 else if (type.startsWith("lab-")) { const c = type.slice(4); if (sites[i].lab[c]) sites[i].lab[c].daily.splice(j, 1); }
                 saveData();
-                const sec = type === "cash" ? "cash" : type.startsWith("mat") ? "mat" : "lab";
+                const sec = type === "cash" ? "cash" : type === "other" ? "other" : type === "addwork" ? "addwork" : type.startsWith("mat") ? "mat" : "lab";
                 refreshBody(i, sec); refreshHdr(i); renderDash();
             }
 
@@ -3324,8 +3684,10 @@
             function addSite() {
                 const nm = document.getElementById("newSiteName").value.trim();
                 if (!nm) { notif("Enter a site name"); return; }
-                sites.push(mkSite(nm));
+                const profitInput = parseFloat(document.getElementById("newSiteProfit").value);
+                sites.push(mkSite(nm, isNaN(profitInput) ? 15 : profitInput));
                 document.getElementById("newSiteName").value = "";
+                document.getElementById("newSiteProfit").value = "15";
                 document.getElementById("addSiteBar").classList.remove("open");
                 saveData(); renderDash(); renderSites(); notif(nm + " added");
             }
@@ -3404,7 +3766,7 @@
                 const { rec, matExp, labExp, exp, prof, bal, paid, pending } = calc(i);
                 const wb = XLSX.utils.book_new();
                 const d = new Date();
-                const ds = d.getDate() + "-" + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()] + "-" + d.getFullYear();
+                const ds = d.getDate() + "-" + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()] + "-" + d.getFullYear();
 
                 // Sheet 1: Cash Receipts
                 const cashData = [
@@ -3480,35 +3842,84 @@
                 XLSX.utils.book_append_sheet(wb, wsLab, "Labour");
 
                 // Sheet 4: Summary
+                const ptPctSite = (s.profitPct !== undefined && s.profitPct !== null) ? s.profitPct : 15;
+                const ptSite = ptPctSite / 100;
                 const sumData = [
                     [s.name.toUpperCase() + " - SUMMARY"],
                     ["Generated: " + ds],
+                    ["Profit %: " + ptPctSite + "%"],
                     [""],
-                    ["Item", "Amount (₹)", "With 15% Profit (₹)"],
+                    ["Item", "Amount (₹)", "With " + ptPctSite + "% Profit (₹)"],
                     [""],
                     ["MATERIALS", "", ""],
                 ];
                 s.matCats.forEach(cat => {
                     const v = (s.mat[cat] || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    sumData.push([cat, v, Math.round(v * (1 + PT))]);
+                    sumData.push([cat, v, Math.round(v * (1 + ptSite))]);
                 });
-                sumData.push(["Total Materials", matExp, Math.round(matExp * (1 + PT))]);
+                sumData.push(["Total Materials", matExp, Math.round(matExp * (1 + ptSite))]);
                 sumData.push([""]);
                 sumData.push(["LABOUR", "", ""]);
                 s.labCats.forEach(cat => {
                     const lb = s.lab[cat] || { daily: [], contract: null };
                     const v = lb.contract !== null ? lb.contract : (lb.daily || []).reduce((a, r) => a + (r.amt || 0), 0);
-                    sumData.push([cat + (lb.contract !== null ? " [SC]" : ""), v, Math.round(v * (1 + PT))]);
+                    sumData.push([cat + (lb.contract !== null ? " [SC]" : ""), v, Math.round(v * (1 + ptSite))]);
                 });
-                sumData.push(["Total Labour", labExp, Math.round(labExp * (1 + PT))]);
+                sumData.push(["Total Labour", labExp, Math.round(labExp * (1 + ptSite))]);
+                if ((s.other || []).length > 0) {
+                    sumData.push([""]);
+                    sumData.push(["OTHER EXPENSES", "", ""]);
+                    (s.other || []).forEach(r => sumData.push([r.purpose || "", r.amt || 0, Math.round((r.amt || 0) * (1 + ptSite))]));
+                    const otherExpSite = (s.other || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    sumData.push(["Total Other Expenses", otherExpSite, Math.round(otherExpSite * (1 + ptSite))]);
+                }
+                if ((s.addWork || []).length > 0) {
+                    sumData.push([""]);
+                    sumData.push(["ADDITIONAL WORK", "", ""]);
+                    (s.addWork || []).forEach(r => sumData.push([r.work || "", r.amt || 0, Math.round((r.amt || 0) * (1 + ptSite))]));
+                    const addWorkExpSite = (s.addWork || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    sumData.push(["Total Additional Work", addWorkExpSite, Math.round(addWorkExpSite * (1 + ptSite))]);
+                }
                 sumData.push([""]);
-                sumData.push(["TOTAL EXPENDITURE", exp, Math.round(exp * (1 + PT))]);
+                sumData.push(["TOTAL EXPENDITURE", exp, Math.round(exp * (1 + ptSite))]);
                 sumData.push(["TOTAL RECEIPTS", rec, ""]);
-                sumData.push(["PROFIT @ 15%", prof, ""]);
+                sumData.push(["PROFIT @ " + ptPctSite + "%", prof, ""]);
                 sumData.push(["NET BALANCE", bal, ""]);
                 const wsSum = XLSX.utils.aoa_to_sheet(sumData);
                 wsSum["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 22 }];
                 XLSX.utils.book_append_sheet(wb, wsSum, "Summary");
+
+                // Sheet 5: Other Expenses
+                if ((s.other || []).length > 0) {
+                    const otherData = [
+                        [s.name.toUpperCase() + " - OTHER EXPENSES"],
+                        ["Generated: " + ds],
+                        [""],
+                        ["#", "Date", "Purpose", "Amount (₹)"]
+                    ];
+                    (s.other || []).forEach((r, j) => otherData.push([j + 1, r.date || "", r.purpose || "", r.amt || 0]));
+                    const otherTotalVal = (s.other || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    otherData.push(["", "", "TOTAL OTHER EXPENSES", otherTotalVal]);
+                    const wsOther = XLSX.utils.aoa_to_sheet(otherData);
+                    wsOther["!cols"] = [{ wch: 4 }, { wch: 14 }, { wch: 30 }, { wch: 16 }];
+                    XLSX.utils.book_append_sheet(wb, wsOther, "Other Expenses");
+                }
+
+                // Sheet 6: Additional Work
+                if ((s.addWork || []).length > 0) {
+                    const awData = [
+                        [s.name.toUpperCase() + " - ADDITIONAL WORK"],
+                        ["Generated: " + ds],
+                        [""],
+                        ["#", "Date", "Work Description", "Amount (₹)"]
+                    ];
+                    (s.addWork || []).forEach((r, j) => awData.push([j + 1, r.date || "", r.work || "", r.amt || 0]));
+                    const awTotal = (s.addWork || []).reduce((a, r) => a + (r.amt || 0), 0);
+                    awData.push(["", "", "TOTAL ADDITIONAL WORK", awTotal]);
+                    const wsAW = XLSX.utils.aoa_to_sheet(awData);
+                    wsAW["!cols"] = [{ wch: 4 }, { wch: 14 }, { wch: 34 }, { wch: 16 }];
+                    XLSX.utils.book_append_sheet(wb, wsAW, "Additional Work");
+                }
 
                 const safeName = (s.name || "Site").replace(/[^A-Za-z0-9 _-]/g, "").substring(0, 20) || "Site";
                 XLSX.writeFile(wb, "Meridian_" + safeName + "_" + ds + ".xlsx");
@@ -3648,6 +4059,16 @@
                             });
                         }
                     });
+
+                    (s.other || []).forEach(r => {
+                        if (!inDbRange(r.date)) return;
+                        entries.push({ date: r.date || "", site: s.name, type: "Other Expense", typeKey: "other", part: r.purpose || "", ref: "", dr: r.amt || 0, cr: 0 });
+                    });
+
+                    (s.addWork || []).forEach(r => {
+                        if (!inDbRange(r.date)) return;
+                        entries.push({ date: r.date || "", site: s.name, type: "Additional Work", typeKey: "addwork", part: r.work || "", ref: "", dr: r.amt || 0, cr: 0 });
+                    });
                 });
 
                 const tf = dbFilters.type;
@@ -3657,7 +4078,7 @@
                     if (!a.date && !b.date) return 0;
                     if (!a.date) return 1;
                     if (!b.date) return -1;
-                    return a.date.localeCompare(b.date);
+                    return b.date.localeCompare(a.date);
                 });
 
                 const groups = {};
@@ -3680,7 +4101,7 @@
 
                         grp.forEach((e, j) => {
                             grpDr += e.dr; grpCr += e.cr;
-                            const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : "db-type-lab";
+                            const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : e.typeKey === "other" ? "db-type-lab" : "db-type-lab";
                             tableRows += `<tr>
                             <td>${j === 0 ? (dateKey === "-" ? "<span style='color:#aaa'>-</span>" : `<span class="db-date-cell">${fmtDate(dateKey)}</span>`) : ""}</td>
                             <td style="font-size:11px">${esc(e.site)}</td>
@@ -3724,6 +4145,8 @@
                   <option value="receipt"${tf === "receipt" ? " selected" : ""}>Receipts Only</option>
                   <option value="material"${tf === "material" ? " selected" : ""}>Materials Only</option>
                   <option value="labour"${tf === "labour" ? " selected" : ""}>Labour Only</option>
+                  <option value="other"${tf === "other" ? " selected" : ""}>Other Expense Only</option>
+                  <option value="addwork"${tf === "addwork" ? " selected" : ""}>Additional Work Only</option>
                 </select></div>
               </div>
               <div class="db-stats">
