@@ -1464,6 +1464,80 @@
             }
         }
 
+        /* -- Office I&E card ----------------------------- */
+        .office-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 2px solid #534AB7;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(83,74,183,.12)
+        }
+        .office-hdr {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 16px;
+            cursor: pointer;
+            user-select: none;
+            background: #fff;
+            transition: background .15s
+        }
+        .office-hdr:hover { background: #F5F3FF }
+        .office-hdr.open { background: #534AB7 }
+        .office-hdr.open .sname { color: #fff }
+        .office-hdr.open .smeta { color: #C5C0F0 }
+        .office-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #534AB7;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0
+        }
+        .office-hdr.open .office-icon { background: #3C3489 }
+        .office-body { border-top: 2px solid #534AB7 }
+        .office-fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            border-radius: 0;
+            border: none;
+            overflow-y: auto;
+            background: #F0F2F5
+        }
+        .office-fullscreen .office-body { background: #F0F2F5 }
+        .office-fullscreen .sec-panel { min-height: calc(100vh - 180px) }
+        .office-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border-top: 1px solid #e0e0e0;
+            background: #F0F2F5
+        }
+        .office-col {
+            background: #fff;
+            border-right: 2px solid #e0e0e0
+        }
+        .office-col:last-child { border-right: none }
+        .office-col-hdr {
+            background: #1D9E75;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 14px;
+            letter-spacing: .3px
+        }
+        .income-col-hdr { background: #1D9E75 }
+        .expense-col-hdr { background: #C00000 }
+        @media(max-width:800px) {
+            .office-cols { grid-template-columns: 1fr }
+            .office-col { border-right: none; border-bottom: 2px solid #e0e0e0 }
+        }
+
         /* -- Payment history ----------------------------- */
         .pay-hist-btn {
             background: #E6F1FB;
@@ -1601,6 +1675,7 @@
 
             <div id="view-dash">
                 <div class="dash-cards" id="dashCards"></div>
+                <div id="officePanel" style="margin-bottom:12px"></div>
                 <div class="sites-list" id="dashSitesList" style="margin-top:16px"></div>
             </div>
 
@@ -1717,10 +1792,16 @@
             const DEF_MAT = ["Stone", "Cement", "Sand", "Metal", "Steel"];
             const DEF_LAB = ["Stone Masonry", "Concrete Mason", "Man Labor", "Plastering"];
 
+            const DEF_OFF_INC = ["Floor Plan Design Charge", "Panchayat Permit Drawing Charge", "3D Designing Charge", "Site Consultation Charge"];
+            const DEF_OFF_EXP = ["Building / Office Rent", "Electricity Charge", "Staff Salary"];
+
             let sites = [];
             let vendors = [];
             let labourers = [];
             let bankAccounts = [];
+            let office = { income: [], expenses: [], staff: [] };
+            let officeOpen = false;
+            let officeTab = "income";
             let openSite = null;
             let openSec = {};
             let openCat = {};
@@ -1799,10 +1880,11 @@
                                 vendors = d.vendors || [];
                                 labourers = d.labourers || [];
                                 bankAccounts = d.bankAccounts || [];
+                                office = d.office || { income: [], expenses: [], staff: [] };
                                 fbConnected = true;
                                 setCloudStatus("synced", "&#9728; Cloud Synced");
                                 // Also save to localStorage as backup
-                                localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts }));
+                                localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts, office }));
                                 return;
                             }
                         }
@@ -1832,17 +1914,20 @@
                         vendors = d.vendors || [];
                         labourers = d.labourers || [];
                         bankAccounts = d.bankAccounts || [];
+                        office = d.office || { income: [], expenses: [], staff: [] };
                     } else {
                         for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                         vendors = [];
                         labourers = [];
                         bankAccounts = [];
+                        office = { income: [], expenses: [], staff: [] };
                     }
                 } catch (e) {
                     sites = [];
                     vendors = [];
                     labourers = [];
                     bankAccounts = [];
+                    office = { income: [], expenses: [], staff: [] };
                     for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                 }
             }
@@ -1850,7 +1935,7 @@
             // -- SAVE (local instant + cloud debounced) --
             function saveData() {
                 // Always save locally instantly
-                try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts })); } catch (e) { }
+                try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts, office })); } catch (e) { }
 
                 // Debounce cloud save
                 if (saveTimer) clearTimeout(saveTimer);
@@ -1862,7 +1947,7 @@
                     try {
                         setCloudStatus("syncing", "&#9881; Saving...");
                         const ref = window.fsDoc(window.db, "meridian", "main");
-                        await window.fsSetDoc(ref, { sites, vendors, labourers, bankAccounts, updated: new Date().toISOString() });
+                        await window.fsSetDoc(ref, { sites, vendors, labourers, bankAccounts, office, updated: new Date().toISOString() });
                         setCloudStatus("synced", "&#9728; Cloud Synced");
                     } catch (e) {
                         console.error("Cloud save error:", e);
@@ -1953,15 +2038,58 @@
                 const { cashInHand } = calcCashInHand();
                 const balBank = bankAccounts.reduce((a, acc) => a + calcBankAcc(acc).balance, 0);
                 const balTotal = cashInHand + balBank;
-                
-                document.getElementById("dashCards").innerHTML = `
-    <div class="dcard"><div class="dl">Total Income</div><div class="dv dv-green">${fmt(tR)}</div></div>
-    <div class="dcard"><div class="dl">Total Expense</div><div class="dv dv-red">${fmt(tE)}</div></div>
-    <div class="dcard"><div class="dl">Payment Pending</div><div class="dv dv-amber">${fmt(tPend)}</div></div>
-    <div class="dcard"><div class="dl">Cash in Hand</div><div class="dv dv-blue">${fmt(cashInHand)}</div></div>
-    <div class="dcard"><div class="dl">Balance in Bank</div><div class="dv dv-blue">${fmt(balBank)}</div></div>
-    <div class="dcard"><div class="dl">Total Balance</div><div class="dv dv-green">${fmt(balTotal)}</div></div>`;
+                const offInc = office.income.reduce((a, r) => a + (r.amt || 0), 0);
+                const offExp = office.expenses.reduce((a, r) => a + (r.amt || 0), 0);
+                const offBal = offInc - offExp;
 
+                document.getElementById("dashCards").innerHTML = `
+    <div class="dcard dv-green-card" style="background:#F0FAF5">
+      <div class="dl">Total Income</div><div class="dv dv-green">${fmt(tR)}</div>
+      <div style="font-size:10px;color:#1D9E75;margin-top:5px;font-weight:600;opacity:.7">&#128200; Sites</div>
+    </div>
+    <div class="dcard dv-red-card" style="background:#FDF0F0">
+      <div class="dl">Total Expense</div><div class="dv dv-red">${fmt(tE)}</div>
+      <div style="font-size:10px;color:#C00000;margin-top:5px;font-weight:600;opacity:.7">&#128200; Sites</div>
+    </div>
+    <div class="dcard dv-amber-card" style="background:#FDF6EC">
+      <div class="dl">Payment Pending</div><div class="dv dv-amber">${fmt(tPend)}</div>
+      <div style="font-size:10px;color:#BA7517;margin-top:5px;font-weight:600;opacity:.7">&#9200; Unpaid</div>
+    </div>
+    <div class="dcard dv-blue-card" style="background:#EFF5FD">
+      <div class="dl">Cash in Hand</div><div class="dv dv-blue">${fmt(cashInHand)}</div>
+      <div style="font-size:10px;color:#185FA5;margin-top:5px;font-weight:600;opacity:.7">&#128181; Receipts − Deposits</div>
+    </div>
+    <div class="dcard dv-blue-card" style="background:#EFF5FD">
+      <div class="dl">Balance in Bank</div><div class="dv dv-blue">${fmt(balBank)}</div>
+      <div style="font-size:10px;color:#185FA5;margin-top:5px;font-weight:600;opacity:.7">&#127981; Bank Accounts</div>
+    </div>
+    <div class="dcard dv-green-card" style="background:#F0FAF5">
+      <div class="dl">Total Balance</div><div class="dv dv-green">${fmt(balTotal)}</div>
+      <div style="font-size:10px;color:#1D9E75;margin-top:5px;font-weight:600;opacity:.7">&#128176; Cash + Bank</div>
+    </div>
+
+    <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:4px 0 2px">
+      <span style="font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">&#127970; Office</span>
+      <div style="flex:1;height:1.5px;background:linear-gradient(to right,#C4B5FD,transparent)"></div>
+    </div>
+
+    <div class="dcard" style="grid-column:span 2;border-left:4px solid #534AB7;background:#F5F3FF">
+      <div class="dl" style="color:#534AB7">Office Income</div>
+      <div class="dv" style="color:#534AB7">${fmt(offInc)}</div>
+      <div style="font-size:10px;color:#534AB7;margin-top:5px;font-weight:600;opacity:.7">&#128200; Receipts</div>
+    </div>
+    <div class="dcard" style="grid-column:span 2;border-left:4px solid #C00000;background:#FDF0F0">
+      <div class="dl">Office Expense</div>
+      <div class="dv dv-red">${fmt(offExp)}</div>
+      <div style="font-size:10px;color:#C00000;margin-top:5px;font-weight:600;opacity:.7">&#128200; Expenditure</div>
+    </div>
+    <div class="dcard" style="grid-column:span 2;border-left:4px solid ${offBal>=0?'#1D9E75':'#C00000'};background:${offBal>=0?'#F0FAF5':'#FDF0F0'}">
+      <div class="dl">Office Balance</div>
+      <div class="dv ${offBal>=0?'dv-green':'dv-red'}">${fmt(offBal)}</div>
+      <div style="font-size:10px;color:${offBal>=0?'#1D9E75':'#C00000'};margin-top:5px;font-weight:600;opacity:.7">${offBal>=0?'&#9989; Surplus':'&#9888; Deficit'}</div>
+    </div>`;
+
+                renderOffice();
                 renderSitesInto("dashSitesList");
             }
             
@@ -1976,6 +2104,245 @@
                 const totalCredits = txns.filter(t => t.type === "cr").reduce((a, t) => a + (t.amt || 0), 0);
                 const totalDebits = txns.filter(t => t.type === "dr").reduce((a, t) => a + (t.amt || 0), 0);
                 return { totalCredits, totalDebits, balance: (acc.openingBal || 0) + totalCredits - totalDebits };
+            }
+
+            // -- OFFICE I&E --
+            function renderOffice() {
+                const wrap = document.getElementById("officePanel");
+                if (!wrap) return;
+                const totalInc = office.income.reduce((a, r) => a + (r.amt || 0), 0);
+                const totalExp = office.expenses.reduce((a, r) => a + (r.amt || 0), 0);
+                const offBal = totalInc - totalExp;
+                const balCls = offBal >= 0 ? "dv-green" : "dv-red";
+
+                const incCats = [...new Set([...DEF_OFF_INC, ...office.income.map(r => r.cat).filter(Boolean)])];
+                const expCats = [...new Set([...DEF_OFF_EXP, ...office.expenses.map(r => r.cat).filter(Boolean)])];
+
+                const incSearch = (document.getElementById('ofi-search')||{value:''}).value.toLowerCase();
+                const expSearch = (document.getElementById('ofe-search')||{value:''}).value.toLowerCase();
+
+                // Income table rows
+                const filtInc = office.income.filter(r => !incSearch || (r.cat+r.client+r.desc+r.date).toLowerCase().includes(incSearch));
+                const filtIncTotal = filtInc.reduce((a,r)=>a+(r.amt||0),0);
+                const incRows = filtInc.length === 0
+                    ? `<tr class="empty-row"><td colspan="6">${incSearch ? 'No results for "'+incSearch+'"' : 'No income entries yet'}</td></tr>`
+                    : filtInc.map((r, j) => `<tr>
+                        <td class="muted">${j+1}</td>
+                        <td>${fmtDate(r.date)}</td>
+                        <td>${esc(r.cat)}</td>
+                        <td>${esc(r.client)||"-"}</td>
+                        <td>${esc(r.desc)||"-"}</td>
+                        <td class="r" style="color:#1D9E75;font-weight:700">${fmt(r.amt)}</td>
+                        <td><button class="del-btn" onclick="delOfficeIncome(${office.income.indexOf(r)})">&#10005;</button></td>
+                      </tr>`).join("") +
+                    `<tr class="sub-row"><td colspan="5">Total${incSearch?' (filtered)':''}</td><td class="r">${fmt(filtIncTotal)}</td><td></td></tr>`;
+
+                const isStaffSalary = r => r.cat && r.cat.toLowerCase().includes("staff salary");
+
+                // Expense table rows
+                const filtExp = office.expenses.filter(r => !expSearch || (r.cat+(r.staffName||'')+(r.desc||'')+r.date).toLowerCase().includes(expSearch));
+                const filtExpTotal = filtExp.reduce((a,r)=>a+(r.amt||0),0);
+                const expRows = filtExp.length === 0
+                    ? `<tr class="empty-row"><td colspan="5">No expense entries yet${expSearch?' for "'+expSearch+'"':''}</td></tr>`
+                    : filtExp.map((r, j) => `<tr${isStaffSalary(r) ? ' style="background:#EEF6FF"' : ''}>
+                        <td class="muted">${j+1}</td>
+                        <td>${fmtDate(r.date)}</td>
+                        <td>${esc(r.cat)}${isStaffSalary(r) && r.staffName ? ` <span style="font-size:10px;color:#2E75B6;font-weight:700">&#128119; ${esc(r.staffName)}</span>` : ''}</td>
+                        <td class="r" style="color:#C00000;font-weight:700">${fmt(r.amt)}</td>
+                        <td><button class="del-btn" onclick="delOfficeExpense(${office.expenses.indexOf(r)})">&#10005;</button></td>
+                      </tr>`).join("") +
+                    `<tr class="sub-row"><td colspan="3">Total${expSearch?' (filtered)':''}</td><td class="r">${fmt(filtExpTotal)}</td><td></td></tr>`;
+
+                // Staff table — shows salary paid per staff member
+                const staffRows = office.staff.length === 0
+                    ? '<tr class="empty-row"><td colspan="5">No staff added yet</td></tr>'
+                    : office.staff.map((s, j) => {
+                        const salaryPaid = office.expenses
+                            .filter(e => isStaffSalary(e) && e.staffName === s.name)
+                            .reduce((a, e) => a + (e.amt || 0), 0);
+                        return `<tr>
+                            <td class="muted">${j+1}</td>
+                            <td><strong>${esc(s.name)}</strong></td>
+                            <td>${esc(s.address)||"-"}</td>
+                            <td class="r" style="color:#C00000;font-weight:700">${salaryPaid > 0 ? fmt(salaryPaid) : '<span style="color:#bbb">-</span>'}</td>
+                            <td><button class="del-btn" onclick="delOfficeStaff(${j})">&#10005;</button></td>
+                          </tr>`;
+                    }).join("");
+
+                wrap.innerHTML = `
+  <div class="office-card${officeOpen?" office-fullscreen":""}">
+    <div class="office-hdr${officeOpen?" open":""}" onclick="toggleOffice()" style="${officeOpen?"position:sticky;top:0;z-index:1001":""}">
+      <div class="office-icon">&#127970;</div>
+      <div class="sinfo">
+        <div class="sname" style="${officeOpen?"color:#fff":""}">Office Income &amp; Expenditure</div>
+        <div class="smeta">Income: <strong>${fmt(totalInc)}</strong> &nbsp;|&nbsp; Expense: <strong>${fmt(totalExp)}</strong> &nbsp;|&nbsp; Balance: <strong style="${officeOpen?(offBal>=0?'color:#7EE8B0':'color:#FFB3B3'):(offBal>=0?'':'color:#C00000')}">${fmt(offBal)}</strong></div>
+      </div>
+      ${officeOpen
+        ? `<button class="btn btn-red" style="font-size:16px;padding:6px 12px;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="event.stopPropagation();toggleOffice()" title="Close">&#10005;</button>`
+        : `<span class="sarr">&#9654;</span>`
+      }
+    </div>
+    ${officeOpen ? `
+    <div class="office-body">
+      <!-- Summary cards -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px 0">
+        <div class="scard sg"><div class="sl">Office Income</div><div class="sv">${fmt(totalInc)}</div></div>
+        <div class="scard sr"><div class="sl">Office Expense</div><div class="sv">${fmt(totalExp)}</div></div>
+        <div class="scard ${offBal>=0?"sg":"sr"}"><div class="sl">Office Balance</div><div class="sv">${fmt(offBal)}</div></div>
+      </div>
+
+      <!-- TABS -->
+      <div class="sec-tabs" style="margin-top:12px">
+        <div class="sec-tab${officeTab==="income"?" on":""}" onclick="setOfficeTab('income')">&#128176; Office Income</div>
+        <div class="sec-tab${officeTab==="expense"?" on":""}" onclick="setOfficeTab('expense')">&#128176; Office Expense</div>
+        <div class="sec-tab${officeTab==="staff"?" on":""}" onclick="setOfficeTab('staff')">&#128119; Staff</div>
+      </div>
+
+      <!-- TWO-COLUMN LAYOUT: Income | Expense (shown when income or expense tab is active) -->
+      <div class="office-cols" style="${officeTab==='staff'?'display:none':'grid-template-columns:1fr'}">
+
+        <!-- LEFT: INCOME -->
+        <div class="office-col" style="${officeTab==='expense'?'display:none':''}">
+          <div class="office-col-hdr income-col-hdr" style="display:flex;align-items:center;justify-content:space-between">
+            <span>&#128176; Income</span>
+            <input type="text" id="ofi-search" placeholder="&#128269; Search..." oninput="renderOffice()" autocomplete="off"
+              style="font-size:11px;padding:3px 8px;border:1px solid rgba(255,255,255,.4);border-radius:5px;background:rgba(255,255,255,.2);color:#fff;width:150px" onclick="event.stopPropagation()">
+          </div>
+          <div style="padding:14px">
+            <div class="form-row fg2" style="margin-bottom:6px">
+              <div class="fi"><label>Date</label><input type="date" id="ofi-date"></div>
+              <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ofi-amt" placeholder="0" min="0"></div>
+            </div>
+            <div class="form-row fg2" style="margin-bottom:6px">
+              <div class="fi"><label>Category</label>
+                <input type="text" id="ofi-cat" list="ofi-cat-dl" placeholder="Select or type..." autocomplete="off">
+                <datalist id="ofi-cat-dl">${incCats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+              </div>
+              <div class="fi"><label>Client Name</label><input type="text" id="ofi-client" placeholder="Client / Party name"></div>
+            </div>
+            <div class="form-row" style="grid-template-columns:1fr auto;gap:8px;margin-bottom:12px">
+              <div class="fi"><label>Description / Notes</label><input type="text" id="ofi-desc" placeholder="Details..."></div>
+              <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" onclick="addOfficeIncome()">+ Add</button></div>
+            </div>
+            <div class="tbl-wrap"><table class="etbl">
+              <thead><tr><th style="width:28px">#</th><th>Date</th><th>Category</th><th>Client</th><th class="r">Amount</th><th></th></tr></thead>
+              <tbody>${incRows}</tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: EXPENSE -->
+        <div class="office-col" style="${officeTab==='income'?'display:none':''}">
+          <div class="office-col-hdr expense-col-hdr" style="display:flex;align-items:center;justify-content:space-between">
+            <span>&#128176; Expense</span>
+            <input type="text" id="ofe-search" placeholder="&#128269; Search..." oninput="renderOffice()" autocomplete="off"
+              style="font-size:11px;padding:3px 8px;border:1px solid rgba(255,255,255,.4);border-radius:5px;background:rgba(255,255,255,.2);color:#fff;width:150px" onclick="event.stopPropagation()">
+          </div>
+          <div style="padding:14px">
+            <div class="form-row fg2" style="margin-bottom:6px">
+              <div class="fi"><label>Date</label><input type="date" id="ofe-date"></div>
+              <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ofe-amt" placeholder="0" min="0"></div>
+            </div>
+            <div class="form-row fg2" style="margin-bottom:6px">
+              <div class="fi"><label>Category</label>
+                <input type="text" id="ofe-cat" list="ofe-cat-dl" placeholder="Select or type..." autocomplete="off"
+                  oninput="const w=document.getElementById('ofe-staff-wrap');if(w)w.style.display=this.value.toLowerCase().includes('staff salary')?'block':'none'">
+                <datalist id="ofe-cat-dl">${expCats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+              </div>
+              <div class="fi" id="ofe-staff-wrap" style="display:none">
+                <label>Staff Member</label>
+                <select id="ofe-staff">
+                  <option value="">-- Select Staff --</option>
+                  ${office.staff.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+            <div class="fi" style="display:flex;justify-content:flex-end;margin-bottom:12px">
+              <button class="btn btn-red" onclick="addOfficeExpense()">+ Add Expense</button>
+            </div>
+            <div class="tbl-wrap" style="margin-bottom:18px"><table class="etbl">
+              <thead><tr><th style="width:28px">#</th><th>Date</th><th>Category</th><th class="r">Amount</th><th></th></tr></thead>
+              <tbody>${expRows}</tbody>
+            </table></div>
+
+          </div>
+        </div>
+
+      </div><!-- /office-cols -->
+
+      <!-- STAFF TAB -->
+      ${officeTab==='staff' ? `
+      <div style="padding:14px;background:#fff">
+        <div class="office-col-hdr" style="background:#2E75B6;margin:-14px -14px 14px;border-radius:0">&#128119; Staff &nbsp;<span style="font-size:10px;font-weight:400;opacity:.85">(${office.staff.length} members)</span></div>
+        <div class="form-row fg3" style="margin-bottom:14px">
+          <div class="fi"><label>Staff Name</label><input type="text" id="ofs-name" placeholder="Full name"></div>
+          <div class="fi"><label>Address</label><input type="text" id="ofs-addr" placeholder="Home address"></div>
+          <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addOfficeStaff()">+ Add Staff</button></div>
+        </div>
+        <div class="tbl-wrap"><table class="etbl">
+          <thead><tr><th style="width:28px">#</th><th>Name</th><th>Address</th><th class="r">Salary Paid</th><th></th></tr></thead>
+          <tbody>${staffRows}</tbody>
+        </table></div>
+      </div>` : ''}
+
+
+    </div>` : ""}
+  </div>`;
+            }
+
+            function setOfficeTab(t) { officeTab = t; renderOffice(); }
+            function toggleOffice() {
+                officeOpen = !officeOpen;
+                document.body.classList.toggle("lock-scroll", officeOpen);
+                renderOffice();
+                if (officeOpen) { const el = document.getElementById("officePanel"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+            }
+
+            function addOfficeIncome() {
+                const date = val("ofi-date"), cat = val("ofi-cat"), client = val("ofi-client"), desc = val("ofi-desc"), amt = num("ofi-amt");
+                if (!cat) { notif("Enter a category"); return; }
+                if (!amt) { notif("Enter an amount"); return; }
+                office.income.push({ date, cat, client, desc, amt });
+                office.income.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+                saveData(); renderOffice(); renderDash(); notif("Income entry added");
+            }
+
+            function delOfficeIncome(j) {
+                if (!confirm("Delete this income entry?")) return;
+                office.income.splice(j, 1);
+                saveData(); renderOffice(); renderDash(); notif("Entry deleted");
+            }
+
+            function addOfficeExpense() {
+                const date = val("ofe-date"), cat = val("ofe-cat"), amt = num("ofe-amt");
+                const isSal = cat.toLowerCase().includes("staff salary");
+                const staffName = isSal ? val("ofe-staff") : "";
+                if (!cat) { notif("Enter a category"); return; }
+                if (!amt) { notif("Enter an amount"); return; }
+                if (isSal && !staffName) { notif("Select a staff member for Salary"); return; }
+                office.expenses.push({ date, cat, staffName, amt });
+                office.expenses.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+                saveData(); renderOffice(); renderDash(); notif("Expense entry added");
+            }
+
+            function delOfficeExpense(j) {
+                if (!confirm("Delete this expense entry?")) return;
+                office.expenses.splice(j, 1);
+                saveData(); renderOffice(); renderDash(); notif("Entry deleted");
+            }
+
+            function addOfficeStaff() {
+                const name = val("ofs-name"), address = val("ofs-addr");
+                if (!name) { notif("Enter staff name"); return; }
+                if (office.staff.find(s => s.name.toLowerCase() === name.toLowerCase())) { notif("Staff already exists"); return; }
+                office.staff.push({ name, address });
+                saveData(); renderOffice(); notif(name + " added to staff");
+            }
+
+            function delOfficeStaff(j) {
+                if (!confirm(`Remove "${office.staff[j].name}" from staff?`)) return;
+                office.staff.splice(j, 1);
+                saveData(); renderOffice(); notif("Staff removed");
             }
 
             function goSite(i) {
