@@ -2648,29 +2648,30 @@
       </div>
       <button class="btn btn-grey" style="font-size:11px;padding:5px 10px" onclick="printSec(${i},'mat')">&#128424; Print</button>
     </div>
-    <div class="form-row" style="grid-template-columns:repeat(9,1fr)">
+    <div class="form-row" style="grid-template-columns:repeat(10,1fr)">
       <div class="fi"><label>Date</label><input type="date" id="md-${i}"></div>
       <div class="fi"><label>Supplier</label><div style="display:flex;gap:4px"><input type="text" id="mdt-${i}" list="sup-dl-${i}" placeholder="Select or add supplier" autocomplete="off" style="flex:1"><datalist id="sup-dl-${i}">${vendors.map(v => `<option value="${esc(v.name)}">`).join("")}</datalist><button class="btn btn-blue" style="font-size:11px;padding:5px 9px;white-space:nowrap;flex-shrink:0" onclick="openAddPartyModal('vendor',${i})">+ New</button></div></div>
       <div class="fi"><label>Material</label><input type="text" id="mitem-${i}" value="${esc(cat)}" placeholder="Material"></div>
       <div class="fi"><label>Qty</label><input type="text" id="mqty-${i}" placeholder="e.g. 10 bags"></div>
       <div class="fi"><label>Bill No</label><input type="text" id="mbn-${i}" placeholder="Bill / Invoice"></div>
+      <div class="fi"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="mvn-${i}" placeholder="Voucher No" style="flex:1"><button class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genMatVoucher(${i})" title="Auto-generate voucher number">&#9881; Gen</button></div></div>
       <div class="fi"><label>Total</label><input type="number" id="ma-${i}" placeholder="0" min="0" oninput="updMatPending(${i})"></div>
       <div class="fi"><label>Paid</label><input type="number" id="mp-${i}" placeholder="0" min="0" oninput="updMatPending(${i})"></div>
       <div class="fi"><label>Pending</label><input type="number" id="mrem-${i}" placeholder="0" readonly></div>
       <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addMat(${i},'${jsq(cat)}')">+ Add</button></div>
     </div>
     <div class="tbl-wrap"><table class="etbl">
-      <thead><tr><th>#</th><th>Date</th><th>Vendor</th><th>Material</th><th>Qty</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Date</th><th>Vendor</th><th>Material</th><th>Qty</th><th>Bill No</th><th>Voucher No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
       <tbody>
-        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="10">No ${esc(cat)} entries yet</td></tr>` : ""}
+        ${rows.length === 0 ? `<tr class="empty-row"><td colspan="11">No ${esc(cat)} entries yet</td></tr>` : ""}
         ${rows.map((r, j) => {
                     const pending = (r.amt || 0) - (r.paid || 0);
                     return `<tr>
-              <td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "-"}</td><td>${esc(r.item || cat)}</td><td class="muted">${esc(r.qty) || "-"}</td><td class="muted">${esc(r.bill) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td>
+              <td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "-"}</td><td>${esc(r.item || cat)}</td><td class="muted">${esc(r.qty) || "-"}</td><td class="muted">${esc(r.bill) || "-"}</td><td class="muted">${esc(r.voucher) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td>
               <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'mat-${jsq(cat)}',${j},'${jsq(cat)}')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td>
             </tr>`;
                 }).join("")}
-        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="6">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
+        ${rows.length > 0 ? `<tr class="sub-row"><td colspan="7">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
       </tbody>
     </table></div>`;
             }
@@ -2681,7 +2682,7 @@
             }
 
             function addMat(i, cat) {
-                const d = val("md-" + i), dt = val("mdt-" + i), item = val("mitem-" + i), qty = val("mqty-" + i), bn = val("mbn-" + i), a = num("ma-" + i), p = num("mp-" + i);
+                const d = val("md-" + i), dt = val("mdt-" + i), item = val("mitem-" + i), qty = val("mqty-" + i), bn = val("mbn-" + i), vn = val("mvn-" + i), a = num("ma-" + i), p = num("mp-" + i);
                 if (!a) { notif("Enter an amount"); return; }
                 if (!dt) { notif("Select or add a supplier first"); return; }
                 const supplier = vendors.find(v => v.name.toLowerCase() === dt.toLowerCase());
@@ -2689,8 +2690,36 @@
                 const detName = supplier.name;
                 if (!sites[i].mat[cat]) sites[i].mat[cat] = [];
                 const initPmts = p > 0 ? [{ date: d || new Date().toISOString().slice(0, 10), amount: p, note: "Initial" }] : [];
-                sites[i].mat[cat].push({ date: d, det: detName, item: item || cat, qty, bill: bn, amt: a, paid: p, payments: initPmts });
+                sites[i].mat[cat].push({ date: d, det: detName, item: item || cat, qty, bill: bn, voucher: vn, amt: a, paid: p, payments: initPmts });
                 saveData(); openCat["m" + i] = cat; refreshBody(i, "mat"); refreshHdr(i); renderDash(); notif(cat + " entry added");
+            }
+
+            function nextMatVoucherSeq(siteIdx) {
+                const s = sites[siteIdx];
+                let maxSeq = 0;
+                s.matCats.forEach(c => {
+                    (s.mat[c] || []).forEach(r => {
+                        if (r.voucher) {
+                            const m = r.voucher.match(/-(\d+)$/);
+                            if (m) maxSeq = Math.max(maxSeq, parseInt(m[1], 10));
+                        }
+                    });
+                });
+                return String(maxSeq + 1).padStart(3, "0");
+            }
+
+            function genMatVoucher(i) {
+                const dateEl = document.getElementById("md-" + i);
+                const raw = dateEl ? dateEl.value : "";
+                if (!raw) { notif("Enter the date first, then click Gen"); dateEl && dateEl.focus(); return; }
+                const parts = raw.split("-");          // YYYY-MM-DD
+                const dd = (parts[2] || "").padStart(2, "0");
+                const mm = (parts[1] || "").padStart(2, "0");
+                const yy = (parts[0] || "2000").slice(2);
+                const seq = nextMatVoucherSeq(i);
+                const vch = `VCH-${dd}${mm}${yy}-${seq}`;
+                const el = document.getElementById("mvn-" + i);
+                if (el) { el.value = vch; el.focus(); }
             }
             // -- LABOUR --
             function labHTML(i) {
@@ -2726,27 +2755,28 @@
         <thead><tr><th>Item</th><th>Subcontractor</th><th class="r">Amount</th></tr></thead>
         <tbody>${lb.contract ? `<tr class="sc-row"><td>Subcontract - ${esc(cat)}</td><td>${esc(lb.scName) || "-"}</td><td class="r">${fmt(lb.contract)}</td></tr>` : '<tr class="empty-row"><td colspan="3">Enter contract details above and click Save</td></tr>'}</tbody>
       </table></div>`: `
-      <div class="form-row" style="grid-template-columns:repeat(7,1fr)">
+      <div class="form-row" style="grid-template-columns:repeat(8,1fr)">
         <div class="fi"><label>Date</label><input type="date" id="ld-${i}"></div>
         <div class="fi"><label>Worker</label><div style="display:flex;gap:4px"><input type="text" id="lp-${i}" list="wkr-dl-${i}" placeholder="Select or add worker" autocomplete="off" style="flex:1"><datalist id="wkr-dl-${i}">${labourers.map(l => `<option value="${esc(l.name)}">`).join("")}</datalist><button class="btn btn-blue" style="font-size:11px;padding:5px 9px;white-space:nowrap;flex-shrink:0" onclick="openAddPartyModal('worker',${i})">+ New</button></div></div>
         <div class="fi"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="lvn-${i}" placeholder="Voucher No" style="flex:1"><button class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genVoucher(${i})" title="Auto-generate voucher number">&#9881; Gen</button></div></div>
+        <div class="fi"><label>Bill No</label><div style="display:flex;gap:4px"><input type="text" id="lbn-${i}" placeholder="Bill No" style="flex:1"><button class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genLabBill(${i})" title="Auto-generate bill number">&#9881; Gen</button></div></div>
         <div class="fi"><label>Total</label><input type="number" id="la-${i}" placeholder="0" min="0" oninput="updLabPending(${i})"></div>
         <div class="fi"><label>Paid</label><input type="number" id="lpaid-${i}" placeholder="0" min="0" oninput="updLabPending(${i})"></div>
         <div class="fi"><label>Pending</label><input type="number" id="lrem-${i}" placeholder="0" readonly></div>
         <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addLab(${i},'${jsq(cat)}')">+ Add</button></div>
       </div>
       <div class="tbl-wrap"><table class="etbl">
-        <thead><tr><th>#</th><th>Date</th><th>Worker</th><th>Voucher No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th>Date</th><th>Worker</th><th>Voucher No</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th></th></tr></thead>
         <tbody>
-          ${(lb.daily || []).length === 0 ? `<tr class="empty-row"><td colspan="8">No ${esc(cat)} entries yet</td></tr>` : ""}
+          ${(lb.daily || []).length === 0 ? `<tr class="empty-row"><td colspan="9">No ${esc(cat)} entries yet</td></tr>` : ""}
           ${(lb.daily || []).map((r, j) => {
                     const pending = (r.amt || 0) - (r.paid || 0);
                     return `<tr>
-                <td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "-"}</td><td class="muted">${esc(r.voucher) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td>
+                <td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.part) || "-"}</td><td class="muted">${esc(r.voucher) || "-"}</td><td class="muted">${esc(r.bill) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td>
                 <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'lab-${jsq(cat)}',${j},'${jsq(cat)}')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'lab-${jsq(cat)}',${j})">&#10005;</button></td>
               </tr>`;
                 }).join("")}
-          ${(lb.daily || []).length > 0 ? `<tr class="sub-row"><td colspan="4">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
+          ${(lb.daily || []).length > 0 ? `<tr class="sub-row"><td colspan="5">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
         </tbody>
       </table></div>`}`;
             }
@@ -2757,7 +2787,7 @@
             }
 
             function addLab(i, cat) {
-                const d = val("ld-" + i), p = val("lp-" + i), vn = val("lvn-" + i), a = num("la-" + i), paid = num("lpaid-" + i);
+                const d = val("ld-" + i), p = val("lp-" + i), vn = val("lvn-" + i), bn = val("lbn-" + i), a = num("la-" + i), paid = num("lpaid-" + i);
                 if (!a) { notif("Enter an amount"); return; }
                 if (!p) { notif("Select or add a worker first"); return; }
                 const worker = labourers.find(w => w.name.toLowerCase() === p.toLowerCase());
@@ -2765,8 +2795,36 @@
                 const workerName = worker.name;
                 if (!sites[i].lab[cat]) sites[i].lab[cat] = { daily: [], contract: null, scName: "", scDesc: "" };
                 const initLabPmts = paid > 0 ? [{ date: d || new Date().toISOString().slice(0, 10), amount: paid, note: "Initial" }] : [];
-                sites[i].lab[cat].daily.push({ date: d, part: workerName, voucher: vn, amt: a, paid, payments: initLabPmts });
+                sites[i].lab[cat].daily.push({ date: d, part: workerName, voucher: vn, bill: bn, amt: a, paid, payments: initLabPmts });
                 saveData(); openCat["l" + i] = cat; refreshBody(i, "lab"); refreshHdr(i); renderDash(); notif(cat + " entry added");
+            }
+
+            function nextLabBillSeq(siteIdx) {
+                const s = sites[siteIdx];
+                let maxSeq = 0;
+                s.labCats.forEach(c => {
+                    ((s.lab[c] && s.lab[c].daily) || []).forEach(r => {
+                        if (r.bill) {
+                            const m = r.bill.match(/-(\d+)$/);
+                            if (m) maxSeq = Math.max(maxSeq, parseInt(m[1], 10));
+                        }
+                    });
+                });
+                return String(maxSeq + 1).padStart(3, "0");
+            }
+
+            function genLabBill(i) {
+                const dateEl = document.getElementById("ld-" + i);
+                const raw = dateEl ? dateEl.value : "";
+                if (!raw) { notif("Enter the date first, then click Gen"); dateEl && dateEl.focus(); return; }
+                const parts = raw.split("-");          // YYYY-MM-DD
+                const dd = (parts[2] || "").padStart(2, "0");
+                const mm = (parts[1] || "").padStart(2, "0");
+                const yy = (parts[0] || "2000").slice(2);
+                const seq = nextLabBillSeq(i);
+                const bn = `BILL-${dd}${mm}${yy}-${seq}`;
+                const el = document.getElementById("lbn-" + i);
+                if (el) { el.value = bn; el.focus(); }
             }
 
             function nextVoucherSeq(siteIdx) {
@@ -2810,6 +2868,32 @@
                 if (el) el.value = `VCH-${dd}${mm}${yy}-${seq}`;
             }
 
+            function genMatVoucherEdit(siteIdx) {
+                const dateEl = document.getElementById("ee-date");
+                const raw = dateEl ? dateEl.value : "";
+                if (!raw) { notif("Enter the date first, then click Gen"); dateEl && dateEl.focus(); return; }
+                const parts = raw.split("-");
+                const dd = (parts[2] || "").padStart(2, "0");
+                const mm = (parts[1] || "").padStart(2, "0");
+                const yy = (parts[0] || "2000").slice(2);
+                const seq = nextMatVoucherSeq(siteIdx);
+                const el = document.getElementById("ee-mvoucher");
+                if (el) el.value = `VCH-${dd}${mm}${yy}-${seq}`;
+            }
+
+            function genLabBillEdit(siteIdx) {
+                const dateEl = document.getElementById("ee-date");
+                const raw = dateEl ? dateEl.value : "";
+                if (!raw) { notif("Enter the date first, then click Gen"); dateEl && dateEl.focus(); return; }
+                const parts = raw.split("-");
+                const dd = (parts[2] || "").padStart(2, "0");
+                const mm = (parts[1] || "").padStart(2, "0");
+                const yy = (parts[0] || "2000").slice(2);
+                const seq = nextLabBillSeq(siteIdx);
+                const el = document.getElementById("ee-labbill");
+                if (el) el.value = `BILL-${dd}${mm}${yy}-${seq}`;
+            }
+
             // -- EDIT ENTRY --
             let editCtx = null;
 
@@ -2835,6 +2919,7 @@
                         <div class="fi" style="margin-bottom:9px"><label>Material</label><input type="text" id="ee-item" value="${esc(entry.item||'')}"></div>
                         <div class="fi" style="margin-bottom:9px"><label>Qty</label><input type="text" id="ee-qty" value="${esc(entry.qty||'')}"></div>
                         <div class="fi" style="margin-bottom:9px"><label>Bill No</label><input type="text" id="ee-bill" value="${esc(entry.bill||'')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="ee-mvoucher" value="${esc(entry.voucher||'')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genMatVoucherEdit(${siteIdx})">&#9881; Gen</button></div></div>
                         <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
                 } else if (type.startsWith("lab-")) {
                     entry = s.lab[catKey].daily[entryIdx];
@@ -2843,6 +2928,7 @@
                         <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
                         <div class="fi" style="margin-bottom:9px"><label>Worker</label><input type="text" id="ee-part" value="${esc(entry.part||'')}"></div>
                         <div class="fi" style="margin-bottom:9px"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="ee-voucher" value="${esc(entry.voucher||'')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genVoucherEdit(${siteIdx})">&#9881; Gen</button></div></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Bill No</label><div style="display:flex;gap:4px"><input type="text" id="ee-labbill" value="${esc(entry.bill||'')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genLabBillEdit(${siteIdx})">&#9881; Gen</button></div></div>
                         <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
                 } else if (type === "other") {
                     entry = s.other[entryIdx];
@@ -2882,10 +2968,10 @@
                     if (rcvdChanged || amtChanged || dateChanged) linkCashToBank(e);
                 } else if (type.startsWith("mat-")) {
                     const e = s.mat[catKey][entryIdx];
-                    e.date = gv("ee-date"); e.det = gv("ee-det"); e.item = gv("ee-item"); e.qty = gv("ee-qty"); e.bill = gv("ee-bill"); e.amt = gn("ee-amt");
+                    e.date = gv("ee-date"); e.det = gv("ee-det"); e.item = gv("ee-item"); e.qty = gv("ee-qty"); e.bill = gv("ee-bill"); e.voucher = gv("ee-mvoucher"); e.amt = gn("ee-amt");
                 } else if (type.startsWith("lab-")) {
                     const e = s.lab[catKey].daily[entryIdx];
-                    e.date = gv("ee-date"); e.part = gv("ee-part"); e.voucher = gv("ee-voucher"); e.amt = gn("ee-amt");
+                    e.date = gv("ee-date"); e.part = gv("ee-part"); e.voucher = gv("ee-voucher"); e.bill = gv("ee-labbill"); e.amt = gn("ee-amt");
                 } else if (type === "other") {
                     const e = s.other[entryIdx];
                     e.date = gv("ee-date"); e.purpose = gv("ee-purpose"); e.amt = gn("ee-amt");
