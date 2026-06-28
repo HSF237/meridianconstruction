@@ -2140,7 +2140,7 @@
     </div>
     <div class="dcard dv-blue-card" style="background:#EFF5FD">
       <div class="dl">Cash in Hand</div><div class="dv dv-blue">${fmt(cashInHand)}</div>
-      <div style="font-size:10px;color:#185FA5;margin-top:5px;font-weight:600;opacity:.7">&#128181; Receipts − Deposits</div>
+      <div style="font-size:10px;color:#185FA5;margin-top:5px;font-weight:600;opacity:.7">&#128181; Receipts − Deposits − Paid Out</div>
     </div>
     <div class="dcard dv-blue-card" style="background:#EFF5FD">
       <div class="dl">Balance in Bank</div><div class="dv dv-blue">${fmt(balBank)}</div>
@@ -2179,7 +2179,11 @@
             function calcCashInHand() {
                 const totalReceipts = sites.reduce((a, s) => a + s.cash.reduce((b, r) => b + (r.amt || 0), 0), 0);
                 const totalDeposited = bankAccounts.reduce((a, acc) => a + (acc.transactions || []).filter(t => t.type === "cr").reduce((b, t) => b + (t.amt || 0), 0), 0);
-                return { totalReceipts, totalDeposited, cashInHand: totalReceipts - totalDeposited };
+                const totalPaidOut = sites.reduce((a, _, i) => {
+                    const c = calc(i);
+                    return a + c.paid;
+                }, 0);
+                return { totalReceipts, totalDeposited, totalPaidOut, cashInHand: totalReceipts - totalDeposited - totalPaidOut };
             }
 
             function calcBankAcc(acc) {
