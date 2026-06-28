@@ -2064,8 +2064,8 @@
                 const otherExp = (s.other || []).reduce((a, r) => a + (r.amt || 0), 0);
                 const addWorkExp = (s.addWork || []).reduce((a, r) => a + (r.amt || 0), 0);
                 const exp = matExp + labExp + otherExp + addWorkExp;
-                const paid = matPaid + labPaid;
-                const pending = exp - paid;
+                const paid = matPaid + labPaid + otherExp + addWorkExp;
+                const pending = matExp + labExp - matPaid - labPaid;
                 const prof = Math.round(exp * pt);
                 const bal = Math.round(rec - exp - prof);
                 return { rec, matExp, labExp, otherExp, addWorkExp, exp, prof, bal, paid, pending };
@@ -3623,7 +3623,7 @@
                           <td class="r" style="color:${p.pending > 0 ? '#BA7517' : '#1D9E75'};font-weight:700">${fmt(p.pending)}</td>
                           <td style="font-size:11px">${esc(p.upi) || '<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone) || ''}</span></td>
                           <td class="r" style="white-space:nowrap;display:flex;gap:5px;justify-content:flex-end;align-items:center">
-                            ${p.pending > 0 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${p.pending})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                            ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : p.pending > 0 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${p.pending})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
                             <button class="btn btn-red" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();deleteParty('${type}','${jsq(p.name)}',${p.entries.length})">&#10005;</button>
                           </td>
                         </tr>
@@ -3676,6 +3676,7 @@
             }
 
             function payParty(type, name, amount) {
+                if (name === "(Unknown)") { notif("Add a vendor/worker name to this entry before paying."); return; }
                 const arr = type === "vendor" ? vendors : labourers;
                 let party = arr.find(v => v.name === name);
                 if (!party || !party.upi) {
