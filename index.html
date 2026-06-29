@@ -9,7 +9,7 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { initializeApp } from "https://www.gAAstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -245,6 +245,10 @@
 
         .dv-blue {
             color: #185FA5
+        }
+
+        .dv-teal {
+            color: #0E8074
         }
 
         .dash-tbl-wrap {
@@ -955,6 +959,25 @@
             }
         }
 
+        @media(max-width:600px) {
+            #dashCards {
+                gap: 6px
+            }
+
+            #dashCards .dcard {
+                padding: 10px 12px
+            }
+
+            #dashCards .dcard .dl {
+                font-size: 10px;
+                margin-bottom: 5px
+            }
+
+            #dashCards .dcard .dv {
+                font-size: 16px
+            }
+        }
+
         .db-filter-bar {
             padding: 14px;
             border-bottom: 1px solid #eee;
@@ -1148,6 +1171,10 @@
 
         .dcard.dv-blue-card {
             border-left: 4px solid #185FA5
+        }
+
+        .dcard.dv-teal-card {
+            border-left: 4px solid #0E8074
         }
 
         /* -- Button press feedback --------------------- */
@@ -1482,8 +1509,9 @@
             border-radius: 10px;
             border: 2px solid #534AB7;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(83,74,183,.12)
+            box-shadow: 0 2px 8px rgba(83, 74, 183, .12)
         }
+
         .office-hdr {
             display: flex;
             align-items: center;
@@ -1494,10 +1522,23 @@
             background: #fff;
             transition: background .15s
         }
-        .office-hdr:hover { background: #F5F3FF }
-        .office-hdr.open { background: #534AB7 }
-        .office-hdr.open .sname { color: #fff }
-        .office-hdr.open .smeta { color: #C5C0F0 }
+
+        .office-hdr:hover {
+            background: #F5F3FF
+        }
+
+        .office-hdr.open {
+            background: #534AB7
+        }
+
+        .office-hdr.open .sname {
+            color: #fff
+        }
+
+        .office-hdr.open .smeta {
+            color: #C5C0F0
+        }
+
         .office-icon {
             width: 34px;
             height: 34px;
@@ -1510,8 +1551,15 @@
             font-size: 16px;
             flex-shrink: 0
         }
-        .office-hdr.open .office-icon { background: #3C3489 }
-        .office-body { border-top: 2px solid #534AB7 }
+
+        .office-hdr.open .office-icon {
+            background: #3C3489
+        }
+
+        .office-body {
+            border-top: 2px solid #534AB7
+        }
+
         .office-fullscreen {
             position: fixed;
             inset: 0;
@@ -1521,8 +1569,15 @@
             overflow-y: auto;
             background: #F0F2F5
         }
-        .office-fullscreen .office-body { background: #F0F2F5 }
-        .office-fullscreen .sec-panel { min-height: calc(100vh - 180px) }
+
+        .office-fullscreen .office-body {
+            background: #F0F2F5
+        }
+
+        .office-fullscreen .sec-panel {
+            min-height: calc(100vh - 180px)
+        }
+
         .office-cols {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1530,11 +1585,16 @@
             border-top: 1px solid #e0e0e0;
             background: #F0F2F5
         }
+
         .office-col {
             background: #fff;
             border-right: 2px solid #e0e0e0
         }
-        .office-col:last-child { border-right: none }
+
+        .office-col:last-child {
+            border-right: none
+        }
+
         .office-col-hdr {
             background: #1D9E75;
             color: #fff;
@@ -1543,11 +1603,24 @@
             padding: 10px 14px;
             letter-spacing: .3px
         }
-        .income-col-hdr { background: #1D9E75 }
-        .expense-col-hdr { background: #C00000 }
+
+        .income-col-hdr {
+            background: #1D9E75
+        }
+
+        .expense-col-hdr {
+            background: #C00000
+        }
+
         @media(max-width:800px) {
-            .office-cols { grid-template-columns: 1fr }
-            .office-col { border-right: none; border-bottom: 2px solid #e0e0e0 }
+            .office-cols {
+                grid-template-columns: 1fr
+            }
+
+            .office-col {
+                border-right: none;
+                border-bottom: 2px solid #e0e0e0
+            }
         }
 
         /* -- Payment history ----------------------------- */
@@ -1828,7 +1901,8 @@
                 <h3 id="editEntryTitle">Edit Entry</h3>
                 <div id="editEntryFields"></div>
                 <div style="display:flex;gap:8px;margin-top:14px">
-                    <button class="btn btn-green" style="flex:1" onclick="saveEditEntry()">&#10003; Save Changes</button>
+                    <button class="btn btn-green" style="flex:1" onclick="saveEditEntry()">&#10003; Save
+                        Changes</button>
                     <button class="btn btn-grey" onclick="closeModal('editEntryModal')">Cancel</button>
                 </div>
             </div>
@@ -2150,6 +2224,10 @@
       <div class="dl">Total Balance</div><div class="dv dv-green">${fmt(balTotal)}</div>
       <div style="font-size:10px;color:#1D9E75;margin-top:5px;font-weight:600;opacity:.7">&#128176; Cash + Bank</div>
     </div>
+    <div class="dcard dv-teal-card" style="background:#EBF7F5">
+      <div class="dl">Profit</div><div class="dv dv-teal">${fmt(tP)}</div>
+      <div style="font-size:10px;color:#0E8074;margin-top:5px;font-weight:600;opacity:.7">&#128181; Company earnings (fee %)</div>
+    </div>
 
     <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:4px 0 2px">
       <span style="font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">&#127970; Office</span>
@@ -2166,10 +2244,10 @@
       <div class="dv dv-red">${fmt(offExp)}</div>
       <div style="font-size:10px;color:#C00000;margin-top:5px;font-weight:600;opacity:.7">&#128200; Expenditure</div>
     </div>
-    <div class="dcard" style="grid-column:span 2;border-left:4px solid ${offBal>=0?'#1D9E75':'#C00000'};background:${offBal>=0?'#F0FAF5':'#FDF0F0'}">
+    <div class="dcard" style="grid-column:span 2;border-left:4px solid ${offBal >= 0 ? '#1D9E75' : '#C00000'};background:${offBal >= 0 ? '#F0FAF5' : '#FDF0F0'}">
       <div class="dl">Office Balance</div>
-      <div class="dv ${offBal>=0?'dv-green':'dv-red'}">${fmt(offBal)}</div>
-      <div style="font-size:10px;color:${offBal>=0?'#1D9E75':'#C00000'};margin-top:5px;font-weight:600;opacity:.7">${offBal>=0?'&#9989; Surplus':'&#9888; Deficit'}</div>
+      <div class="dv ${offBal >= 0 ? 'dv-green' : 'dv-red'}">${fmt(offBal)}</div>
+      <div style="font-size:10px;color:${offBal >= 0 ? '#1D9E75' : '#C00000'};margin-top:5px;font-weight:600;opacity:.7">${offBal >= 0 ? '&#9989; Surplus' : '&#9888; Deficit'}</div>
     </div>`;
 
                 renderOffice();
@@ -2205,40 +2283,40 @@
                 const incCats = [...new Set([...DEF_OFF_INC, ...office.income.map(r => r.cat).filter(Boolean)])];
                 const expCats = [...new Set([...DEF_OFF_EXP, ...office.expenses.map(r => r.cat).filter(Boolean)])];
 
-                const incSearch = (document.getElementById('ofi-search')||{value:''}).value.toLowerCase();
-                const expSearch = (document.getElementById('ofe-search')||{value:''}).value.toLowerCase();
+                const incSearch = (document.getElementById('ofi-search') || { value: '' }).value.toLowerCase();
+                const expSearch = (document.getElementById('ofe-search') || { value: '' }).value.toLowerCase();
 
                 // Income table rows
-                const filtInc = office.income.filter(r => !incSearch || (r.cat+r.client+r.desc+r.date).toLowerCase().includes(incSearch));
-                const filtIncTotal = filtInc.reduce((a,r)=>a+(r.amt||0),0);
+                const filtInc = office.income.filter(r => !incSearch || (r.cat + r.client + r.desc + r.date).toLowerCase().includes(incSearch));
+                const filtIncTotal = filtInc.reduce((a, r) => a + (r.amt || 0), 0);
                 const incRows = filtInc.length === 0
-                    ? `<tr class="empty-row"><td colspan="6">${incSearch ? 'No results for "'+incSearch+'"' : 'No income entries yet'}</td></tr>`
+                    ? `<tr class="empty-row"><td colspan="6">${incSearch ? 'No results for "' + incSearch + '"' : 'No income entries yet'}</td></tr>`
                     : filtInc.map((r, j) => `<tr>
-                        <td class="muted">${j+1}</td>
+                        <td class="muted">${j + 1}</td>
                         <td>${fmtDate(r.date)}</td>
                         <td>${esc(r.cat)}</td>
-                        <td>${esc(r.client)||"-"}</td>
-                        <td>${esc(r.desc)||"-"}</td>
+                        <td>${esc(r.client) || "-"}</td>
+                        <td>${esc(r.desc) || "-"}</td>
                         <td class="r" style="color:#1D9E75;font-weight:700">${fmt(r.amt)}</td>
                         <td><button class="del-btn" onclick="delOfficeIncome(${office.income.indexOf(r)})">&#10005;</button></td>
                       </tr>`).join("") +
-                    `<tr class="sub-row"><td colspan="5">Total${incSearch?' (filtered)':''}</td><td class="r">${fmt(filtIncTotal)}</td><td></td></tr>`;
+                    `<tr class="sub-row"><td colspan="5">Total${incSearch ? ' (filtered)' : ''}</td><td class="r">${fmt(filtIncTotal)}</td><td></td></tr>`;
 
                 const isStaffSalary = r => r.cat && r.cat.toLowerCase().includes("staff salary");
 
                 // Expense table rows
-                const filtExp = office.expenses.filter(r => !expSearch || (r.cat+(r.staffName||'')+(r.desc||'')+r.date).toLowerCase().includes(expSearch));
-                const filtExpTotal = filtExp.reduce((a,r)=>a+(r.amt||0),0);
+                const filtExp = office.expenses.filter(r => !expSearch || (r.cat + (r.staffName || '') + (r.desc || '') + r.date).toLowerCase().includes(expSearch));
+                const filtExpTotal = filtExp.reduce((a, r) => a + (r.amt || 0), 0);
                 const expRows = filtExp.length === 0
-                    ? `<tr class="empty-row"><td colspan="5">No expense entries yet${expSearch?' for "'+expSearch+'"':''}</td></tr>`
+                    ? `<tr class="empty-row"><td colspan="5">No expense entries yet${expSearch ? ' for "' + expSearch + '"' : ''}</td></tr>`
                     : filtExp.map((r, j) => `<tr${isStaffSalary(r) ? ' style="background:#EEF6FF"' : ''}>
-                        <td class="muted">${j+1}</td>
+                        <td class="muted">${j + 1}</td>
                         <td>${fmtDate(r.date)}</td>
                         <td>${esc(r.cat)}${isStaffSalary(r) && r.staffName ? ` <span style="font-size:10px;color:#2E75B6;font-weight:700">&#128119; ${esc(r.staffName)}</span>` : ''}</td>
                         <td class="r" style="color:#C00000;font-weight:700">${fmt(r.amt)}</td>
                         <td><button class="del-btn" onclick="delOfficeExpense(${office.expenses.indexOf(r)})">&#10005;</button></td>
                       </tr>`).join("") +
-                    `<tr class="sub-row"><td colspan="3">Total${expSearch?' (filtered)':''}</td><td class="r">${fmt(filtExpTotal)}</td><td></td></tr>`;
+                    `<tr class="sub-row"><td colspan="3">Total${expSearch ? ' (filtered)' : ''}</td><td class="r">${fmt(filtExpTotal)}</td><td></td></tr>`;
 
                 // Staff table — shows salary paid per staff member
                 const staffRows = office.staff.length === 0
@@ -2248,26 +2326,26 @@
                             .filter(e => isStaffSalary(e) && e.staffName === s.name)
                             .reduce((a, e) => a + (e.amt || 0), 0);
                         return `<tr>
-                            <td class="muted">${j+1}</td>
+                            <td class="muted">${j + 1}</td>
                             <td><strong>${esc(s.name)}</strong></td>
-                            <td>${esc(s.address)||"-"}</td>
+                            <td>${esc(s.address) || "-"}</td>
                             <td class="r" style="color:#C00000;font-weight:700">${salaryPaid > 0 ? fmt(salaryPaid) : '<span style="color:#bbb">-</span>'}</td>
                             <td><button class="del-btn" onclick="delOfficeStaff(${j})">&#10005;</button></td>
                           </tr>`;
                     }).join("");
 
                 wrap.innerHTML = `
-  <div class="office-card${officeOpen?" office-fullscreen":""}">
-    <div class="office-hdr${officeOpen?" open":""}" onclick="toggleOffice()" style="${officeOpen?"position:sticky;top:0;z-index:1001":""}">
+  <div class="office-card${officeOpen ? " office-fullscreen" : ""}">
+    <div class="office-hdr${officeOpen ? " open" : ""}" onclick="toggleOffice()" style="${officeOpen ? "position:sticky;top:0;z-index:1001" : ""}">
       <div class="office-icon">&#127970;</div>
       <div class="sinfo">
-        <div class="sname" style="${officeOpen?"color:#fff":""}">Office Income &amp; Expenditure</div>
-        <div class="smeta">Income: <strong>${fmt(totalInc)}</strong> &nbsp;|&nbsp; Expense: <strong>${fmt(totalExp)}</strong> &nbsp;|&nbsp; Balance: <strong style="${officeOpen?(offBal>=0?'color:#7EE8B0':'color:#FFB3B3'):(offBal>=0?'':'color:#C00000')}">${fmt(offBal)}</strong></div>
+        <div class="sname" style="${officeOpen ? "color:#fff" : ""}">Office Income &amp; Expenditure</div>
+        <div class="smeta">Income: <strong>${fmt(totalInc)}</strong> &nbsp;|&nbsp; Expense: <strong>${fmt(totalExp)}</strong> &nbsp;|&nbsp; Balance: <strong style="${officeOpen ? (offBal >= 0 ? 'color:#7EE8B0' : 'color:#FFB3B3') : (offBal >= 0 ? '' : 'color:#C00000')}">${fmt(offBal)}</strong></div>
       </div>
       ${officeOpen
-        ? `<button class="btn btn-red" style="font-size:16px;padding:6px 12px;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="event.stopPropagation();toggleOffice()" title="Close">&#10005;</button>`
-        : `<span class="sarr">&#9654;</span>`
-      }
+                        ? `<button class="btn btn-red" style="font-size:16px;padding:6px 12px;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="event.stopPropagation();toggleOffice()" title="Close">&#10005;</button>`
+                        : `<span class="sarr">&#9654;</span>`
+                    }
     </div>
     ${officeOpen ? `
     <div class="office-body">
@@ -2275,21 +2353,21 @@
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px 0">
         <div class="scard sg"><div class="sl">Office Income</div><div class="sv">${fmt(totalInc)}</div></div>
         <div class="scard sr"><div class="sl">Office Expense</div><div class="sv">${fmt(totalExp)}</div></div>
-        <div class="scard ${offBal>=0?"sg":"sr"}"><div class="sl">Office Balance</div><div class="sv">${fmt(offBal)}</div></div>
+        <div class="scard ${offBal >= 0 ? "sg" : "sr"}"><div class="sl">Office Balance</div><div class="sv">${fmt(offBal)}</div></div>
       </div>
 
       <!-- TABS -->
       <div class="sec-tabs" style="margin-top:12px">
-        <div class="sec-tab${officeTab==="income"?" on":""}" onclick="setOfficeTab('income')">&#128176; Office Income</div>
-        <div class="sec-tab${officeTab==="expense"?" on":""}" onclick="setOfficeTab('expense')">&#128176; Office Expense</div>
-        <div class="sec-tab${officeTab==="staff"?" on":""}" onclick="setOfficeTab('staff')">&#128119; Staff</div>
+        <div class="sec-tab${officeTab === "income" ? " on" : ""}" onclick="setOfficeTab('income')">&#128176; Office Income</div>
+        <div class="sec-tab${officeTab === "expense" ? " on" : ""}" onclick="setOfficeTab('expense')">&#128176; Office Expense</div>
+        <div class="sec-tab${officeTab === "staff" ? " on" : ""}" onclick="setOfficeTab('staff')">&#128119; Staff</div>
       </div>
 
       <!-- TWO-COLUMN LAYOUT: Income | Expense (shown when income or expense tab is active) -->
-      <div class="office-cols" style="${officeTab==='staff'?'display:none':'grid-template-columns:1fr'}">
+      <div class="office-cols" style="${officeTab === 'staff' ? 'display:none' : 'grid-template-columns:1fr'}">
 
         <!-- LEFT: INCOME -->
-        <div class="office-col" style="${officeTab==='expense'?'display:none':''}">
+        <div class="office-col" style="${officeTab === 'expense' ? 'display:none' : ''}">
           <div class="office-col-hdr income-col-hdr" style="display:flex;align-items:center;justify-content:space-between">
             <span>&#128176; Income</span>
             <input type="text" id="ofi-search" placeholder="&#128269; Search..." oninput="renderOffice()" autocomplete="off"
@@ -2303,7 +2381,7 @@
             <div class="form-row fg2" style="margin-bottom:6px">
               <div class="fi"><label>Category</label>
                 <input type="text" id="ofi-cat" list="ofi-cat-dl" placeholder="Select or type..." autocomplete="off">
-                <datalist id="ofi-cat-dl">${incCats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+                <datalist id="ofi-cat-dl">${incCats.map(c => `<option value="${esc(c)}">`).join("")}</datalist>
               </div>
               <div class="fi"><label>Client Name</label><input type="text" id="ofi-client" placeholder="Client / Party name"></div>
             </div>
@@ -2319,7 +2397,7 @@
         </div>
 
         <!-- RIGHT: EXPENSE -->
-        <div class="office-col" style="${officeTab==='income'?'display:none':''}">
+        <div class="office-col" style="${officeTab === 'income' ? 'display:none' : ''}">
           <div class="office-col-hdr expense-col-hdr" style="display:flex;align-items:center;justify-content:space-between">
             <span>&#128176; Expense</span>
             <input type="text" id="ofe-search" placeholder="&#128269; Search..." oninput="renderOffice()" autocomplete="off"
@@ -2334,13 +2412,13 @@
               <div class="fi"><label>Category</label>
                 <input type="text" id="ofe-cat" list="ofe-cat-dl" placeholder="Select or type..." autocomplete="off"
                   oninput="const w=document.getElementById('ofe-staff-wrap');if(w)w.style.display=this.value.toLowerCase().includes('staff salary')?'block':'none'">
-                <datalist id="ofe-cat-dl">${expCats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+                <datalist id="ofe-cat-dl">${expCats.map(c => `<option value="${esc(c)}">`).join("")}</datalist>
               </div>
               <div class="fi" id="ofe-staff-wrap" style="display:none">
                 <label>Staff Member</label>
                 <select id="ofe-staff">
                   <option value="">-- Select Staff --</option>
-                  ${office.staff.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("")}
+                  ${office.staff.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("")}
                 </select>
               </div>
             </div>
@@ -2358,7 +2436,7 @@
       </div><!-- /office-cols -->
 
       <!-- STAFF TAB -->
-      ${officeTab==='staff' ? `
+      ${officeTab === 'staff' ? `
       <div style="padding:14px;background:#fff">
         <div class="office-col-hdr" style="background:#2E75B6;margin:-14px -14px 14px;border-radius:0">&#128119; Staff &nbsp;<span style="font-size:10px;font-weight:400;opacity:.85">(${office.staff.length} members)</span></div>
         <div class="form-row fg3" style="margin-bottom:14px">
@@ -2390,7 +2468,7 @@
                 if (!cat) { notif("Enter a category"); return; }
                 if (!amt) { notif("Enter an amount"); return; }
                 office.income.push({ date, cat, client, desc, amt });
-                office.income.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+                office.income.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
                 saveData(); renderOffice(); renderDash(); notif("Income entry added");
             }
 
@@ -2408,7 +2486,7 @@
                 if (!amt) { notif("Enter an amount"); return; }
                 if (isSal && !staffName) { notif("Select a staff member for Salary"); return; }
                 office.expenses.push({ date, cat, staffName, amt });
-                office.expenses.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+                office.expenses.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
                 saveData(); renderOffice(); renderDash(); notif("Expense entry added");
             }
 
@@ -2909,45 +2987,45 @@
                     entry = s.cash[entryIdx];
                     title = "Edit Cash Receipt";
                     fields = `
-                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Receipt No</label><input type="text" id="ee-rcpt" value="${esc(entry.rcpt||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Particulars</label><input type="text" id="ee-part" value="${esc(entry.part||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Received In</label><select id="ee-rcvdin">${rcvdInOpts(entry.receivedIn||'Cash')}</select></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Receipt No</label><input type="text" id="ee-rcpt" value="${esc(entry.rcpt || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Particulars</label><input type="text" id="ee-part" value="${esc(entry.part || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Received In</label><select id="ee-rcvdin">${rcvdInOpts(entry.receivedIn || 'Cash')}</select></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt || 0}" min="0"></div>`;
                 } else if (type.startsWith("mat-")) {
                     entry = s.mat[catKey][entryIdx];
                     title = "Edit Material Entry";
                     fields = `
-                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Vendor</label><input type="text" id="ee-det" value="${esc(entry.det||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Material</label><input type="text" id="ee-item" value="${esc(entry.item||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Qty</label><input type="text" id="ee-qty" value="${esc(entry.qty||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Bill No</label><input type="text" id="ee-bill" value="${esc(entry.bill||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="ee-mvoucher" value="${esc(entry.voucher||'')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genMatVoucherEdit(${siteIdx})">&#9881; Gen</button></div></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Vendor</label><input type="text" id="ee-det" value="${esc(entry.det || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Material</label><input type="text" id="ee-item" value="${esc(entry.item || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Qty</label><input type="text" id="ee-qty" value="${esc(entry.qty || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Bill No</label><input type="text" id="ee-bill" value="${esc(entry.bill || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="ee-mvoucher" value="${esc(entry.voucher || '')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genMatVoucherEdit(${siteIdx})">&#9881; Gen</button></div></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt || 0}" min="0"></div>`;
                 } else if (type.startsWith("lab-")) {
                     entry = s.lab[catKey].daily[entryIdx];
                     title = "Edit Labour Entry";
                     fields = `
-                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Worker</label><input type="text" id="ee-part" value="${esc(entry.part||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="ee-voucher" value="${esc(entry.voucher||'')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genVoucherEdit(${siteIdx})">&#9881; Gen</button></div></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Bill No</label><div style="display:flex;gap:4px"><input type="text" id="ee-labbill" value="${esc(entry.bill||'')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genLabBillEdit(${siteIdx})">&#9881; Gen</button></div></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Worker</label><input type="text" id="ee-part" value="${esc(entry.part || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Voucher No</label><div style="display:flex;gap:4px"><input type="text" id="ee-voucher" value="${esc(entry.voucher || '')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genVoucherEdit(${siteIdx})">&#9881; Gen</button></div></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Bill No</label><div style="display:flex;gap:4px"><input type="text" id="ee-labbill" value="${esc(entry.bill || '')}" style="flex:1"><button type="button" class="btn btn-grey" style="font-size:11px;padding:5px 8px;white-space:nowrap;flex-shrink:0" onclick="genLabBillEdit(${siteIdx})">&#9881; Gen</button></div></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Total Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt || 0}" min="0"></div>`;
                 } else if (type === "other") {
                     entry = s.other[entryIdx];
                     title = "Edit Other Expense";
                     fields = `
-                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Purpose</label><input type="text" id="ee-purpose" value="${esc(entry.purpose||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Purpose</label><input type="text" id="ee-purpose" value="${esc(entry.purpose || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt || 0}" min="0"></div>`;
                 } else if (type === "addwork") {
                     entry = s.addWork[entryIdx];
                     title = "Edit Additional Work";
                     fields = `
-                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Work Description</label><input type="text" id="ee-work" value="${esc(entry.work||'')}"></div>
-                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt||0}" min="0"></div>`;
+                        <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="ee-date" value="${esc(entry.date || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Work Description</label><input type="text" id="ee-work" value="${esc(entry.work || '')}"></div>
+                        <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="ee-amt" value="${entry.amt || 0}" min="0"></div>`;
                 }
                 document.getElementById("editEntryTitle").textContent = title;
                 document.getElementById("editEntryFields").innerHTML = fields;
@@ -2972,10 +3050,26 @@
                     if (rcvdChanged || amtChanged || dateChanged) linkCashToBank(e);
                 } else if (type.startsWith("mat-")) {
                     const e = s.mat[catKey][entryIdx];
-                    e.date = gv("ee-date"); e.det = gv("ee-det"); e.item = gv("ee-item"); e.qty = gv("ee-qty"); e.bill = gv("ee-bill"); e.voucher = gv("ee-mvoucher"); e.amt = gn("ee-amt");
+                    const oldAmt = e.amt, oldPaid = e.paid || 0;
+                    const newAmt = gn("ee-amt");
+                    e.date = gv("ee-date"); e.det = gv("ee-det"); e.item = gv("ee-item"); e.qty = gv("ee-qty"); e.bill = gv("ee-bill"); e.voucher = gv("ee-mvoucher"); e.amt = newAmt;
+                    if (oldPaid === oldAmt && newAmt !== oldAmt) {
+                        if (!e.payments) e.payments = [];
+                        const diff = newAmt - oldPaid;
+                        if (diff !== 0) e.payments.push({ date: new Date().toISOString().slice(0, 10), amount: diff, note: "Amount correction" });
+                        e.paid = e.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                    }
                 } else if (type.startsWith("lab-")) {
                     const e = s.lab[catKey].daily[entryIdx];
-                    e.date = gv("ee-date"); e.part = gv("ee-part"); e.voucher = gv("ee-voucher"); e.bill = gv("ee-labbill"); e.amt = gn("ee-amt");
+                    const oldAmt = e.amt, oldPaid = e.paid || 0;
+                    const newAmt = gn("ee-amt");
+                    e.date = gv("ee-date"); e.part = gv("ee-part"); e.voucher = gv("ee-voucher"); e.bill = gv("ee-labbill"); e.amt = newAmt;
+                    if (oldPaid === oldAmt && newAmt !== oldAmt) {
+                        if (!e.payments) e.payments = [];
+                        const diff = newAmt - oldPaid;
+                        if (diff !== 0) e.payments.push({ date: new Date().toISOString().slice(0, 10), amount: diff, note: "Amount correction" });
+                        e.paid = e.payments.reduce((a, p) => a + (p.amount || 0), 0);
+                    }
                 } else if (type === "other") {
                     const e = s.other[entryIdx];
                     e.date = gv("ee-date"); e.purpose = gv("ee-purpose"); e.amt = gn("ee-amt");
