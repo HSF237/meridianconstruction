@@ -1203,6 +1203,13 @@
             background: #F0F4FA
         }
 
+        /* Total rows keep their dark background even on striped (even) rows */
+        .etbl tbody tr.db-total-row td,
+        .etbl tbody tr.db-total-row:hover td {
+            background: #1A3C5E;
+            color: #fff
+        }
+
         .dash-tbl tbody tr:nth-child(even) td {
             background: #FAFBFD
         }
@@ -2302,7 +2309,7 @@
                 const expSearch = (document.getElementById('ofe-search') || { value: '' }).value.toLowerCase();
 
                 // Income table rows
-                const filtInc = office.income.filter(r => !incSearch || (r.cat + r.client + r.desc + r.date).toLowerCase().includes(incSearch));
+                const filtInc = office.income.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).filter(r => !incSearch || (r.cat + r.client + r.desc + r.date).toLowerCase().includes(incSearch));
                 const filtIncTotal = filtInc.reduce((a, r) => a + (r.amt || 0), 0);
                 const incRows = filtInc.length === 0
                     ? `<tr class="empty-row"><td colspan="6">${incSearch ? 'No results for "' + incSearch + '"' : 'No income entries yet'}</td></tr>`
@@ -2320,7 +2327,7 @@
                 const isStaffSalary = r => r.cat && r.cat.toLowerCase().includes("staff salary");
 
                 // Expense table rows
-                const filtExp = office.expenses.filter(r => !expSearch || (r.cat + (r.staffName || '') + (r.desc || '') + r.date).toLowerCase().includes(expSearch));
+                const filtExp = office.expenses.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).filter(r => !expSearch || (r.cat + (r.staffName || '') + (r.desc || '') + r.date).toLowerCase().includes(expSearch));
                 const filtExpTotal = filtExp.reduce((a, r) => a + (r.amt || 0), 0);
                 const expRows = filtExp.length === 0
                     ? `<tr class="empty-row"><td colspan="5">No expense entries yet${expSearch ? ' for "' + expSearch + '"' : ''}</td></tr>`
@@ -4392,7 +4399,7 @@
                 const f = orFilters;
                 const inR = d => !((f.from && (!d || d < f.from)) || (f.to && (!d || d > f.to)));
                 const isSal = r => r.cat && r.cat.toLowerCase().includes("staff salary");
-                const byDate = (a, b) => (a.date || "").localeCompare(b.date || "");
+                const byDate = (a, b) => (b.date || "").localeCompare(a.date || ""); // newest first
 
                 const inc = office.income.filter(r => inR(r.date)).sort(byDate);
                 let exp = office.expenses.filter(r => inR(r.date)).sort(byDate);
