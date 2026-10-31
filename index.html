@@ -1020,6 +1020,19 @@
             border-bottom: none
         }
 
+        .etbl tbody tr.db-bal-row:nth-child(n) td,
+        .etbl tbody tr.db-bal-row:nth-child(n):hover td,
+        .db-bal-row td {
+            background: #EEF3F8;
+            color: #1A3C5E;
+            font-weight: 600;
+            font-size: 12px
+        }
+
+        .db-close-row td {
+            border-bottom: 2px solid #C9D6E3
+        }
+
         .db-net-row td {
             background: #EAF3DE;
             font-weight: 700;
@@ -4292,9 +4305,10 @@
                 const siteOptions = `<option value="">All Sites</option>` +
                     sites.map((s, i) => `<option value="${i}"${dbFilters.site === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
 
-                const entries = [];
                 const siteIdx = dbFilters.site !== "" ? parseInt(dbFilters.site) : -1;
 
+                const collectEntries = () => {
+                const entries = [];
                 sites.forEach((s, idx) => {
                     if (siteIdx >= 0 && siteIdx !== idx) return;
 
@@ -4334,9 +4348,28 @@
                         entries.push({ date: r.date || "", site: s.name, type: "Additional Work", typeKey: "addwork", part: r.work || "", ref: "", dr: r.amt || 0, cr: 0, ed: [idx, "addwork", k, ""] });
                     });
                 });
+                return entries;
+                };
+                const entries = collectEntries();
 
                 const tf = dbFilters.type;
                 const filtered = entries.filter(e => !tf || e.typeKey === tf);
+
+                // -- Running balance (receipts - expenses), carried from the very first entry.
+                //    Uses ALL dates (ignores From/To) but the same Site and Type filters.
+                const savedRange = { from: dbFilters.from, to: dbFilters.to };
+                let allEntries;
+                try { dbFilters.from = ""; dbFilters.to = ""; allEntries = collectEntries(); }
+                finally { dbFilters.from = savedRange.from; dbFilters.to = savedRange.to; }
+                const dayNet = {}; let undatedNet = 0;
+                allEntries.filter(e => !tf || e.typeKey === tf).forEach(e => {
+                    const n = (e.cr || 0) - (e.dr || 0);
+                    if (e.date) dayNet[e.date] = (dayNet[e.date] || 0) + n; else undatedNet += n;
+                });
+                const openBal = {}, closeBal = {};
+                let runBal = undatedNet;
+                Object.keys(dayNet).sort().forEach(d => { openBal[d] = runBal; runBal += dayNet[d]; closeBal[d] = runBal; });
+                const balCell = v => `<span style="color:${v >= 0 ? "#1D9E75" : "#C00000"}">${fmt(v)}</span>`;
 
                 filtered.sort((a, b) => {
                     if (!a.date && !b.date) return 0;
@@ -4362,12 +4395,18 @@
                     groupOrder.forEach(dateKey => {
                         const grp = groups[dateKey];
                         let grpDr = 0, grpCr = 0;
+                        if (dateKey !== "-") tableRows += `<tr class="db-bal-row">
+                        <td><span class="db-date-cell">${fmtDate(dateKey)}</span></td>
+                        <td colspan="4" style="text-align:right">Opening Balance</td>
+                        <td colspan="2" class="r">${balCell(openBal[dateKey])}</td>
+                        <td></td>
+                    </tr>`;
 
                         grp.forEach((e, j) => {
                             grpDr += e.dr; grpCr += e.cr;
                             const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : e.typeKey === "other" ? "db-type-lab" : "db-type-lab";
                             tableRows += `<tr>
-                            <td>${j === 0 ? (dateKey === "-" ? "<span style='color:#aaa'>-</span>" : `<span class="db-date-cell">${fmtDate(dateKey)}</span>`) : ""}</td>
+                            <td>${j === 0 && dateKey === "-" ? "<span style='color:#aaa'>-</span>" : ""}</td>
                             <td style="font-size:11px">${esc(e.site)}</td>
                             <td class="${typeClass}" style="font-size:11px">${esc(e.type)}</td>
                             <td>${esc(e.part) || "-"}</td>
@@ -4381,9 +4420,15 @@
                         totalDr += grpDr; totalCr += grpCr;
 
                         tableRows += `<tr class="sub-row">
-                        <td colspan="5" style="text-align:right">${dateKey === "-" ? "Subtotal (No Date)" : fmtDate(dateKey) + " - Daily Total"}</td>
+                        <td colspan="5" style="text-align:right">${dateKey === "-" ? "Subtotal (No Date) - counted at the start of the running balance" : fmtDate(dateKey) + " - Daily Total"}</td>
                         <td class="r">${grpDr > 0 ? fmt(grpDr) : "-"}</td>
                         <td class="r">${grpCr > 0 ? fmt(grpCr) : "-"}</td>
+                        <td></td>
+                    </tr>`;
+                        if (dateKey !== "-") tableRows += `<tr class="db-bal-row db-close-row">
+                        <td></td>
+                        <td colspan="4" style="text-align:right">${fmtDate(dateKey)} - Closing Balance</td>
+                        <td colspan="2" class="r">${balCell(closeBal[dateKey])}</td>
                         <td></td>
                     </tr>`;
                     });
@@ -4399,6 +4444,17 @@
                     <td colspan="5" style="text-align:right;color:#1A3C5E">Net Balance (Receipts - Expenses)</td>
                     <td colspan="3" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td>
                 </tr>`;
+                    const shownDays = groupOrder.filter(d => d !== "-").sort();
+                    if (shownDays.length) {
+                        tableRows += `<tr class="db-net-row">
+                    <td colspan="5" style="text-align:right;color:#1A3C5E">Opening Balance on ${fmtDate(shownDays[0])}</td>
+                    <td colspan="3" class="r">${balCell(openBal[shownDays[0]])}</td>
+                </tr>`;
+                        tableRows += `<tr class="db-net-row">
+                    <td colspan="5" style="text-align:right;color:#1A3C5E">Closing Balance on ${fmtDate(shownDays[shownDays.length - 1])}</td>
+                    <td colspan="3" class="r">${balCell(closeBal[shownDays[shownDays.length - 1]])}</td>
+                </tr>`;
+                    }
                 }
 
                 document.getElementById("daybookContent").innerHTML = `
@@ -4422,6 +4478,7 @@
                 <span style="color:#1D9E75">&#9650; Receipts: <strong>${fmt(totalCr)}</strong></span>
                 <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearDbFilters()">Clear Filters</button>
               </div>
+              <div style="font-size:11px;color:#6B7A88;margin-top:6px">Opening / Closing Balance = receipts &minus; expenses, carried forward from the first entry (for the selected Site and Type). Entries with no date are counted at the start.</div>
             </div>
             <div class="tbl-wrap" style="margin-top:0">
               <table class="etbl">
