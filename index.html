@@ -1355,7 +1355,7 @@
         .etbl .edit-btn {
             background: none;
             border: none;
-            color: #aaa;
+            color: #2E75B6;
             cursor: pointer;
             font-size: 14px;
             padding: 0 4px;
@@ -3158,6 +3158,8 @@
                 closeModal("editEntryModal");
                 const sec = type === "cash" ? "cash" : type === "other" ? "other" : type === "addwork" ? "addwork" : type.startsWith("mat") ? "mat" : "lab";
                 refreshBody(siteIdx, sec); refreshHdr(siteIdx); renderDash();
+                const dbView = document.getElementById("view-daybook");
+                if (dbView && dbView.style.display !== "none") renderDayBook();
                 notif("Entry updated"); editCtx = null;
             }
 
@@ -4296,15 +4298,15 @@
                 sites.forEach((s, idx) => {
                     if (siteIdx >= 0 && siteIdx !== idx) return;
 
-                    s.cash.forEach(r => {
+                    s.cash.forEach((r, k) => {
                         if (!inDbRange(r.date)) return;
-                        entries.push({ date: r.date || "", site: s.name, type: "Receipt", typeKey: "receipt", part: r.part || "", ref: "", dr: 0, cr: r.amt || 0 });
+                        entries.push({ date: r.date || "", site: s.name, type: "Receipt", typeKey: "receipt", part: r.part || "", ref: "", dr: 0, cr: r.amt || 0, ed: [idx, "cash", k, ""] });
                     });
 
                     s.matCats.forEach(cat => {
-                        (s.mat[cat] || []).forEach(r => {
+                        (s.mat[cat] || []).forEach((r, k) => {
                             if (!inDbRange(r.date)) return;
-                            entries.push({ date: r.date || "", site: s.name, type: "Material - " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0 });
+                            entries.push({ date: r.date || "", site: s.name, type: "Material - " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0, ed: [idx, "mat-" + cat, k, cat] });
                         });
                     });
 
@@ -4315,21 +4317,21 @@
                             if (!inDbRange("")) return;
                             entries.push({ date: "", site: s.name, type: "Labour - " + cat + " (SC)", typeKey: "labour", part: lb.scName || "Subcontractor", ref: "", dr: lb.contract || 0, cr: 0 });
                         } else {
-                            (lb.daily || []).forEach(r => {
+                            (lb.daily || []).forEach((r, k) => {
                                 if (!inDbRange(r.date)) return;
-                                entries.push({ date: r.date || "", site: s.name, type: "Labour - " + cat, typeKey: "labour", part: r.part || "", ref: r.voucher || "", dr: r.amt || 0, cr: 0 });
+                                entries.push({ date: r.date || "", site: s.name, type: "Labour - " + cat, typeKey: "labour", part: r.part || "", ref: r.voucher || "", dr: r.amt || 0, cr: 0, ed: [idx, "lab-" + cat, k, cat] });
                             });
                         }
                     });
 
-                    (s.other || []).forEach(r => {
+                    (s.other || []).forEach((r, k) => {
                         if (!inDbRange(r.date)) return;
-                        entries.push({ date: r.date || "", site: s.name, type: "Other Expense", typeKey: "other", part: r.purpose || "", ref: "", dr: r.amt || 0, cr: 0 });
+                        entries.push({ date: r.date || "", site: s.name, type: "Other Expense", typeKey: "other", part: r.purpose || "", ref: "", dr: r.amt || 0, cr: 0, ed: [idx, "other", k, ""] });
                     });
 
-                    (s.addWork || []).forEach(r => {
+                    (s.addWork || []).forEach((r, k) => {
                         if (!inDbRange(r.date)) return;
-                        entries.push({ date: r.date || "", site: s.name, type: "Additional Work", typeKey: "addwork", part: r.work || "", ref: "", dr: r.amt || 0, cr: 0 });
+                        entries.push({ date: r.date || "", site: s.name, type: "Additional Work", typeKey: "addwork", part: r.work || "", ref: "", dr: r.amt || 0, cr: 0, ed: [idx, "addwork", k, ""] });
                     });
                 });
 
@@ -4355,7 +4357,7 @@
                 let tableRows = "";
 
                 if (filtered.length === 0) {
-                    tableRows = '<tr class="empty-row"><td colspan="7">No entries found for the selected filters.</td></tr>';
+                    tableRows = '<tr class="empty-row"><td colspan="8">No entries found for the selected filters.</td></tr>';
                 } else {
                     groupOrder.forEach(dateKey => {
                         const grp = groups[dateKey];
@@ -4372,6 +4374,7 @@
                             <td class="muted">${esc(e.ref) || "-"}</td>
                             <td class="r">${e.dr > 0 ? fmt(e.dr) : "<span style='color:#ddd'>-</span>"}</td>
                             <td class="r" style="color:#1D9E75">${e.cr > 0 ? fmt(e.cr) : "<span style='color:#ddd'>-</span>"}</td>
+                            <td>${e.ed ? `<button class="edit-btn" onclick="openEditEntry(${e.ed[0]},'${jsq(e.ed[1])}',${e.ed[2]},'${jsq(e.ed[3])}')" title="Edit">&#9998;</button>` : ""}</td>
                         </tr>`;
                         });
 
@@ -4381,6 +4384,7 @@
                         <td colspan="5" style="text-align:right">${dateKey === "-" ? "Subtotal (No Date)" : fmtDate(dateKey) + " - Daily Total"}</td>
                         <td class="r">${grpDr > 0 ? fmt(grpDr) : "-"}</td>
                         <td class="r">${grpCr > 0 ? fmt(grpCr) : "-"}</td>
+                        <td></td>
                     </tr>`;
                     });
 
@@ -4389,10 +4393,11 @@
                     <td colspan="5">PERIOD TOTAL</td>
                     <td class="r">${fmt(totalDr)}</td>
                     <td class="r">${fmt(totalCr)}</td>
+                    <td></td>
                 </tr>`;
                     tableRows += `<tr class="db-net-row">
                     <td colspan="5" style="text-align:right;color:#1A3C5E">Net Balance (Receipts - Expenses)</td>
-                    <td colspan="2" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td>
+                    <td colspan="3" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td>
                 </tr>`;
                 }
 
@@ -4428,6 +4433,7 @@
                   <th style="width:9%">Ref No</th>
                   <th class="r" style="width:11%">Debit (&#8377;)</th>
                   <th class="r" style="width:11%">Credit (&#8377;)</th>
+                  <th style="width:3%"></th>
                 </tr></thead>
                 <tbody>${tableRows}</tbody>
               </table>
