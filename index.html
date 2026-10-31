@@ -2320,7 +2320,7 @@
                         <td>${esc(r.client) || "-"}</td>
                         <td>${esc(r.desc) || "-"}</td>
                         <td class="r" style="color:#1D9E75;font-weight:700">${fmt(r.amt)}</td>
-                        <td><button class="del-btn" onclick="delOfficeIncome(${office.income.indexOf(r)})">&#10005;</button></td>
+                        <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditOffice('income',${office.income.indexOf(r)})" title="Edit">&#9998;</button><button class="del-btn" onclick="delOfficeIncome(${office.income.indexOf(r)})">&#10005;</button></td>
                       </tr>`).join("") +
                     `<tr class="sub-row"><td colspan="5">Total${incSearch ? ' (filtered)' : ''}</td><td class="r">${fmt(filtIncTotal)}</td><td></td></tr>`;
 
@@ -2336,7 +2336,7 @@
                         <td>${fmtDate(r.date)}</td>
                         <td>${esc(r.cat)}${isStaffSalary(r) && r.staffName ? ` <span style="font-size:10px;color:#2E75B6;font-weight:700">&#128119; ${esc(r.staffName)}</span>` : ''}</td>
                         <td class="r" style="color:#C00000;font-weight:700">${fmt(r.amt)}</td>
-                        <td><button class="del-btn" onclick="delOfficeExpense(${office.expenses.indexOf(r)})">&#10005;</button></td>
+                        <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditOffice('expenses',${office.expenses.indexOf(r)})" title="Edit">&#9998;</button><button class="del-btn" onclick="delOfficeExpense(${office.expenses.indexOf(r)})">&#10005;</button></td>
                       </tr>`).join("") +
                     `<tr class="sub-row"><td colspan="3">Total${expSearch ? ' (filtered)' : ''}</td><td class="r">${fmt(filtExpTotal)}</td><td></td></tr>`;
 
@@ -2412,7 +2412,7 @@
               <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-green" onclick="addOfficeIncome()">+ Add</button></div>
             </div>
             <div class="tbl-wrap"><table class="etbl">
-              <thead><tr><th style="width:28px">#</th><th>Date</th><th>Category</th><th>Client</th><th class="r">Amount</th><th></th></tr></thead>
+              <thead><tr><th style="width:28px">#</th><th>Date</th><th>Category</th><th>Client</th><th>Notes</th><th class="r">Amount</th><th></th></tr></thead>
               <tbody>${incRows}</tbody>
             </table></div>
           </div>
@@ -2475,6 +2475,60 @@
 
     </div>` : ""}
   </div>`;
+            }
+
+            // -- EDIT OFFICE ENTRY (reuses the Edit Entry modal) --
+            function openEditOffice(kind, idx) {
+                const e = office[kind][idx];
+                if (!e) return;
+                editCtx = { office: kind, idx };
+                const isInc = kind === "income";
+                const cats = [...new Set([...(isInc ? DEF_OFF_INC : DEF_OFF_EXP), ...office[kind].map(r => r.cat).filter(Boolean)])];
+                const isSal = !isInc && (e.cat || "").toLowerCase().includes("staff salary");
+                let fields = `
+                    <div class="fi" style="margin-bottom:9px"><label>Date</label><input type="date" id="eo-date" value="${esc(e.date || '')}"></div>
+                    <div class="fi" style="margin-bottom:9px"><label>Category</label><input type="text" id="eo-cat" list="eo-cat-dl" value="${esc(e.cat || '')}" autocomplete="off"${isInc ? '' : ` oninput="const w=document.getElementById('eo-staff-wrap');if(w)w.style.display=this.value.toLowerCase().includes('staff salary')?'block':'none'"`}>
+                      <datalist id="eo-cat-dl">${cats.map(c => `<option value="${esc(c)}">`).join("")}</datalist></div>`;
+                if (isInc) {
+                    fields += `
+                    <div class="fi" style="margin-bottom:9px"><label>Client Name</label><input type="text" id="eo-client" value="${esc(e.client || '')}"></div>
+                    <div class="fi" style="margin-bottom:9px"><label>Description / Notes</label><input type="text" id="eo-desc" value="${esc(e.desc || '')}"></div>`;
+                } else {
+                    fields += `
+                    <div class="fi" id="eo-staff-wrap" style="margin-bottom:9px;display:${isSal ? 'block' : 'none'}"><label>Staff Member</label>
+                      <select id="eo-staff"><option value="">-- Select Staff --</option>${office.staff.map(st => `<option value="${esc(st.name)}"${st.name === e.staffName ? ' selected' : ''}>${esc(st.name)}</option>`).join("")}</select></div>`;
+                }
+                fields += `
+                    <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="eo-amt" value="${e.amt || 0}" min="0"></div>`;
+                document.getElementById("editEntryTitle").textContent = isInc ? "Edit Office Income" : "Edit Office Expense";
+                document.getElementById("editEntryFields").innerHTML = fields;
+                document.getElementById("editEntryModal").classList.add("open");
+                setTimeout(() => { const f = document.getElementById("eo-date"); if (f) f.focus(); }, 50);
+            }
+
+            function saveEditOffice() {
+                const { office: kind, idx } = editCtx;
+                const e = office[kind][idx];
+                if (!e) { closeModal("editEntryModal"); editCtx = null; return; }
+                const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+                const cat = gv("eo-cat"), amt = parseFloat(gv("eo-amt")) || 0;
+                if (!cat) { notif("Enter a category"); return; }
+                if (!amt) { notif("Enter an amount"); return; }
+                e.date = gv("eo-date"); e.cat = cat; e.amt = amt;
+                if (kind === "income") { e.client = gv("eo-client"); e.desc = gv("eo-desc"); }
+                else {
+                    const isSal = cat.toLowerCase().includes("staff salary");
+                    const staffName = isSal ? gv("eo-staff") : "";
+                    if (isSal && !staffName) { notif("Select a staff member for Salary"); return; }
+                    e.staffName = staffName;
+                }
+                office[kind].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+                editCtx = null;
+                closeModal("editEntryModal");
+                saveData(); renderOffice(); renderDash();
+                const rep = document.getElementById("view-offrep");
+                if (rep && rep.style.display !== "none") renderOfficeReport();
+                notif("Entry updated");
             }
 
             function setOfficeTab(t) { officeTab = t; renderOffice(); }
@@ -3057,6 +3111,7 @@
 
             function saveEditEntry() {
                 if (!editCtx) return;
+                if (editCtx.office) { saveEditOffice(); return; }
                 const { siteIdx, type, entryIdx, catKey } = editCtx;
                 const s = sites[siteIdx];
                 const gv = id => { const e = document.getElementById(id); return e ? e.value.trim() : ""; };
