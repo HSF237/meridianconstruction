@@ -1033,81 +1033,6 @@
             border-bottom: 2px solid #C9D6E3
         }
 
-        /* ===== Dashboard v2 ===== */
-        .d2-hello { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 14px }
-        .d2-hello h2 { font-size:20px; color:#1A3C5E; font-weight:800; margin:0 }
-        .d2-hello p { font-size:13px; color:#5D6D7B; margin:2px 0 0 }
-        .d2-actions { display:flex; flex-wrap:wrap; gap:8px }
-        .d2-act { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:8px 14px; border-radius:10px; border:1px solid #D5DEE7; background:#fff; color:#1A3C5E; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 1px 2px rgba(16,40,64,.06); transition:background .15s, transform .1s }
-        .d2-act:hover { background:#F2F6FA }
-        .d2-act:active { transform:translateY(1px) }
-        .d2-act .ic { font-size:15px; line-height:1 }
-        .d2-act.primary { background:#1A3C5E; color:#fff; border-color:#1A3C5E }
-        .d2-act.primary:hover { background:#21527F }
-        .d2-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:10px }
-        .d2-kpi { background:#fff; border-radius:14px; padding:16px 16px 14px; box-shadow:0 1px 3px rgba(16,40,64,.08); border:1px solid #E6ECF2; display:flex; gap:12px; align-items:flex-start }
-        .d2-kpi .kic { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0 }
-        .d2-kpi .klbl { font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:#5D6D7B }
-        .d2-kpi .kval { font-size:24px; font-weight:800; color:#14273A; margin-top:2px; font-variant-numeric:tabular-nums; white-space:nowrap }
-        .d2-kpi .kval.neg { color:#B42318 }
-        .d2-kpi .ksub { font-size:12px; color:#5D6D7B; margin-top:2px }
-        .d2-pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px }
-        .d2-pill { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #E6ECF2; border-radius:999px; padding:7px 14px; font-size:13px; color:#33424F }
-        .d2-pill b { font-variant-numeric:tabular-nums; color:#14273A }
-        .d2-pill b.neg { color:#B42318 }
-        .d2-cols { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:18px; align-items:start }
-        .d2-sec-hdr { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px }
-        .d2-sec-hdr h2, .d2-card h3 { font-size:16px; font-weight:800; color:#1A3C5E; margin:0 }
-        .d2-tools { display:flex; gap:8px; flex-wrap:wrap }
-        .d2-search, .d2-select { min-height:40px; border:1px solid #CBD5E1; border-radius:10px; padding:8px 12px; font-size:14px; background:#fff; color:#14273A }
-        .d2-search { width:220px }
-        .d2-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px }
-        .d2-chip { min-height:36px; padding:6px 14px; border-radius:999px; border:1px solid #CBD5E1; background:#fff; font-size:13px; font-weight:700; color:#33424F; cursor:pointer }
-        .d2-chip .n { display:inline-block; min-width:20px; margin-left:6px; padding:0 6px; border-radius:999px; background:#EEF2F6; font-size:12px }
-        .d2-chip[aria-pressed="true"] { background:#1A3C5E; border-color:#1A3C5E; color:#fff }
-        .d2-chip[aria-pressed="true"] .n { background:rgba(255,255,255,.2) }
-        .d2-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px }
-        .d2-tile { background:#fff; border:1px solid #E6ECF2; border-radius:14px; padding:14px; box-shadow:0 1px 3px rgba(16,40,64,.06); display:flex; flex-direction:column; gap:10px; transition:box-shadow .15s, border-color .15s }
-        .d2-tile:hover { box-shadow:0 4px 14px rgba(16,40,64,.10); border-color:#C9D6E3 }
-        .d2-tile.owes { border-color:#F1C6C1 }
-        .d2-tile-top { display:flex; gap:10px; align-items:flex-start }
-        .d2-no { width:34px; height:34px; border-radius:10px; background:#1A3C5E; color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0 }
-        .d2-open { all:unset; cursor:pointer; flex:1; min-width:0; border-radius:6px }
-        .d2-open .nm { font-size:15px; font-weight:800; color:#14273A; line-height:1.25; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-        .d2-open .ago { font-size:12px; color:#5D6D7B; margin-top:2px; display:block }
-        .d2-open .ago.stale { color:#B54708; font-weight:700 }
-        .d2-bal { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums }
-        .d2-bal.pos { color:#067647 } .d2-bal.neg { color:#B42318 }
-        .d2-bal small { display:block; font-size:12px; font-weight:600; color:#5D6D7B }
-        .d2-bar { height:8px; border-radius:999px; background:#EEF2F6; overflow:hidden }
-        .d2-bar > i { display:block; height:100%; border-radius:999px; background:#1D9E75 }
-        .d2-bar.low > i { background:#D92D20 }
-        .d2-barlbl { font-size:12px; color:#5D6D7B; margin-top:4px }
-        .d2-nums { display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; font-size:12px; color:#5D6D7B }
-        .d2-nums b { color:#14273A; font-variant-numeric:tabular-nums; font-weight:700 }
-        .d2-tile-act { display:flex; gap:6px; flex-wrap:wrap; margin-top:auto }
-        .d2-mini { min-height:34px; padding:5px 10px; border-radius:8px; border:1px solid #D5DEE7; background:#F7F9FB; color:#1A3C5E; font-size:12px; font-weight:700; cursor:pointer }
-        .d2-mini:hover { background:#EEF3F8 }
-        .d2-mini.ghost { background:transparent; border-color:transparent; color:#5D6D7B; margin-left:auto }
-        .d2-mini.danger:hover { color:#B42318; background:#FEF3F2 }
-        .d2-side { display:flex; flex-direction:column; gap:14px }
-        .d2-card { background:#fff; border:1px solid #E6ECF2; border-radius:14px; padding:14px; box-shadow:0 1px 3px rgba(16,40,64,.06) }
-        .d2-card h3 { margin-bottom:8px }
-        .d2-row { all:unset; box-sizing:border-box; display:flex; align-items:center; gap:10px; width:100%; padding:9px 8px; border-radius:10px; cursor:pointer; font-size:13px; color:#33424F }
-        .d2-row:hover { background:#F2F6FA }
-        .d2-row .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0 }
-        .d2-row .t { flex:1; min-width:0 } .d2-row .t b { display:block; color:#14273A; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-        .d2-row .v { font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap }
-        .d2-empty { font-size:13px; color:#5D6D7B; padding:6px 8px }
-        .d2-side #officePanel { margin:0 }
-        .qp-list { max-height:50vh; overflow:auto; display:flex; flex-direction:column; gap:4px }
-        .qp-item { all:unset; box-sizing:border-box; display:flex; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid #E6ECF2; cursor:pointer; font-size:14px; color:#14273A }
-        .qp-item:hover { background:#F2F6FA }
-        .d2-act:focus-visible, .d2-chip:focus-visible, .d2-mini:focus-visible, .d2-open:focus-visible, .d2-row:focus-visible, .qp-item:focus-visible, .d2-search:focus-visible, .d2-select:focus-visible { outline:3px solid #E89B0C; outline-offset:2px }
-        @media (max-width:1100px) { .d2-cols { display:flex; flex-direction:column } .d2-side { display:contents } #d2-attn { order:-2 } .d2-side #officePanel { order:-1 } .d2-main { order:0; width:100% } #d2-recent { order:1 } .d2-kpis { grid-template-columns:repeat(2,1fr) } }
-        @media (max-width:600px) { .d2-kpis { grid-template-columns:1fr 1fr; gap:8px } .d2-kpi { padding:12px; flex-direction:column; gap:6px } .d2-kpi .kval { font-size:19px } .d2-search { width:100% } .d2-tools { width:100% } .d2-select { width:100% } .d2-act { flex:1 1 calc(50% - 8px); justify-content:center } .d2-hello h2 { font-size:18px } }
-        @media (prefers-reduced-motion: reduce) { .d2-act, .d2-tile { transition:none } }
-
         .book-switch {
             display: inline-flex;
             border: 1px solid rgba(255, 255, 255, .45);
@@ -1935,30 +1860,9 @@
             </div>
 
             <div id="view-dash">
-                <div id="dashCards"></div>
-                <div class="d2-cols">
-                    <section class="d2-main" aria-labelledby="d2-sites-h">
-                        <div class="d2-sec-hdr">
-                            <h2 id="d2-sites-h">Sites</h2>
-                            <div class="d2-tools">
-                                <input type="search" id="d2-q" class="d2-search" placeholder="Search sites..." aria-label="Search sites" oninput="dashF.q=this.value;renderSitesInto('dashSitesList')">
-                                <select id="d2-sort" class="d2-select" aria-label="Sort sites" onchange="dashF.sort=this.value;renderSitesInto('dashSitesList')">
-                                    <option value="num">Sort: Site no.</option>
-                                    <option value="bal">Sort: Balance (lowest first)</option>
-                                    <option value="recent">Sort: Recently updated</option>
-                                    <option value="name">Sort: Name</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="d2-chips" id="d2-chips" role="group" aria-label="Filter sites"></div>
-                        <div class="sites-list" id="dashSitesList"></div>
-                    </section>
-                    <aside class="d2-side" aria-label="Summary">
-                        <div id="d2-attn"></div>
-                        <div id="officePanel"></div>
-                        <div id="d2-recent"></div>
-                    </aside>
-                </div>
+                <div class="dash-cards" id="dashCards"></div>
+                <div id="officePanel" style="margin-bottom:12px"></div>
+                <div class="sites-list" id="dashSitesList" style="margin-top:16px"></div>
             </div>
 
             <div id="view-sites" style="display:none">
@@ -2070,17 +1974,6 @@
         <div class="notif" id="notif"></div>
 
         <!-- Edit Entry Modal -->
-        <div class="modal-bg" id="quickPickModal">
-            <div class="modal" style="width:440px" role="dialog" aria-modal="true" aria-labelledby="qpTitle">
-                <h3 id="qpTitle">Choose a site</h3>
-                <input type="search" id="qpSearch" class="d2-search" style="width:100%;margin-bottom:10px" placeholder="Search sites..." aria-label="Search sites" oninput="renderQuickPick()">
-                <div id="qpList" class="qp-list"></div>
-                <div style="display:flex;justify-content:flex-end;margin-top:12px">
-                    <button class="btn btn-grey" onclick="closeModal('quickPickModal')">Cancel</button>
-                </div>
-            </div>
-        </div>
-
         <div class="modal-bg" id="editEntryModal">
             <div class="modal" style="width:460px">
                 <h3 id="editEntryTitle">Edit Entry</h3>
@@ -2421,45 +2314,6 @@
             }
 
             // -- DASHBOARD --
-            // -- DASHBOARD (v2) --
-            let dashF = { q: "", show: "all", sort: "num" };
-            const QP_LABEL = { cash: "Add a receipt", mat: "Add a material expense", lab: "Add a labour expense", other: "Add an other expense" };
-            let qpSec = "cash";
-
-            function shortAmt(n) {
-                const a = Math.abs(n), sg = n < 0 ? "-" : "";
-                if (a >= 1e7) return sg + "₹" + (a / 1e7).toFixed(2) + " Cr";
-                if (a >= 1e5) return sg + "₹" + (a / 1e5).toFixed(2) + " L";
-                return fmt(n);
-            }
-            function siteLastDate(s) {
-                let m = "";
-                const t = d => { if (d && d > m) m = d; };
-                (s.cash || []).forEach(r => t(r.date)); (s.other || []).forEach(r => t(r.date)); (s.addWork || []).forEach(r => t(r.date));
-                (s.matCats || []).forEach(c => (s.mat[c] || []).forEach(r => t(r.date)));
-                (s.labCats || []).forEach(c => ((s.lab[c] && s.lab[c].daily) || []).forEach(r => t(r.date)));
-                return m;
-            }
-            function daysSince(d) {
-                if (!d) return null;
-                const t = new Date(); t.setHours(0, 0, 0, 0);
-                return Math.round((t - new Date(d + "T00:00:00")) / 86400000);
-            }
-            function agoText(n) {
-                if (n === null) return "No entries yet";
-                if (n <= 0) return "Updated today";
-                if (n === 1) return "Updated yesterday";
-                if (n < 60) return "Updated " + n + " days ago";
-                return "Updated " + Math.round(n / 30) + " months ago";
-            }
-            function siteInfo(i) {
-                const s = sites[i], c = calc(i), last = siteLastDate(s), ago = daysSince(last);
-                const owed = c.exp + c.prof;
-                let pct = owed > 0 ? Math.min(100, Math.floor(c.rec / owed * 100)) : null;
-                if (pct !== null && c.bal < 0) pct = Math.min(pct, 99); // never show 100% while the client still owes
-                return { i, s, c, last, ago, stale: ago === null || ago > 30, pct };
-            }
-
             function renderDash() {
                 let tR = 0, tE = 0, tP = 0, tB = 0, tPend = 0;
                 sites.forEach((_, i) => { const c = calc(i); tR += c.rec; tE += c.exp; tP += c.prof; tB += c.bal; tPend += c.pending; });
@@ -2469,124 +2323,60 @@
                 const offInc = office.income.reduce((a, r) => a + (r.amt || 0), 0);
                 const offExp = office.expenses.reduce((a, r) => a + (r.amt || 0), 0);
                 const offBal = offInc - offExp;
-                const h = new Date().getHours();
-                const greet = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-                const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-                const kpi = (ic, bg, lbl, v, sub, neg) => `
-      <div class="d2-kpi"><div class="kic" style="background:${bg}" aria-hidden="true">${ic}</div>
-        <div><div class="klbl">${lbl}</div><div class="kval${neg ? " neg" : ""}" title="${fmt(v)}">${fmt(v)}</div><div class="ksub">${sub}</div></div></div>`;
-                const pill = (lbl, v, neg) => `<div class="d2-pill">${lbl} <b class="${neg ? "neg" : ""}">${fmt(v)}</b></div>`;
 
                 document.getElementById("dashCards").innerHTML = `
-    <div class="d2-hello">
-      <div><h2>${greet}</h2><p>${today} &middot; ${BOOKS[curBook].label} &middot; ${sites.length} site${sites.length === 1 ? "" : "s"}</p></div>
-      <div class="d2-actions" role="toolbar" aria-label="Quick actions">
-        <button class="d2-act primary" onclick="openQuickPick('cash')"><span class="ic" aria-hidden="true">&#128176;</span>Receipt</button>
-        <button class="d2-act" onclick="openQuickPick('mat')"><span class="ic" aria-hidden="true">&#129521;</span>Material</button>
-        <button class="d2-act" onclick="openQuickPick('lab')"><span class="ic" aria-hidden="true">&#128119;</span>Labour</button>
-        <button class="d2-act" onclick="openQuickPick('other')"><span class="ic" aria-hidden="true">&#128196;</span>Other expense</button>
-        <button class="d2-act" onclick="toggleAddSite()"><span class="ic" aria-hidden="true">&#10133;</span>Site</button>
-        <button class="d2-act" onclick="showTab('daybook')"><span class="ic" aria-hidden="true">&#128218;</span>Daybook</button>
-        <button class="d2-act" onclick="showTab('offrep')"><span class="ic" aria-hidden="true">&#127970;</span>Office report</button>
-      </div>
+    <div class="dcard dv-green-card" style="background:#F0FAF5">
+      <div class="dl">Total Income</div><div class="dv dv-green">${fmt(tR)}</div>
+      <div style="font-size:10px;color:#1D9E75;margin-top:5px;font-weight:600;opacity:.7">&#128200; Sites</div>
     </div>
-    <div class="d2-kpis">
-      ${kpi("&#128176;", "#E7F6EF", "Received", tR, shortAmt(tR) + " from clients")}
-      ${kpi("&#129521;", "#EEF2F6", "Spent", tE, "Materials, labour &amp; other")}
-      ${kpi("&#128200;", "#FEF3E2", "Your profit", tP, "Each site's profit %")}
-      ${kpi("&#9878;&#65039;", tB >= 0 ? "#E7F6EF" : "#FEF3F2", "Balance", tB, "Received − spent − profit", tB < 0)}
+    <div class="dcard dv-red-card" style="background:#FDF0F0">
+      <div class="dl">Total Expense</div><div class="dv dv-red">${fmt(tE)}</div>
+      <div style="font-size:10px;color:#C00000;margin-top:5px;font-weight:600;opacity:.7">&#128200; Sites</div>
     </div>
-    <div class="d2-pills" aria-label="More figures">
-      ${pill("&#128181; Cash in hand", cashInHand, cashInHand < 0)}
-      ${pill("&#127981; Bank", balBank, balBank < 0)}
-      ${pill("&#128176; Cash + bank", balTotal, balTotal < 0)}
-      ${pill("&#9200; Unpaid to suppliers/workers", tPend, false)}
-      ${pill("&#127970; Office balance", offBal, offBal < 0)}
+    <div class="dcard dv-amber-card" style="background:#FDF6EC">
+      <div class="dl">Payment Pending</div><div class="dv dv-amber">${fmt(tPend)}</div>
+      <div style="font-size:10px;color:#BA7517;margin-top:5px;font-weight:600;opacity:.7">&#9200; Unpaid</div>
+    </div>
+    <div class="dcard dv-blue-card" style="background:#EFF5FD">
+      <div class="dl">Cash in Hand</div><div class="dv dv-blue">${fmt(cashInHand)}</div>
+      <div style="font-size:10px;color:#185FA5;margin-top:5px;font-weight:600;opacity:.7">&#128181; Site Balances − Deposits</div>
+    </div>
+    <div class="dcard dv-blue-card" style="background:#EFF5FD">
+      <div class="dl">Balance in Bank</div><div class="dv dv-blue">${fmt(balBank)}</div>
+      <div style="font-size:10px;color:#185FA5;margin-top:5px;font-weight:600;opacity:.7">&#127981; Bank Accounts</div>
+    </div>
+    <div class="dcard dv-green-card" style="background:#F0FAF5">
+      <div class="dl">Total Balance</div><div class="dv dv-green">${fmt(balTotal)}</div>
+      <div style="font-size:10px;color:#1D9E75;margin-top:5px;font-weight:600;opacity:.7">&#128176; Cash + Bank</div>
+    </div>
+    <div class="dcard dv-teal-card" style="background:#EBF7F5">
+      <div class="dl">Profit</div><div class="dv dv-teal">${fmt(tP)}</div>
+      <div style="font-size:10px;color:#0E8074;margin-top:5px;font-weight:600;opacity:.7">&#128181; Company earnings (fee %)</div>
+    </div>
+
+    <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:4px 0 2px">
+      <span style="font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">&#127970; Office</span>
+      <div style="flex:1;height:1.5px;background:linear-gradient(to right,#C4B5FD,transparent)"></div>
+    </div>
+
+    <div class="dcard" style="grid-column:span 2;border-left:4px solid #534AB7;background:#F5F3FF">
+      <div class="dl" style="color:#534AB7">Office Income</div>
+      <div class="dv" style="color:#534AB7">${fmt(offInc)}</div>
+      <div style="font-size:10px;color:#534AB7;margin-top:5px;font-weight:600;opacity:.7">&#128200; Receipts</div>
+    </div>
+    <div class="dcard" style="grid-column:span 2;border-left:4px solid #C00000;background:#FDF0F0">
+      <div class="dl">Office Expense</div>
+      <div class="dv dv-red">${fmt(offExp)}</div>
+      <div style="font-size:10px;color:#C00000;margin-top:5px;font-weight:600;opacity:.7">&#128200; Expenditure</div>
+    </div>
+    <div class="dcard" style="grid-column:span 2;border-left:4px solid ${offBal >= 0 ? '#1D9E75' : '#C00000'};background:${offBal >= 0 ? '#F0FAF5' : '#FDF0F0'}">
+      <div class="dl">Office Balance</div>
+      <div class="dv ${offBal >= 0 ? 'dv-green' : 'dv-red'}">${fmt(offBal)}</div>
+      <div style="font-size:10px;color:${offBal >= 0 ? '#1D9E75' : '#C00000'};margin-top:5px;font-weight:600;opacity:.7">${offBal >= 0 ? '&#9989; Surplus' : '&#9888; Deficit'}</div>
     </div>`;
 
                 renderOffice();
                 renderSitesInto("dashSitesList");
-                renderDashSide();
-            }
-
-            function renderSiteGrid(wrap) {
-                const all = sites.map((_, i) => siteInfo(i));
-                const cnt = { all: all.length, owes: all.filter(x => x.c.bal < 0).length, ahead: all.filter(x => x.c.bal >= 0).length, stale: all.filter(x => x.stale).length };
-                const chip = (k, lbl) => `<button class="d2-chip" aria-pressed="${dashF.show === k}" onclick="dashF.show='${k}';renderSitesInto('dashSitesList')">${lbl}<span class="n">${cnt[k]}</span></button>`;
-                const chips = document.getElementById("d2-chips");
-                if (chips) chips.innerHTML = chip("all", "All") + chip("owes", "Client owes") + chip("ahead", "Paid ahead") + chip("stale", "Not updated 30+ days");
-                const q = (dashF.q || "").trim().toLowerCase();
-                let list = all.filter(x => (!q || x.s.name.toLowerCase().includes(q)) &&
-                    (dashF.show === "all" || (dashF.show === "owes" && x.c.bal < 0) || (dashF.show === "ahead" && x.c.bal >= 0) || (dashF.show === "stale" && x.stale)));
-                if (dashF.sort === "bal") list.sort((a, b) => a.c.bal - b.c.bal);
-                else if (dashF.sort === "recent") list.sort((a, b) => (b.last || "").localeCompare(a.last || ""));
-                else if (dashF.sort === "name") list.sort((a, b) => a.s.name.localeCompare(b.s.name));
-                if (!list.length) { wrap.innerHTML = `<div class="d2-card d2-empty">${sites.length ? "No sites match." : "No sites yet. Use <b>+ Site</b> above to add your first site."}</div>`; return; }
-                wrap.innerHTML = `<div class="d2-grid">${list.map(x => {
-                    const { i, s, c, ago, stale, pct } = x;
-                    const hasSC = s.labCats.some(lc => s.lab[lc] && s.lab[lc].contract !== null);
-                    return `<article class="d2-tile${c.bal < 0 ? " owes" : ""}" id="st-${i}" aria-label="${esc(s.name)}">
-          <div class="d2-tile-top">
-            <div class="d2-no" aria-hidden="true">${String(i + 1).padStart(2, "0")}</div>
-            <button class="d2-open" onclick="toggleSite(${i})" aria-label="Open ${esc(s.name)}">
-              <span class="nm">${esc(s.name)}${hasSC ? ' <span class="sc-pill">Subcontract</span>' : ""}</span>
-              <span class="ago${stale ? " stale" : ""}">${agoText(ago)}</span>
-            </button>
-          </div>
-          <div class="d2-bal ${c.bal < 0 ? "neg" : "pos"}">${fmt(c.bal)}<small>${c.bal < 0 ? "Client owes you" : "Paid ahead"}</small></div>
-          ${pct === null ? "" : `<div><div class="d2-bar${pct < 100 ? " low" : ""}" role="img" aria-label="Client has paid ${pct}% of cost plus profit"><i style="width:${pct}%"></i></div><div class="d2-barlbl">Paid ${pct}% of cost + profit</div></div>`}
-          <div class="d2-nums"><span>Received <b>${shortAmt(c.rec)}</b></span><span>Spent <b>${shortAmt(c.exp)}</b></span></div>
-          <div class="d2-tile-act">
-            <button class="d2-mini" onclick="quickOpen(${i},'cash')">+ Receipt</button>
-            <button class="d2-mini" onclick="quickOpen(${i},'mat')">+ Material</button>
-            <button class="d2-mini ghost" onclick="renameSite(${i})" title="Rename site" aria-label="Rename ${esc(s.name)}">&#9998;</button>
-            <button class="d2-mini ghost danger" style="margin-left:0" onclick="deleteSite(${i})" title="Delete site" aria-label="Delete ${esc(s.name)}">&#128465;</button>
-          </div>
-        </article>`;
-                }).join("")}</div>`;
-            }
-
-            function renderDashSide() {
-                const all = sites.map((_, i) => siteInfo(i));
-                const owes = all.filter(x => x.c.bal < 0).sort((a, b) => a.c.bal - b.c.bal);
-                const stale = all.filter(x => x.stale && x.c.bal >= 0).sort((a, b) => (a.last || "").localeCompare(b.last || ""));
-                const pend = all.filter(x => x.c.pending > 0);
-                const row = (x, dot, sub, val, valCol) => `<button class="d2-row" onclick="toggleSite(${x.i})"><span class="dot" style="background:${dot}" aria-hidden="true"></span><span class="t"><b>${esc(x.s.name)}</b>${sub}</span><span class="v" style="color:${valCol}">${val}</span></button>`;
-                let rows = owes.map(x => row(x, "#D92D20", "Client owes you", fmt(-x.c.bal), "#B42318"))
-                    .concat(pend.map(x => row(x, "#E89B0C", "Unpaid to suppliers / workers", fmt(x.c.pending), "#B54708")))
-                    .concat(stale.map(x => row(x, "#98A2B3", agoText(x.ago), x.last ? fmtDate(x.last) : "-", "#5D6D7B")));
-                const a = document.getElementById("d2-attn");
-                if (a) a.innerHTML = `<div class="d2-card"><h3>&#9888;&#65039; Needs attention <span style="font-weight:600;color:#5D6D7B;font-size:13px">(${rows.length})</span></h3>${rows.length ? rows.slice(0, 8).join("") + (rows.length > 8 ? `<div class="d2-empty">+ ${rows.length - 8} more</div>` : "") : '<div class="d2-empty">All clear &#127881;</div>'}</div>`;
-                // recent activity
-                const ev = [];
-                const todayISO = new Date().toISOString().slice(0, 10);
-                sites.forEach((s, i) => {
-                    s.cash.forEach(r => ev.push({ i, d: r.date, t: "Receipt", amt: r.amt, sec: "cash", cr: true }));
-                    s.matCats.forEach(c => (s.mat[c] || []).forEach(r => ev.push({ i, d: r.date, t: c, amt: r.amt, sec: "mat" })));
-                    s.labCats.forEach(c => ((s.lab[c] && s.lab[c].daily) || []).forEach(r => ev.push({ i, d: r.date, t: c, amt: r.amt, sec: "lab" })));
-                    (s.other || []).forEach(r => ev.push({ i, d: r.date, t: r.purpose || "Other expense", amt: r.amt, sec: "other" }));
-                });
-                const recent = ev.filter(e => e.d && e.d <= todayISO).sort((x, y) => y.d.localeCompare(x.d)).slice(0, 6);
-                const r = document.getElementById("d2-recent");
-                if (r) r.innerHTML = `<div class="d2-card"><h3>&#128338; Recent entries</h3>${recent.length ? recent.map(e => `<button class="d2-row" onclick="quickOpen(${e.i},'${e.sec}')"><span class="t"><b>${esc(sites[e.i].name)}</b>${esc(e.t)} &middot; ${fmtDate(e.d)}</span><span class="v" style="color:${e.cr ? "#067647" : "#14273A"}">${e.cr ? "+" : ""}${fmt(e.amt || 0)}</span></button>`).join("") : '<div class="d2-empty">No entries yet</div>'}</div>`;
-            }
-
-            function quickOpen(i, sec) {
-                openSec[i] = sec;
-                if (openSite !== i) toggleSite(i); else setSec(i, sec);
-            }
-            function openQuickPick(sec) {
-                qpSec = sec;
-                document.getElementById("qpTitle").textContent = QP_LABEL[sec] + " – choose a site";
-                const q = document.getElementById("qpSearch"); q.value = "";
-                renderQuickPick();
-                document.getElementById("quickPickModal").classList.add("open");
-                setTimeout(() => q.focus(), 50);
-            }
-            function renderQuickPick() {
-                const q = (document.getElementById("qpSearch").value || "").toLowerCase();
-                const list = sites.map((s, i) => ({ s, i })).filter(x => !q || x.s.name.toLowerCase().includes(q));
-                document.getElementById("qpList").innerHTML = list.length ? list.map(x => `<button class="qp-item" onclick="closeModal('quickPickModal');quickOpen(${x.i},'${qpSec}')"><span><b>${String(x.i + 1).padStart(2, "0")}</b> &nbsp;${esc(x.s.name)}</span><span style="color:#5D6D7B">${fmt(calc(x.i).bal)}</span></button>`).join("") : '<div class="d2-empty">No sites found</div>';
             }
 
             function calcCashInHand() {
@@ -2917,8 +2707,6 @@
             function renderSitesInto(targetId) {
                 const wrap = document.getElementById(targetId);
                 if (!wrap) return;
-                if (targetId === "dashSitesList" && openSite === null) { renderSiteGrid(wrap); return; }
-                if (targetId === "dashSitesList") { const ch = document.getElementById("d2-chips"); if (ch) ch.innerHTML = ""; }
                 wrap.innerHTML = "";
                 sites.forEach((s, i) => {
                     const { rec, exp, paid, pending, bal } = calc(i);
