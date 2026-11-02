@@ -1033,6 +1033,44 @@
             border-bottom: 2px solid #C9D6E3
         }
 
+        .book-switch {
+            display: inline-flex;
+            border: 1px solid rgba(255, 255, 255, .45);
+            border-radius: 8px;
+            overflow: hidden
+        }
+
+        .bk-btn {
+            background: transparent;
+            color: #fff;
+            border: none;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 6px 14px;
+            cursor: pointer
+        }
+
+        .bk-btn+.bk-btn {
+            border-left: 1px solid rgba(255, 255, 255, .45)
+        }
+
+        .bk-btn.on {
+            background: #E89B0C;
+            color: #1A1A1A
+        }
+
+        .book-label {
+            display: inline-block;
+            background: rgba(255, 255, 255, .18);
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-weight: 700
+        }
+
+        body.book-b .topbar {
+            background: linear-gradient(135deg, #3B2A5A, #5B3F8C)
+        }
+
         .db-net-row td {
             background: #EAF3DE;
             font-weight: 700;
@@ -1788,9 +1826,13 @@
         <div class="topbar">
             <div class="tb-left">
                 <h1>&#127959; Meridian Construction Company</h1>
-                <p>Income &amp; Expenditure - Site Manager</p>
+                <p>Income &amp; Expenditure - Site Manager &nbsp;<span class="book-label" id="bookLabel"></span></p>
             </div>
             <div class="tb-right">
+                <div class="book-switch" title="Switch between Book A (current data) and Book B (new books)">
+                    <button class="bk-btn" id="bk-A" onclick="switchBook('A')" title="Book A: current books">A</button>
+                    <button class="bk-btn" id="bk-B" onclick="switchBook('B')" title="Book B: new books">B</button>
+                </div>
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
                 <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
@@ -1971,8 +2013,13 @@
 
         <script>
             const PT = 0.15;
-            const STORE_KEY = "meridian_v3";
-            const FB_DOC = "meridian/main";
+            // -- BOOKS: A = existing data, B = new blank books (separate cloud document + local copy) --
+            const BOOKS = {
+                A: { doc: "main", store: "meridian_v3", label: "Book A", desc: "Current books" },
+                B: { doc: "bookB", store: "meridian_v3_B", label: "Book B", desc: "New books" }
+            };
+            let curBook = (() => { try { return localStorage.getItem("mc_book") === "B" ? "B" : "A"; } catch (e) { return "A"; } })();
+            let STORE_KEY = BOOKS[curBook].store;
             const DEF_MAT = ["Stone", "Cement", "Sand", "Metal", "Steel"];
             const DEF_LAB = ["Stone Masonry", "Concrete Mason", "Man Labor", "Plastering"];
 
@@ -2057,15 +2104,16 @@
 
             // -- LOAD --
             async function loadData() {
+                fbConnected = false; // set again only after this book loads from the cloud
                 // Try Firebase first
                 if (window.firebaseReady && window.db) {
                     try {
                         setCloudStatus("syncing", "&#9881; Loading from cloud...");
-                        const ref = window.fsDoc(window.db, "meridian", "main");
+                        const ref = window.fsDoc(window.db, "meridian", BOOKS[curBook].doc);
                         const snap = await window.fsGetDoc(ref);
                         if (snap.exists()) {
                             const d = snap.data();
-                            if (d.sites && d.sites.length > 0) {
+                            if (Array.isArray(d.sites) && (d.sites.length > 0 || curBook === "B")) {
                                 sites = d.sites.map(migrateSite);
                                 vendors = d.vendors || [];
                                 labourers = d.labourers || [];
@@ -2106,7 +2154,8 @@
                         bankAccounts = d.bankAccounts || [];
                         office = d.office || { income: [], expenses: [], staff: [] };
                     } else {
-                        for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
+                        sites = [];
+                        if (curBook === "A") for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                         vendors = [];
                         labourers = [];
                         bankAccounts = [];
@@ -2127,23 +2176,62 @@
                 // Always save locally instantly
                 try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts, office })); } catch (e) { }
 
-                // Debounce cloud save
+                // Debounce cloud save (always to the book that was open when the change was made)
                 if (saveTimer) clearTimeout(saveTimer);
-                saveTimer = setTimeout(async () => {
-                    if (!window.firebaseReady || !window.db || !fbConnected) {
-                        setCloudStatus("offline", "&#128190; Local only");
-                        return;
-                    }
-                    try {
-                        setCloudStatus("syncing", "&#9881; Saving...");
-                        const ref = window.fsDoc(window.db, "meridian", "main");
-                        await window.fsSetDoc(ref, { sites, vendors, labourers, bankAccounts, office, updated: new Date().toISOString() });
-                        setCloudStatus("synced", "&#9728; Cloud Synced");
-                    } catch (e) {
-                        console.error("Cloud save error:", e);
-                        setCloudStatus("error", "&#9888; Cloud error");
-                    }
+                const book = curBook;
+                saveTimer = setTimeout(() => {
+                    saveTimer = null;
+                    if (book !== curBook) return; // never write one book's data into the other
+                    cloudSaveNow(book);
                 }, 800);
+            }
+
+            async function cloudSaveNow(book) {
+                if (!window.firebaseReady || !window.db || !fbConnected) {
+                    setCloudStatus("offline", "&#128190; Local only");
+                    return;
+                }
+                try {
+                    setCloudStatus("syncing", "&#9881; Saving...");
+                    const ref = window.fsDoc(window.db, "meridian", BOOKS[book].doc);
+                    await window.fsSetDoc(ref, { sites, vendors, labourers, bankAccounts, office, updated: new Date().toISOString() });
+                    setCloudStatus("synced", "&#9728; Cloud Synced");
+                } catch (e) {
+                    console.error("Cloud save error:", e);
+                    setCloudStatus("error", "&#9888; Cloud error");
+                }
+            }
+
+            // -- SWITCH BOOK (A / B) --
+            let switchingBook = false;
+            async function switchBook(b) {
+                if (b === curBook || switchingBook || !BOOKS[b]) return;
+                switchingBook = true;
+                try {
+                    // finish any pending save of the current book first
+                    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; await cloudSaveNow(curBook); }
+                    curBook = b; STORE_KEY = BOOKS[b].store;
+                    try { localStorage.setItem("mc_book", b); } catch (e) { }
+                    sites = []; vendors = []; labourers = []; bankAccounts = []; office = { income: [], expenses: [], staff: [] };
+                    openSite = null; openSec = {}; openCat = {}; officeOpen = false; officeTab = "income";
+                    acctSite = 0; vendSite = 0; labSite = 0; openBankAcc = null;
+                    vsFilters = { site: "" }; wkFilters = { site: "" };
+                    dbFilters = { from: "", to: "", site: "", type: "" };
+                    orFilters = { from: "", to: "", view: "all", staff: "" };
+                    document.body.classList.remove("lock-scroll");
+                    renderBookSwitch();
+                    await loadData();
+                    renderDash(); showTab("dash");
+                    notif("Switched to " + BOOKS[b].label + " (" + BOOKS[b].desc + ")");
+                } finally { switchingBook = false; }
+            }
+
+            function renderBookSwitch() {
+                ["A", "B"].forEach(k => { const el = document.getElementById("bk-" + k); if (el) el.classList.toggle("on", k === curBook); });
+                const lbl = document.getElementById("bookLabel");
+                if (lbl) lbl.textContent = BOOKS[curBook].label + " \u00B7 " + BOOKS[curBook].desc;
+                document.body.classList.toggle("book-b", curBook === "B");
+                document.title = "Meridian Construction - " + BOOKS[curBook].label;
             }
 
             // -- CALC --
@@ -4021,7 +4109,7 @@
             function clearAllData() {
                 pwdConfirm(
                     "Reset All Data",
-                    "This will permanently delete ALL sites and entries and reset to 20 blank sites. This cannot be undone.",
+                    "This will permanently delete ALL sites and entries in " + BOOKS[curBook].label + " and reset to 20 blank sites. This cannot be undone.",
                     () => {
                         sites = []; for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                         openSite = null; openSec = {}; openCat = {};
@@ -4584,6 +4672,7 @@
 
             // -- BOOT --
             async function boot() {
+                renderBookSwitch();
                 await loadData();
                 renderDash();
                 showTab("dash");
