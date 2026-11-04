@@ -1033,6 +1033,14 @@
             border-bottom: 2px solid #C9D6E3
         }
 
+        .cat-suggest { margin: -2px 0 12px }
+        .cat-suggest-lbl { font-size: 11px; font-weight: 700; color: #5D6D7B; margin-bottom: 6px }
+        .cat-suggest-none { font-size: 12px; color: #5D6D7B }
+        .cat-sug { display: inline-flex; align-items: center; gap: 6px; margin: 0 6px 6px 0; padding: 5px 10px; border-radius: 999px; border: 1px solid #C9D6E3; background: #F5F8FB; color: #1A3C5E; font-size: 12px; font-weight: 700; cursor: pointer }
+        .cat-sug:hover { background: #E8F0F8; border-color: #1A3C5E }
+        .cat-sug span { font-size: 10px; font-weight: 700; color: #5D6D7B; background: #fff; border-radius: 999px; padding: 0 6px }
+        .cat-suggest:empty { display: none }
+
         .book-switch {
             display: inline-flex;
             border: 1px solid rgba(255, 255, 255, .45);
@@ -1909,8 +1917,9 @@
                 <div class="fi" style="margin-bottom:10px">
                     <label>Category Name <span style="color:#C00000">*</span></label>
                     <input type="text" id="addCatName" placeholder="e.g. Stone Masonry, Plastering..."
-                        onkeydown="if(event.key==='Enter')confirmAddCat()">
+                        onkeydown="if(event.key==='Enter')confirmAddCat()" oninput="renderCatSuggest()" autocomplete="off">
                 </div>
+                <div id="addCatSuggest" class="cat-suggest"></div>
                 <div id="addCatSCSection" style="display:none">
                     <div
                         style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:#F5F3FF;border:1px solid #C4B5FD;border-radius:7px">
@@ -3425,8 +3434,43 @@
                 document.getElementById("addCatSCName").value = "";
                 document.getElementById("addCatSCAmt").value = "";
                 document.getElementById("addCatSCDesc").value = "";
+                renderCatSuggest();
                 document.getElementById("addCatModal").classList.add("open");
                 setTimeout(() => document.getElementById("addCatName").focus(), 50);
+            }
+
+            // Categories already used on OTHER sites of this book (most used first), minus ones this site has
+            function catSuggestions(siteIdx, type) {
+                const have = new Set(((sites[siteIdx] || {})[type + "Cats"] || []).map(c => c.trim().toLowerCase()));
+                const seen = {};
+                sites.forEach((s, i) => {
+                    if (i === siteIdx) return;
+                    (s[type + "Cats"] || []).forEach(c => {
+                        const k = (c || "").trim().toLowerCase();
+                        if (!k || have.has(k)) return;
+                        if (!seen[k]) seen[k] = { name: c.trim(), n: 0, spell: {} };
+                        seen[k].n++; seen[k].spell[c.trim()] = (seen[k].spell[c.trim()] || 0) + 1;
+                    });
+                });
+                return Object.values(seen).map(x => ({ name: Object.entries(x.spell).sort((a, b) => b[1] - a[1])[0][0], n: x.n }))
+                    .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+            }
+            function renderCatSuggest() {
+                const box = document.getElementById("addCatSuggest");
+                if (!box || !addCatCtx) return;
+                const q = (document.getElementById("addCatName").value || "").trim().toLowerCase();
+                const all = catSuggestions(addCatCtx.siteIdx, addCatCtx.type);
+                const list = all.filter(x => !q || x.name.toLowerCase().includes(q));
+                if (!all.length) { box.innerHTML = ""; return; }
+                box.innerHTML = `<div class="cat-suggest-lbl">Already used on other sites &ndash; tap to add:</div>` +
+                    (list.length ? list.map(x => `<button type="button" class="cat-sug" data-name="${esc(x.name)}" onclick="pickCatSuggest(this.dataset.name)" title="Used on ${x.n} site${x.n === 1 ? "" : "s"}">${esc(x.name)}<span>${x.n}</span></button>`).join("")
+                        : `<div class="cat-suggest-none">No match &ndash; press Add to create &ldquo;${esc(document.getElementById("addCatName").value.trim())}&rdquo;</div>`);
+            }
+            function pickCatSuggest(name) {
+                document.getElementById("addCatName").value = name;
+                const sc = document.getElementById("addCatIsSC");
+                if (addCatCtx && addCatCtx.type === "lab" && sc && sc.checked) { renderCatSuggest(); return; } // subcontract: fill the name, user completes the rest
+                confirmAddCat();
             }
 
             function toggleAddCatSC() {
@@ -3441,13 +3485,13 @@
                 const { siteIdx, type } = addCatCtx;
                 const s = sites[siteIdx];
                 if (type === "mat") {
-                    if (s.matCats.includes(nm)) { notif("Already exists"); return; }
+                    if (s.matCats.some(c => c.trim().toLowerCase() === nm.toLowerCase())) { notif("Already exists"); return; }
                     s.matCats.push(nm);
                     if (!s.mat[nm]) s.mat[nm] = [];
                     openCat["m" + siteIdx] = nm;
                     saveData(); closeModal("addCatModal"); refreshBody(siteIdx, "mat"); notif(nm + " added");
                 } else {
-                    if (s.labCats.includes(nm)) { notif("Already exists"); return; }
+                    if (s.labCats.some(c => c.trim().toLowerCase() === nm.toLowerCase())) { notif("Already exists"); return; }
                     const isSC = document.getElementById("addCatIsSC").checked;
                     if (isSC) {
                         const scName = document.getElementById("addCatSCName").value.trim();
