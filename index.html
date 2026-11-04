@@ -2462,7 +2462,7 @@
                             <td><strong>${esc(s.name)}</strong></td>
                             <td>${esc(s.address) || "-"}</td>
                             <td class="r" style="color:#C00000;font-weight:700">${salaryPaid > 0 ? fmt(salaryPaid) : '<span style="color:#bbb">-</span>'}</td>
-                            <td><button class="del-btn" onclick="delOfficeStaff(${j})">&#10005;</button></td>
+                            <td style="white-space:nowrap"><button class="edit-btn" onclick="editStaffAsk(${j})" title="Edit (password needed)">&#9998;</button><button class="del-btn" onclick="delOfficeStaff(${j})">&#10005;</button></td>
                           </tr>`;
                     }).join("");
 
@@ -2639,6 +2639,93 @@
                 const rep = document.getElementById("view-offrep");
                 if (rep && rep.style.display !== "none") renderOfficeReport();
                 notif("Entry updated");
+            }
+
+            // -- EDIT: staff (password), bank account, bank transaction, supplier / worker --
+            function editStaffAsk(j) {
+                const st = office.staff[j]; if (!st) return;
+                pwdConfirm("Edit Staff", `Enter the password to edit "${st.name}".`, () => openEditGeneric("staff", j));
+            }
+            function openEditGeneric(kind, a, b) {
+                const f = (id, lbl, v, type, extra) => `<div class="fi" style="margin-bottom:9px"><label>${lbl}</label><input type="${type || "text"}" id="${id}" value="${esc(v == null ? "" : String(v))}" ${extra || ""}></div>`;
+                let title = "Edit", html = "";
+                if (kind === "staff") {
+                    const st = office.staff[a]; if (!st) return;
+                    editCtx = { kind, j: a, old: st.name };
+                    title = "Edit Staff";
+                    html = f("eg-name", "Staff Name", st.name) + f("eg-addr", "Address", st.address);
+                    const n = office.expenses.filter(e => e.staffName === st.name).length;
+                    if (n) html += `<div style="font-size:11px;color:#666;margin-top:-2px">Renaming also updates ${n} salary entr${n === 1 ? "y" : "ies"} for this person.</div>`;
+                } else if (kind === "bankAcc") {
+                    const acc = bankAccounts[a]; if (!acc) return;
+                    editCtx = { kind, i: a, oldLabel: acc.bkName + (acc.accNo ? " (··" + String(acc.accNo).slice(-4) + ")" : "") };
+                    title = "Edit Bank Account";
+                    html = f("eg-bk", "Bank Name", acc.bkName) + f("eg-holder", "Account Holder", acc.accName) + f("eg-no", "Account Number", acc.accNo) + f("eg-open", "Opening Balance (&#8377;)", acc.openingBal || 0, "number", 'min="0"');
+                } else if (kind === "bankTxn") {
+                    const t = ((bankAccounts[a] || {}).transactions || [])[b]; if (!t) return;
+                    editCtx = { kind, i: a, j: b };
+                    title = "Edit Bank Transaction";
+                    const lock = t.autoLinked ? 'disabled title="Linked to a site receipt - change the amount on the receipt"' : "";
+                    html = f("eg-date", "Date", t.date, "date") + f("eg-desc", "Description", t.desc) +
+                        `<div class="fi" style="margin-bottom:9px"><label>Type</label><select id="eg-type" ${lock}><option value="cr"${t.type === "cr" ? " selected" : ""}>Credit (money in)</option><option value="dr"${t.type === "dr" ? " selected" : ""}>Debit (money out)</option></select></div>` +
+                        f("eg-amt", "Amount (&#8377;)", t.amt, "number", 'min="0" ' + lock) +
+                        (t.autoLinked ? '<div style="font-size:11px;color:#666">This came from a site receipt. To change the amount, edit that receipt.</div>' : "");
+                } else if (kind === "party") {
+                    const arr = a === "vendor" ? vendors : labourers;
+                    const rec = arr.find(p => p.name === b) || { name: b, phone: "", upi: "" };
+                    editCtx = { kind, type: a, old: b };
+                    title = a === "vendor" ? "Edit Supplier" : "Edit Worker";
+                    const n = buildPartyMap(a).find(p => p.name === b);
+                    html = f("eg-name", "Name", rec.name) + f("eg-phone", "Phone", rec.phone, "tel") + f("eg-upi", "UPI ID", rec.upi) +
+                        (n && n.entries.length ? `<div style="font-size:11px;color:#666">Renaming also updates the name on ${n.entries.length} entr${n.entries.length === 1 ? "y" : "ies"} in this book.</div>` : "");
+                } else return;
+                document.getElementById("editEntryTitle").textContent = title;
+                document.getElementById("editEntryFields").innerHTML = html;
+                document.getElementById("editEntryModal").classList.add("open");
+                setTimeout(() => { const x = document.querySelector("#editEntryFields input:not([disabled])"); if (x) x.focus(); }, 50);
+            }
+            function saveEditGeneric() {
+                const g = id => { const e = document.getElementById(id); return e ? e.value.trim() : ""; };
+                const c = editCtx;
+                if (c.kind === "staff") {
+                    const st = office.staff[c.j]; const nm = g("eg-name");
+                    if (!nm) { notif("Enter a name"); return; }
+                    if (office.staff.some((x, k) => k !== c.j && x.name.toLowerCase() === nm.toLowerCase())) { notif(nm + " already exists"); return; }
+                    st.name = nm; st.address = g("eg-addr");
+                    if (nm !== c.old) office.expenses.forEach(e => { if (e.staffName === c.old) e.staffName = nm; });
+                    saveData(); renderOffice(); renderDash();
+                    const rep = document.getElementById("view-offrep"); if (rep && rep.style.display !== "none") renderOfficeReport();
+                } else if (c.kind === "bankAcc") {
+                    const acc = bankAccounts[c.i]; const bk = g("eg-bk"), no = g("eg-no");
+                    if (!bk || !no) { notif("Enter bank name and account number"); return; }
+                    acc.bkName = bk; acc.accName = g("eg-holder"); acc.accNo = no; acc.openingBal = parseFloat(g("eg-open")) || 0;
+                    const newLabel = bk + (no ? " (··" + String(no).slice(-4) + ")" : "");
+                    if (newLabel !== c.oldLabel) sites.forEach(s => s.cash.forEach(r => { if (r.receivedIn === c.oldLabel) r.receivedIn = newLabel; }));
+                    saveData(); renderAccounts(); renderDash();
+                } else if (c.kind === "bankTxn") {
+                    const acc = bankAccounts[c.i]; const t = acc.transactions[c.j];
+                    t.date = g("eg-date"); t.desc = g("eg-desc");
+                    if (!t.autoLinked) {
+                        const amt = parseFloat(g("eg-amt")) || 0;
+                        if (!amt) { notif("Enter an amount"); return; }
+                        t.amt = amt; t.type = g("eg-type") === "dr" ? "dr" : "cr";
+                    }
+                    acc.transactions.sort((x, y) => (x.date || "").localeCompare(y.date || ""));
+                    saveData(); renderAccounts(); renderDash();
+                } else if (c.kind === "party") {
+                    const arr = c.type === "vendor" ? vendors : labourers; const nm = g("eg-name");
+                    if (!nm) { notif("Enter a name"); return; }
+                    if (nm.toLowerCase() !== c.old.toLowerCase() && arr.some(p => p.name.toLowerCase() === nm.toLowerCase())) { notif(nm + " already exists"); return; }
+                    let rec = arr.find(p => p.name === c.old);
+                    if (!rec) { rec = { name: c.old }; arr.push(rec); }
+                    rec.name = nm; rec.phone = g("eg-phone"); rec.upi = g("eg-upi");
+                    if (nm !== c.old) sites.forEach(s => {
+                        if (c.type === "vendor") s.matCats.forEach(cat => (s.mat[cat] || []).forEach(e => { if (e.det === c.old) e.det = nm; }));
+                        else s.labCats.forEach(cat => ((s.lab[cat] && s.lab[cat].daily) || []).forEach(e => { if (e.part === c.old) e.part = nm; }));
+                    });
+                    saveData(); if (c.type === "vendor") renderVendors(); else renderLabours(); renderDash();
+                }
+                editCtx = null; closeModal("editEntryModal"); notif("Updated");
             }
 
             function setOfficeTab(t) { officeTab = t; renderOffice(); }
@@ -3222,6 +3309,7 @@
             function saveEditEntry() {
                 if (!editCtx) return;
                 if (editCtx.office) { saveEditOffice(); return; }
+                if (editCtx.kind) { saveEditGeneric(); return; }
                 const { siteIdx, type, entryIdx, catKey } = editCtx;
                 const s = sites[siteIdx];
                 const gv = id => { const e = document.getElementById(id); return e ? e.value.trim() : ""; };
@@ -3679,7 +3767,7 @@
                             <td class="r" style="color:#C00000">${t.type === "dr" ? fmt(t.amt) : "-"}</td>
                             <td class="r" style="color:#1D9E75">${t.type === "cr" ? fmt(t.amt) : "-"}</td>
                             <td class="r" style="font-weight:600;color:${balColor}">${fmt(runBal)}</td>
-                            <td><button class="del-btn" onclick="delBankTxn(${idx},${j})">&#10005;</button></td>
+                            <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditGeneric('bankTxn',${idx},${j})" title="Edit">&#9998;</button><button class="del-btn" onclick="delBankTxn(${idx},${j})">&#10005;</button></td>
                         </tr>`;
                     }).join("") || `<tr class="empty-row"><td colspan="6">No transactions yet — add manually or import a statement</td></tr>`;
 
@@ -3766,6 +3854,7 @@
                                 <div class="sname">&#127981; ${esc(acc.bkName)}${acc.accName ? " &mdash; " + esc(acc.accName) : ""}</div>
                                 <div class="smeta">A/c: ${esc(acc.accNo)} &nbsp;|&nbsp; Credits: ${fmt(c.totalCredits)} &nbsp;|&nbsp; Debits: ${fmt(c.totalDebits)} &nbsp;|&nbsp; <strong>Balance: ${fmt(c.balance)}</strong></div>
                             </div>
+                            <button class="btn btn-outline" style="font-size:10px;padding:4px 8px" onclick="event.stopPropagation();openEditGeneric('bankAcc',${idx})">&#9998; Edit</button>
                             <button class="btn btn-red" style="font-size:10px;padding:4px 8px" onclick="event.stopPropagation();delBankAccount(${idx})">Delete</button>
                             <span class="sarr">&#9654;</span>
                         </div>
@@ -3946,6 +4035,7 @@
                           <td style="font-size:11px">${esc(p.upi) || '<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone) || ''}</span></td>
                           <td class="r" style="white-space:nowrap;display:flex;gap:5px;justify-content:flex-end;align-items:center">
                             ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : p.pending > 0 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${p.pending})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                            ${p.name === "(Unknown)" ? "" : `<button class="btn btn-outline" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();openEditGeneric('party','${type}','${jsq(p.name)}')" title="Edit">&#9998;</button>`}
                             <button class="btn btn-red" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();deleteParty('${type}','${jsq(p.name)}',${p.entries.length})">&#10005;</button>
                           </td>
                         </tr>
