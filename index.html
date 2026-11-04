@@ -2230,6 +2230,7 @@
                     document.body.classList.remove("lock-scroll");
                     renderBookSwitch();
                     await loadData();
+                    otherBookSites = []; loadOtherBookCats();
                     renderDash(); showTab("dash");
                     notif("Switched to " + BOOKS[b].label + " (" + BOOKS[b].desc + ")");
                 } finally { switchingBook = false; }
@@ -3528,10 +3529,26 @@
             }
 
             // Categories already used on OTHER sites of this book (most used first), minus ones this site has
+            // Categories of the OTHER book (read only, never saved) so Book B can reuse Book A's categories and vice versa
+            let otherBookSites = [];
+            async function loadOtherBookCats() {
+                const ob = curBook === "A" ? "B" : "A", forBook = curBook;
+                let d = null;
+                try {
+                    if (window.firebaseReady && window.db) {
+                        const snap = await window.fsGetDoc(window.fsDoc(window.db, "meridian", BOOKS[ob].doc));
+                        if (snap.exists()) d = snap.data();
+                    }
+                } catch (e) { }
+                if (!d) { try { d = JSON.parse(localStorage.getItem(BOOKS[ob].store) || "null"); } catch (e) { } }
+                if (forBook !== curBook) return; // book was switched meanwhile
+                otherBookSites = (d && Array.isArray(d.sites)) ? d.sites.map(x => ({ matCats: (x.matCats || []).slice(), labCats: (x.labCats || []).slice() })) : [];
+            }
+
             function catSuggestions(siteIdx, type) {
                 const have = new Set(((sites[siteIdx] || {})[type + "Cats"] || []).map(c => c.trim().toLowerCase()));
                 const seen = {};
-                sites.forEach((s, i) => {
+                sites.map((s, i) => [s, i]).concat(otherBookSites.map(s => [s, -1])).forEach(([s, i]) => {
                     if (i === siteIdx) return;
                     (s[type + "Cats"] || []).forEach(c => {
                         const k = (c || "").trim().toLowerCase();
@@ -3550,7 +3567,7 @@
                 const all = catSuggestions(addCatCtx.siteIdx, addCatCtx.type);
                 const list = all.filter(x => !q || x.name.toLowerCase().includes(q));
                 if (!all.length) { box.innerHTML = ""; return; }
-                box.innerHTML = `<div class="cat-suggest-lbl">Already used on other sites &ndash; tap to add:</div>` +
+                box.innerHTML = `<div class="cat-suggest-lbl">Already used on other sites (Book A &amp; B) &ndash; tap to add:</div>` +
                     (list.length ? list.map(x => `<button type="button" class="cat-sug" data-name="${esc(x.name)}" onclick="pickCatSuggest(this.dataset.name)" title="Used on ${x.n} site${x.n === 1 ? "" : "s"}">${esc(x.name)}<span>${x.n}</span></button>`).join("")
                         : `<div class="cat-suggest-none">No match &ndash; press Add to create &ldquo;${esc(document.getElementById("addCatName").value.trim())}&rdquo;</div>`);
             }
@@ -4808,6 +4825,7 @@
             async function boot() {
                 renderBookSwitch();
                 await loadData();
+                loadOtherBookCats();
                 renderDash();
                 showTab("dash");
             }
