@@ -1843,6 +1843,7 @@
                 </div>
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
                 <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
+                <button class="btn btn-amber" id="btnDemoData" style="font-size:11px" onclick="loadBookBDemoData()" title="Load sample demo data for Book B">&#9889; Demo Data</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
             </div>
         </div>
@@ -2111,6 +2112,82 @@
                 el.innerHTML = text;
             }
 
+            // -- DEMO DATA FOR BOOK B --
+            function bookHasTransactions(siteList) {
+                if (!Array.isArray(siteList) || siteList.length === 0) return false;
+                for (const s of siteList) {
+                    if ((s.cash && s.cash.length > 0) ||
+                        (s.other && s.other.length > 0) ||
+                        (s.addWork && s.addWork.length > 0)) return true;
+                    if (s.mat) {
+                        for (const cat in s.mat) {
+                            if (s.mat[cat] && s.mat[cat].length > 0) return true;
+                        }
+                    }
+                    if (s.lab) {
+                        for (const cat in s.lab) {
+                            const lb = s.lab[cat];
+                            if (lb && ((lb.daily && lb.daily.length > 0) || lb.contract !== null)) return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function getDemoDataForBookB() {
+                const s1 = mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15);
+                s1.cash = [
+                    { date: "2026-11-08", amt: 250000, part: "1st Stage Advance - Cash" },
+                    { date: "2026-11-10", amt: 150000, part: "2nd Stage Installment" }
+                ];
+                s1.mat["Stone"] = [
+                    { date: "2026-11-08", det: "Sreekumar Stones", bill: "ST-401", amt: 45000, paid: 45000, payments: [{ date: "2026-11-08", amount: 45000, note: "Full paid" }] }
+                ];
+                s1.mat["Cement"] = [
+                    { date: "2026-11-09", det: "ACC Cement Dealer", bill: "CM-112", amt: 32000, paid: 32000, payments: [{ date: "2026-11-09", amount: 32000, note: "Cash" }] }
+                ];
+                s1.mat["Sand"] = [
+                    { date: "2026-11-10", det: "River Sand Supply", bill: "SD-55", amt: 18000, paid: 18000, payments: [{ date: "2026-11-10", amount: 18000, note: "Paid" }] }
+                ];
+                s1.lab["Stone Masonry"].daily = [
+                    { date: "2026-11-08", part: "Rajan & team (Masonry)", voucher: "V-01", amt: 12000, paid: 12000, payments: [{ date: "2026-11-08", amount: 12000, note: "Daily" }] },
+                    { date: "2026-11-09", part: "Rajan & team (Masonry)", voucher: "V-02", amt: 12000, paid: 12000, payments: [{ date: "2026-11-09", amount: 12000, note: "Daily" }] }
+                ];
+                s1.lab["Man Labor"].daily = [
+                    { date: "2026-11-09", part: "Helper gang (4 helpers)", voucher: "V-03", amt: 6400, paid: 6400, payments: [{ date: "2026-11-09", amount: 6400, note: "Daily" }] },
+                    { date: "2026-11-10", part: "Helper gang (4 helpers)", voucher: "V-04", amt: 6400, paid: 6400, payments: [{ date: "2026-11-10", amount: 6400, note: "Daily" }] }
+                ];
+                s1.other = [
+                    { date: "2026-11-08", purpose: "JCB Excavation & Site Clearing", amt: 8500 }
+                ];
+
+                const s2 = mkSite("Arun Villa - Thrissur", 15);
+                s2.cash = [
+                    { date: "2026-11-09", amt: 300000, part: "Initial Booking Advance" }
+                ];
+                s2.mat["Steel"] = [
+                    { date: "2026-11-10", det: "Tata Tiscon Steel", bill: "TS-88", amt: 65000, paid: 65000, payments: [{ date: "2026-11-10", amount: 65000, note: "Full paid" }] }
+                ];
+                s2.mat["Cement"] = [
+                    { date: "2026-11-11", det: "Ultratech Cement", bill: "UT-33", amt: 28000, paid: 28000, payments: [{ date: "2026-11-11", amount: 28000, note: "Full paid" }] }
+                ];
+                s2.lab["Concrete Mason"].daily = [
+                    { date: "2026-11-10", part: "Suresh Mason & team", voucher: "V-10", amt: 15000, paid: 15000, payments: [{ date: "2026-11-10", amount: 15000, note: "Daily" }] },
+                    { date: "2026-11-11", part: "Suresh Mason & team", voucher: "V-11", amt: 15000, paid: 15000, payments: [{ date: "2026-11-11", amount: 15000, note: "Daily" }] }
+                ];
+
+                return [s1, s2];
+            }
+
+            function loadBookBDemoData() {
+                sites = getDemoDataForBookB();
+                saveData();
+                renderDash();
+                const dbView = document.getElementById("view-daybook");
+                if (dbView && dbView.style.display !== "none") renderDayBook();
+                notif("\u26A1 Demo data loaded for Book B (Nov 8 - 11)");
+            }
+
             // -- LOAD --
             async function loadData() {
                 fbConnected = false; // set again only after this book loads from the cloud
@@ -2128,6 +2205,10 @@
                                 labourers = d.labourers || [];
                                 bankAccounts = d.bankAccounts || [];
                                 office = d.office || { income: [], expenses: [], staff: [] };
+                                if (curBook === "B" && !bookHasTransactions(sites)) {
+                                    sites = getDemoDataForBookB();
+                                    saveData();
+                                }
                                 fbConnected = true;
                                 setCloudStatus("synced", "&#9728; Cloud Synced");
                                 // Also save to localStorage as backup
@@ -2162,54 +2243,15 @@
                         labourers = d.labourers || [];
                         bankAccounts = d.bankAccounts || [];
                         office = d.office || { income: [], expenses: [], staff: [] };
+                        if (curBook === "B" && !bookHasTransactions(sites)) {
+                            sites = getDemoDataForBookB();
+                        }
                     } else {
                         sites = [];
                         if (curBook === "A") {
                             for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                         } else if (curBook === "B") {
-                            // Demo data for Book B
-                            const demoSite1 = mkSite("Arun Villa - Thrissur", 15);
-                            demoSite1.cash = [
-                                { date: "2026-11-08", amt: 250000, part: "Arun K - 1st Installment" },
-                                { date: "2026-11-10", amt: 150000, part: "Arun K - 2nd Installment" }
-                            ];
-                            demoSite1.mat["Stone"] = [
-                                { date: "2026-11-08", det: "Sreekumar Stones", bill: "ST-401", amt: 45000, paid: 45000, payments: [{ date: "2026-11-08", amount: 45000, note: "Full paid" }] }
-                            ];
-                            demoSite1.mat["Cement"] = [
-                                { date: "2026-11-09", det: "ACC Cement Dealer", bill: "CM-112", amt: 32000, paid: 32000, payments: [{ date: "2026-11-09", amount: 32000, note: "Cash" }] }
-                            ];
-                            demoSite1.mat["Sand"] = [
-                                { date: "2026-11-10", det: "River Sand Supply", bill: "SD-55", amt: 18000, paid: 18000, payments: [{ date: "2026-11-10", amount: 18000, note: "Paid" }] }
-                            ];
-                            demoSite1.lab["Stone Masonry"].daily = [
-                                { date: "2026-11-08", part: "Rajan & team", voucher: "V-01", amt: 12000, paid: 12000, payments: [{ date: "2026-11-08", amount: 12000, note: "Daily" }] },
-                                { date: "2026-11-09", part: "Rajan & team", voucher: "V-02", amt: 12000, paid: 12000, payments: [{ date: "2026-11-09", amount: 12000, note: "Daily" }] }
-                            ];
-                            demoSite1.lab["Man Labor"].daily = [
-                                { date: "2026-11-09", part: "Helper gang (4 men)", voucher: "V-03", amt: 6400, paid: 6400, payments: [{ date: "2026-11-09", amount: 6400, note: "Daily" }] },
-                                { date: "2026-11-10", part: "Helper gang (4 men)", voucher: "V-04", amt: 6400, paid: 6400, payments: [{ date: "2026-11-10", amount: 6400, note: "Daily" }] }
-                            ];
-                            demoSite1.other = [
-                                { date: "2026-11-08", purpose: "JCB Excavation", amt: 8500 }
-                            ];
-                            sites.push(demoSite1);
-
-                            const demoSite2 = mkSite("Priya Residence - Ernakulam", 15);
-                            demoSite2.cash = [
-                                { date: "2026-11-09", amt: 300000, part: "Priya S - Advance" }
-                            ];
-                            demoSite2.mat["Steel"] = [
-                                { date: "2026-11-10", det: "Tata Steel Dealer", bill: "TS-88", amt: 65000, paid: 65000, payments: [{ date: "2026-11-10", amount: 65000, note: "Full" }] }
-                            ];
-                            demoSite2.mat["Cement"] = [
-                                { date: "2026-11-11", det: "Ultratech Dealer", bill: "UT-33", amt: 28000, paid: 0, payments: [] }
-                            ];
-                            demoSite2.lab["Concrete Mason"].daily = [
-                                { date: "2026-11-10", part: "Suresh & team", voucher: "V-10", amt: 15000, paid: 15000, payments: [{ date: "2026-11-10", amount: 15000, note: "Daily" }] },
-                                { date: "2026-11-11", part: "Suresh & team", voucher: "V-11", amt: 15000, paid: 15000, payments: [{ date: "2026-11-11", amount: 15000, note: "Daily" }] }
-                            ];
-                            sites.push(demoSite2);
+                            sites = getDemoDataForBookB();
                         }
                         vendors = [];
                         labourers = [];
@@ -2222,7 +2264,11 @@
                     labourers = [];
                     bankAccounts = [];
                     office = { income: [], expenses: [], staff: [] };
-                    for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
+                    if (curBook === "B") {
+                        sites = getDemoDataForBookB();
+                    } else {
+                        for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
+                    }
                 }
             }
 
@@ -2288,6 +2334,8 @@
                 if (lbl) lbl.textContent = BOOKS[curBook].label + " \u00B7 " + BOOKS[curBook].desc;
                 document.body.classList.toggle("book-b", curBook === "B");
                 document.title = "Meridian Construction - " + BOOKS[curBook].label;
+                const demoBtn = document.getElementById("btnDemoData");
+                if (demoBtn) demoBtn.style.display = curBook === "B" ? "" : "none";
             }
 
             // -- CALC --
@@ -4657,6 +4705,21 @@
                 Object.keys(dayNet).sort().forEach(d => { openBal[d] = runBal; runBal += dayNet[d]; closeBal[d] = runBal; });
                 const balCell = v => `<span style="color:${v >= 0 ? "#1D9E75" : "#C00000"}">${fmt(v)}</span>`;
 
+                function getOpeningBalOn(targetDate) {
+                    if (!targetDate) return bookOpeningBal + undatedNet;
+                    let bal = bookOpeningBal + undatedNet;
+                    Object.keys(dayNet).sort().forEach(d => {
+                        if (d < targetDate) bal += dayNet[d];
+                    });
+                    return bal;
+                }
+                function getClosingBalOn(targetDate) {
+                    if (!targetDate) return runBal;
+                    let bal = getOpeningBalOn(targetDate);
+                    if (dayNet[targetDate]) bal += dayNet[targetDate];
+                    return bal;
+                }
+
                 filtered.sort((a, b) => {
                     if (!a.date && !b.date) return 0;
                     if (!a.date) return 1;
@@ -4676,7 +4739,61 @@
                 let tableRows = "";
 
                 if (filtered.length === 0) {
-                    tableRows = '<tr class="empty-row"><td colspan="8">No entries found for the selected filters.</td></tr>';
+                    if (dbFilters.from && dbFilters.to && dbFilters.from === dbFilters.to) {
+                        const selDate = dbFilters.from;
+                        const selOpen = getOpeningBalOn(selDate);
+                        tableRows = `
+                        <tr class="db-bal-row">
+                            <td><span class="db-date-cell">${fmtDate(selDate)}</span></td>
+                            <td colspan="4" style="text-align:right">Opening Balance</td>
+                            <td colspan="2" class="r">${balCell(selOpen)}</td>
+                            <td></td>
+                        </tr>
+                        <tr class="empty-row"><td colspan="8">No entries recorded on ${fmtDate(selDate)}.</td></tr>
+                        <tr class="db-bal-row db-close-row">
+                            <td></td>
+                            <td colspan="4" style="text-align:right">${fmtDate(selDate)} - Closing Balance</td>
+                            <td colspan="2" class="r">${balCell(selOpen)}</td>
+                            <td></td>
+                        </tr>
+                        <tr class="db-total-row">
+                            <td colspan="5">PERIOD TOTAL</td>
+                            <td class="r">0</td>
+                            <td class="r">0</td>
+                            <td></td>
+                        </tr>
+                        <tr class="db-net-row">
+                            <td colspan="5" style="text-align:right;color:#1A3C5E">Opening Balance on ${fmtDate(selDate)}</td>
+                            <td colspan="3" class="r">${balCell(selOpen)}</td>
+                        </tr>
+                        <tr class="db-net-row">
+                            <td colspan="5" style="text-align:right;color:#1A3C5E">Closing Balance on ${fmtDate(selDate)}</td>
+                            <td colspan="3" class="r">${balCell(selOpen)}</td>
+                        </tr>`;
+                    } else if (dbFilters.from || dbFilters.to) {
+                        const sFrom = dbFilters.from || Object.keys(dayNet).sort()[0] || "";
+                        const sTo = dbFilters.to || Object.keys(dayNet).sort().reverse()[0] || "";
+                        const oBal = sFrom ? getOpeningBalOn(sFrom) : runBal;
+                        const cBal = sTo ? getClosingBalOn(sTo) : runBal;
+                        tableRows = `
+                        <tr class="empty-row"><td colspan="8">No entries found for the selected date range.</td></tr>
+                        <tr class="db-total-row">
+                            <td colspan="5">PERIOD TOTAL</td>
+                            <td class="r">0</td>
+                            <td class="r">0</td>
+                            <td></td>
+                        </tr>
+                        ${sFrom ? `<tr class="db-net-row">
+                            <td colspan="5" style="text-align:right;color:#1A3C5E">Opening Balance on ${fmtDate(sFrom)}</td>
+                            <td colspan="3" class="r">${balCell(oBal)}</td>
+                        </tr>` : ""}
+                        ${sTo ? `<tr class="db-net-row">
+                            <td colspan="5" style="text-align:right;color:#1A3C5E">Closing Balance on ${fmtDate(sTo)}</td>
+                            <td colspan="3" class="r">${balCell(cBal)}</td>
+                        </tr>` : ""}`;
+                    } else {
+                        tableRows = '<tr class="empty-row"><td colspan="8">No entries found for the selected filters.</td></tr>';
+                    }
                 } else {
                     groupOrder.forEach(dateKey => {
                         const grp = groups[dateKey];
@@ -4684,7 +4801,7 @@
                         if (dateKey !== "-") tableRows += `<tr class="db-bal-row">
                         <td><span class="db-date-cell">${fmtDate(dateKey)}</span></td>
                         <td colspan="4" style="text-align:right">Opening Balance</td>
-                        <td colspan="2" class="r">${balCell(openBal[dateKey])}</td>
+                        <td colspan="2" class="r">${balCell(openBal[dateKey] !== undefined ? openBal[dateKey] : getOpeningBalOn(dateKey))}</td>
                         <td></td>
                     </tr>`;
 
@@ -4714,7 +4831,7 @@
                         if (dateKey !== "-") tableRows += `<tr class="db-bal-row db-close-row">
                         <td></td>
                         <td colspan="4" style="text-align:right">${fmtDate(dateKey)} - Closing Balance</td>
-                        <td colspan="2" class="r">${balCell(closeBal[dateKey])}</td>
+                        <td colspan="2" class="r">${balCell(closeBal[dateKey] !== undefined ? closeBal[dateKey] : getClosingBalOn(dateKey))}</td>
                         <td></td>
                     </tr>`;
                     });
@@ -4731,14 +4848,18 @@
                     <td colspan="3" class="r" style="color:${net >= 0 ? "#1D9E75" : "#C00000"}">${fmt(net)}</td>
                 </tr>`;
                     const shownDays = groupOrder.filter(d => d !== "-").sort();
-                    if (shownDays.length) {
+                    const firstDate = dbFilters.from || (shownDays.length ? shownDays[0] : "");
+                    const lastDate = dbFilters.to || (shownDays.length ? shownDays[shownDays.length - 1] : "");
+                    if (firstDate) {
                         tableRows += `<tr class="db-net-row">
-                    <td colspan="5" style="text-align:right;color:#1A3C5E">Opening Balance on ${fmtDate(shownDays[0])}</td>
-                    <td colspan="3" class="r">${balCell(openBal[shownDays[0]])}</td>
+                    <td colspan="5" style="text-align:right;color:#1A3C5E">Opening Balance on ${fmtDate(firstDate)}</td>
+                    <td colspan="3" class="r">${balCell(getOpeningBalOn(firstDate))}</td>
                 </tr>`;
+                    }
+                    if (lastDate) {
                         tableRows += `<tr class="db-net-row">
-                    <td colspan="5" style="text-align:right;color:#1A3C5E">Closing Balance on ${fmtDate(shownDays[shownDays.length - 1])}</td>
-                    <td colspan="3" class="r">${balCell(closeBal[shownDays[shownDays.length - 1]])}</td>
+                    <td colspan="5" style="text-align:right;color:#1A3C5E">Closing Balance on ${fmtDate(lastDate)}</td>
+                    <td colspan="3" class="r">${balCell(getClosingBalOn(lastDate))}</td>
                 </tr>`;
                     }
                 }
@@ -4762,6 +4883,7 @@
                 <span>${filtered.length} entr${filtered.length === 1 ? "y" : "ies"}</span>
                 <span style="color:#C00000">&#9660; Expenses: <strong>${fmt(totalDr)}</strong></span>
                 <span style="color:#1D9E75">&#9650; Receipts: <strong>${fmt(totalCr)}</strong></span>
+                ${dbFilters.from ? `<span style="background:#EEF3F8;color:#1A3C5E;padding:2px 8px;border-radius:4px;font-weight:700">&#128218; Opening Bal (${fmtDate(dbFilters.from)}): ${balCell(getOpeningBalOn(dbFilters.from))}</span>` : ""}
                 <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearDbFilters()">Clear Filters</button>
               </div>
               <div style="font-size:11px;color:#6B7A88;margin-top:6px">Opening / Closing Balance = receipts &minus; expenses, carried forward from the first entry (for the selected Site and Type). Entries with no date are counted at the start.${bookOpeningBal > 0 ? ` <strong style="color:#1A3C5E">Book B Opening Balance: ₹${fmt(bookOpeningBal)}</strong>` : ""}</div>
