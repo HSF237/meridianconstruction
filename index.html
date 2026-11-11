@@ -2122,7 +2122,7 @@
                         const snap = await window.fsGetDoc(ref);
                         if (snap.exists()) {
                             const d = snap.data();
-                            if (Array.isArray(d.sites) && (d.sites.length > 0 || curBook === "B")) {
+                            if (Array.isArray(d.sites) && d.sites.length > 0) {
                                 sites = d.sites.map(migrateSite);
                                 vendors = d.vendors || [];
                                 labourers = d.labourers || [];
