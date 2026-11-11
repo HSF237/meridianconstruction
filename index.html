@@ -1844,6 +1844,7 @@
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
                 <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
                 <button class="btn btn-amber" id="btnDemoData" style="font-size:11px" onclick="loadBookBDemoData()" title="Load sample demo data for Book B">&#9889; Demo Data</button>
+                <button class="btn btn-grey" id="btnRemoveDemoData" style="font-size:11px" onclick="removeBookBDemoData()" title="Remove demo transactions and restore clean sites &amp; staff">&#10006; Remove Demo</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
             </div>
         </div>
@@ -2180,17 +2181,58 @@
             }
 
             function loadBookBDemoData() {
+                try { localStorage.removeItem("mc_demo_disabled"); } catch (e) { }
                 sites = getDemoDataForBookB();
                 saveData();
+                renderSites();
                 renderDash();
                 const dbView = document.getElementById("view-daybook");
                 if (dbView && dbView.style.display !== "none") renderDayBook();
                 notif("\u26A1 Demo data loaded for Book B (Nov 8 - 11)");
             }
 
+            function removeBookBDemoData() {
+                if (!confirm("Remove demo data from Book B?\n\nThis will remove all demo transactions and restore your clean sites and staff details with zero balance.")) return;
+                try { localStorage.setItem("mc_demo_disabled", "1"); } catch (e) { }
+
+                // Clean sites with 0 transactions
+                sites = [
+                    mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15),
+                    mkSite("Site 2", 15),
+                    mkSite("Site 3", 15)
+                ];
+
+                // Clean staff details with no transactions
+                office = {
+                    income: [],
+                    expenses: [],
+                    staff: [
+                        { name: "Muhammed Rashid", address: "Site Supervisor" },
+                        { name: "Abdul Salam", address: "Site Engineer" },
+                        { name: "Noufal K", address: "Accounts / Office" }
+                    ]
+                };
+                vendors = [];
+                labourers = [];
+                bankAccounts = [];
+                openSite = null;
+                openSec = {};
+                openCat = {};
+
+                saveData();
+                renderSites();
+                renderDash();
+                const dbView = document.getElementById("view-daybook");
+                if (dbView && dbView.style.display !== "none") renderDayBook();
+                const offRepView = document.getElementById("view-offrep");
+                if (offRepView && offRepView.style.display !== "none") renderOfficeReport();
+                notif("\u2714 Demo data removed. Clean sites & staff details restored.");
+            }
+
             // -- LOAD --
             async function loadData() {
                 fbConnected = false; // set again only after this book loads from the cloud
+                const demoDisabled = (() => { try { return localStorage.getItem("mc_demo_disabled") === "1"; } catch (e) { return false; } })();
                 // Try Firebase first
                 if (window.firebaseReady && window.db) {
                     try {
@@ -2205,7 +2247,7 @@
                                 labourers = d.labourers || [];
                                 bankAccounts = d.bankAccounts || [];
                                 office = d.office || { income: [], expenses: [], staff: [] };
-                                if (curBook === "B" && !bookHasTransactions(sites)) {
+                                if (curBook === "B" && !bookHasTransactions(sites) && !demoDisabled) {
                                     sites = getDemoDataForBookB();
                                     saveData();
                                 }
@@ -2234,6 +2276,7 @@
             }
 
             function loadLocal() {
+                const demoDisabled = (() => { try { return localStorage.getItem("mc_demo_disabled") === "1"; } catch (e) { return false; } })();
                 try {
                     const raw = localStorage.getItem(STORE_KEY);
                     if (raw) {
@@ -2243,7 +2286,7 @@
                         labourers = d.labourers || [];
                         bankAccounts = d.bankAccounts || [];
                         office = d.office || { income: [], expenses: [], staff: [] };
-                        if (curBook === "B" && !bookHasTransactions(sites)) {
+                        if (curBook === "B" && !bookHasTransactions(sites) && !demoDisabled) {
                             sites = getDemoDataForBookB();
                         }
                     } else {
@@ -2251,12 +2294,29 @@
                         if (curBook === "A") {
                             for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                         } else if (curBook === "B") {
-                            sites = getDemoDataForBookB();
+                            if (demoDisabled) {
+                                sites = [
+                                    mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15),
+                                    mkSite("Site 2", 15),
+                                    mkSite("Site 3", 15)
+                                ];
+                                office = {
+                                    income: [],
+                                    expenses: [],
+                                    staff: [
+                                        { name: "Muhammed Rashid", address: "Site Supervisor" },
+                                        { name: "Abdul Salam", address: "Site Engineer" },
+                                        { name: "Noufal K", address: "Accounts / Office" }
+                                    ]
+                                };
+                            } else {
+                                sites = getDemoDataForBookB();
+                            }
                         }
                         vendors = [];
                         labourers = [];
                         bankAccounts = [];
-                        office = { income: [], expenses: [], staff: [] };
+                        if (!office) office = { income: [], expenses: [], staff: [] };
                     }
                 } catch (e) {
                     sites = [];
@@ -2265,7 +2325,11 @@
                     bankAccounts = [];
                     office = { income: [], expenses: [], staff: [] };
                     if (curBook === "B") {
-                        sites = getDemoDataForBookB();
+                        if (demoDisabled) {
+                            sites = [mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15)];
+                        } else {
+                            sites = getDemoDataForBookB();
+                        }
                     } else {
                         for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                     }
@@ -2336,6 +2400,8 @@
                 document.title = "Meridian Construction - " + BOOKS[curBook].label;
                 const demoBtn = document.getElementById("btnDemoData");
                 if (demoBtn) demoBtn.style.display = curBook === "B" ? "" : "none";
+                const remDemoBtn = document.getElementById("btnRemoveDemoData");
+                if (remDemoBtn) remDemoBtn.style.display = curBook === "B" ? "" : "none";
             }
 
             // -- CALC --
