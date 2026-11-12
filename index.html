@@ -1975,6 +1975,11 @@
                         onkeydown="if(event.key==='Enter')confirmAddParty()">
                     <div id="addPartyUPIErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none"></div>
                 </div>
+                <div class="fi" style="margin-bottom:10px" id="addPartyOpenWrap">
+                    <label>Opening Balance (&#8377;) <span style="color:#888;font-weight:400">(optional - amount already owed to this supplier)</span></label>
+                    <input type="number" id="addPartyOpen" placeholder="0" step="0.01"
+                        onkeydown="if(event.key==='Enter')confirmAddParty()">
+                </div>
                 <div style="display:flex;gap:8px;margin-top:16px">
                     <button class="btn btn-green" style="flex:1" onclick="confirmAddParty()">&#10003; Add</button>
                     <button class="btn btn-grey" onclick="closeModal('addPartyModal')">Cancel</button>
@@ -2838,6 +2843,7 @@
                     title = a === "vendor" ? "Edit Supplier" : "Edit Worker";
                     const n = buildPartyMap(a).find(p => p.name === b);
                     html = f("eg-name", "Name", rec.name) + f("eg-phone", "Phone", rec.phone, "tel") + f("eg-upi", "UPI ID", rec.upi) +
+                        (a === "vendor" ? f("eg-open", "Opening Balance (&#8377;) - positive = you owe them", rec.openingBal || 0, "number", 'step="0.01"') : "") +
                         (n && n.entries.length ? `<div style="font-size:11px;color:#666">Renaming also updates the name on ${n.entries.length} entr${n.entries.length === 1 ? "y" : "ies"} in this book.</div>` : "");
                 } else return;
                 document.getElementById("editEntryTitle").textContent = title;
@@ -2880,6 +2886,11 @@
                     let rec = arr.find(p => p.name === c.old);
                     if (!rec) { rec = { name: c.old }; arr.push(rec); }
                     rec.name = nm; rec.phone = g("eg-phone"); rec.upi = g("eg-upi");
+                    if (c.type === "vendor") {
+                        const nb = parseFloat(g("eg-open")) || 0;
+                        if (nb !== (parseFloat(rec.openingBal) || 0)) rec.openingPaid = 0;
+                        rec.openingBal = nb;
+                    }
                     if (nm !== c.old) sites.forEach(s => {
                         if (c.type === "vendor") s.matCats.forEach(cat => (s.mat[cat] || []).forEach(e => { if (e.det === c.old) e.det = nm; }));
                         else s.labCats.forEach(cat => ((s.lab[cat] && s.lab[cat].daily) || []).forEach(e => { if (e.part === c.old) e.part = nm; }));
@@ -3805,6 +3816,8 @@
                 document.getElementById("addPartyName").value = "";
                 document.getElementById("addPartyPhone").value = "";
                 document.getElementById("addPartyUPI").value = "";
+                document.getElementById("addPartyOpen").value = "";
+                document.getElementById("addPartyOpenWrap").style.display = type === "vendor" ? "" : "none";
                 document.getElementById("addPartyNameErr").textContent = "Name is required";
                 document.getElementById("addPartyNameErr").style.display = "none";
                 document.getElementById("addPartyPhoneErr").style.display = "none";
@@ -3832,7 +3845,9 @@
                     document.getElementById("addPartyNameErr").style.display = "block";
                     return;
                 }
-                arr.push({ name, phone, upi });
+                const rec = { name, phone, upi };
+                if (type === "vendor") { rec.openingBal = parseFloat(document.getElementById("addPartyOpen").value) || 0; rec.openingPaid = 0; }
+                arr.push(rec);
                 saveData();
                 // Set the field value and update datalist without full body re-render
                 const inputId = type === "vendor" ? "mdt-" + siteIdx : "lp-" + siteIdx;
@@ -4164,7 +4179,15 @@
                         });
                     }
                 });
-                return Object.values(map).sort((a, b) => b.pending - a.pending || a.name.localeCompare(b.name));
+                const vrec = new Map(vendors.map(v => [v.name, v]));
+                Object.values(map).forEach(p => {
+                    const r = type === "vendor" ? vrec.get(p.name) : null;
+                    const ob = r ? (parseFloat(r.openingBal) || 0) : 0;
+                    const op = r ? (parseFloat(r.openingPaid) || 0) : 0;
+                    p.opening = ob;
+                    p.openOut = ob > 0 ? Math.max(ob - op, 0) : ob; // outstanding opening balance
+                });
+                return Object.values(map).sort((a, b) => (b.pending + b.openOut) - (a.pending + a.openOut) || a.name.localeCompare(b.name));
             }
 
             function renderPartyPage(type) {
@@ -4178,23 +4201,37 @@
                 const filtered = siteIdx >= 0 ? list.filter(p => p.sites.has(sites[siteIdx]?.name)) : list;
                 const siteOptions = `<option value="">All Sites</option>` + sites.map((s, i) => `<option value="${i}"${String(type === "vendor" ? vsFilters.site : wkFilters.site) === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
                 const filterChange = type === "vendor" ? "vsFilters.site=this.value;renderVendors()" : "wkFilters.site=this.value;renderLabours()";
+                const isV = type === "vendor";
+                const opnOf = p => (isV && siteIdx < 0) ? p.openOut : 0; // opening balance is not site-specific
+                const balOf = p => p.pending + opnOf(p);
                 const grandTotal = filtered.reduce((a, p) => a + p.total, 0);
                 const grandPaid = filtered.reduce((a, p) => a + p.paid, 0);
-                const grandPending = filtered.reduce((a, p) => a + p.pending, 0);
+                const grandOpen = filtered.reduce((a, p) => a + opnOf(p), 0);
+                const grandPending = filtered.reduce((a, p) => a + balOf(p), 0);
                 let html = `<div class="dash-tbl-wrap">
                   <div class="dash-tbl-hdr"><span>${label}</span><button class="btn btn-grey" style="font-size:11px;padding:4px 10px" onclick="window.print()">&#128424; Print</button></div>
                   <div class="db-filter-bar"><div class="form-row fg3" style="margin-bottom:0;align-items:center">
                     <div class="fi"><label>Filter by Site</label><select onchange="${filterChange}">${siteOptions}</select></div>
                     <div class="db-stats">
+                      ${isV ? `<span>Opening: <strong>${fmt(grandOpen)}</strong></span>` : ""}
                       <span>Total: <strong style="color:#185FA5">${fmt(grandTotal)}</strong></span>
                       <span style="color:#1D9E75">Paid: <strong>${fmt(grandPaid)}</strong></span>
                       <span style="color:#BA7517">Pending: <strong>${fmt(grandPending)}</strong></span>
                     </div>
                   </div></div>`;
+                if (isV) {
+                    // Sundry creditors = suppliers we owe; sundry debtors = suppliers who owe us (advance / overpaid)
+                    const cr = filtered.filter(p => balOf(p) > 0.005).sort((a, b) => balOf(b) - balOf(a));
+                    const dr = filtered.filter(p => balOf(p) < -0.005).sort((a, b) => balOf(a) - balOf(b));
+                    const tot = arr => arr.reduce((t, p) => t + Math.abs(balOf(p)), 0);
+                    const rowsOf = arr => arr.length ? arr.map(p => `<tr><td>${esc(p.name)}</td><td class="r">${fmt(Math.abs(balOf(p)))}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="2">None</td></tr>`;
+                    const box = (title, color, arr) => `<div class="tbl-wrap"><table class="etbl"><thead><tr><th style="color:${color}">${title}</th><th class="r">Amount</th></tr></thead><tbody>${rowsOf(arr)}</tbody><tfoot><tr><td><strong>Total</strong></td><td class="r"><strong style="color:${color}">${fmt(tot(arr))}</strong></td></tr></tfoot></table></div>`;
+                    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;padding:10px 0">${box("Sundry Creditors (we owe)", "#BA7517", cr)}${box("Sundry Debtors (they owe us)", "#1D9E75", dr)}</div>`;
+                }
                 if (filtered.length === 0) {
                     html += `<p style="text-align:center;color:#aaa;padding:40px">No data yet. ${type === "vendor" ? "Add material entries in sites." : "Add labour entries in sites."}</p>`;
                 } else {
-                    html += `<div class="tbl-wrap"><table class="etbl"><thead><tr><th>${type === "vendor" ? "Supplier" : "Worker"}</th><th>Sites</th><th class="r">Entries</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th style="width:160px">UPI / Phone</th><th class="r">Action</th></tr></thead><tbody>`;
+                    html += `<div class="tbl-wrap"><table class="etbl"><thead><tr><th>${type === "vendor" ? "Supplier" : "Worker"}</th><th>Sites</th><th class="r">Entries</th>${isV ? '<th class="r">Opening</th>' : ''}<th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th style="width:160px">UPI / Phone</th><th class="r">Action</th></tr></thead><tbody>`;
                     filtered.forEach((p, idx) => {
                         const dtRows = p.entries.length
                             ? p.entries.map(e => type === "vendor"
@@ -4206,17 +4243,18 @@
                           <td><strong>${esc(p.name)}</strong></td>
                           <td style="font-size:11px;color:#888">${esc([...p.sites].join(", ")) || '-'}</td>
                           <td class="r">${p.entries.length}</td>
+                          ${isV ? `<td class="r">${fmt(opnOf(p))}</td>` : ""}
                           <td class="r">${fmt(p.total)}</td>
                           <td class="r" style="color:#1D9E75">${fmt(p.paid)}</td>
-                          <td class="r" style="color:${p.pending > 0 ? '#BA7517' : '#1D9E75'};font-weight:700">${fmt(p.pending)}</td>
+                          <td class="r" style="color:${balOf(p) > 0 ? '#BA7517' : '#1D9E75'};font-weight:700">${fmt(balOf(p))}</td>
                           <td style="font-size:11px">${esc(p.upi) || '<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone) || ''}</span></td>
                           <td class="r" style="white-space:nowrap;display:flex;gap:5px;justify-content:flex-end;align-items:center">
-                            ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : p.pending > 0 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${p.pending})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                            ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : balOf(p) > 0 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${balOf(p)})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
                             ${p.name === "(Unknown)" ? "" : `<button class="btn btn-outline" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();openEditGeneric('party','${type}','${jsq(p.name)}')" title="Edit">&#9998;</button>`}
                             <button class="btn btn-red" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();deleteParty('${type}','${jsq(p.name)}',${p.entries.length})">&#10005;</button>
                           </td>
                         </tr>
-                        <tr id="pd-${type}-${idx}" style="display:none"><td colspan="8" style="padding:10px;background:#f5f5f5">
+                        <tr id="pd-${type}-${idx}" style="display:none"><td colspan="9" style="padding:10px;background:#f5f5f5">
                           <table class="etbl" style="margin:0"><thead><tr>${detailCols}</tr></thead><tbody>${dtRows}</tbody></table>
                         </td></tr>`;
                     });
@@ -4302,6 +4340,10 @@
             function markPayCtxPaid() {
                 if (!payCtx) { closeQR(); return; }
                 const today = new Date().toISOString().slice(0, 10);
+                if (payCtx.type === "vendor") {
+                    const vr = vendors.find(v => v.name === payCtx.name);
+                    if (vr && (parseFloat(vr.openingBal) || 0) > 0) vr.openingPaid = parseFloat(vr.openingBal);
+                }
                 sites.forEach(s => {
                     if (payCtx.type === "vendor") {
                         s.matCats.forEach(cat => (s.mat[cat] || []).forEach(e => {
