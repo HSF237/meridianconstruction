@@ -1849,6 +1849,16 @@
         .ss-sw input:not(:placeholder-shown)+.ss-x{display:block}
         .ss-count{font-size:11px;color:#777}
         @media print{.ss-bar{display:none!important}}
+    
+        /* -- Day Book report toggle -------------------- */
+        .db-mode-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;background:#fff;border-bottom:1px solid #eee}
+        .db-mode-lbl{font-size:10px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.4px}
+        .db-seg{display:inline-flex;background:#EEF1F5;border-radius:10px;padding:3px;gap:2px}
+        .db-seg button{border:none;background:transparent;padding:7px 16px;font-size:12px;font-weight:700;color:#5b6773;border-radius:8px;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s;white-space:nowrap}
+        .db-seg button:hover{color:#1A3C5E}
+        .db-seg button.on{background:#1A3C5E;color:#fff;box-shadow:0 2px 6px rgba(26,60,94,.3)}
+        .db-part-hdr{background:#F5F7FA;border-top:1px solid #e3e7ec;border-bottom:1px solid #e3e7ec;padding:9px 14px;font-size:12px;font-weight:700;color:#1A3C5E;margin-top:14px}
+        @media print{.db-mode-bar{display:none!important}}
     </style>
 </head>
 
@@ -1905,7 +1915,6 @@
             <div class="nav-tab" id="nt-vendors" onclick="showTab('vendors')">&#128722; Suppliers</div>
             <div class="nav-tab" id="nt-labours" onclick="showTab('labours')">&#128119; Workers</div>
             <div class="nav-tab daybook-tab" id="nt-daybook" onclick="showTab('daybook')">&#128218; Daybook</div>
-            <div class="nav-tab" id="nt-offrep" onclick="showTab('offrep')">&#127970; Office Report</div>
         </div>
 
         <div class="main">
@@ -1932,33 +1941,30 @@
             <div id="view-vendors" style="display:none"></div>
             <div id="view-labours" style="display:none"></div>
 
-            <div id="view-offrep" style="display:none">
-                <div class="dash-tbl-wrap">
-                    <div class="dash-tbl-hdr">
-                        <span>&#127970; Office Report - Income, Expense &amp; Staff</span>
-                        <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
-                            onclick="window.print()">&#128424; Print</button>
-                    </div>
-                    <div class="print-header">
-                        <h2>Meridian Construction Company</h2>
-                        <p>Office Report - Income, Expense &amp; Staff</p>
-                    </div>
-                    <div id="offrepContent"></div>
-                </div>
-            </div>
-
             <div id="view-daybook" style="display:none">
                 <div class="dash-tbl-wrap">
                     <div class="dash-tbl-hdr">
-                        <span>&#128218; Day Book - Transaction Register</span>
+                        <span>&#128218; Day Book</span>
                         <button class="btn btn-grey" style="font-size:11px;padding:4px 10px"
                             onclick="window.print()">&#128424; Print</button>
                     </div>
-                    <div class="print-header">
-                        <h2>Meridian Construction Company</h2>
-                        <p>Day Book - Transaction Register</p>
+                    <div class="db-mode-bar" id="dbModeBar"></div>
+                    <div id="dbSitesWrap">
+                        <div class="db-part-hdr">&#127959; Sites - Transaction Register</div>
+                        <div class="print-header">
+                            <h2>Meridian Construction Company</h2>
+                            <p>Day Book - Transaction Register</p>
+                        </div>
+                        <div id="daybookContent"></div>
                     </div>
-                    <div id="daybookContent"></div>
+                    <div id="dbOfficeWrap">
+                        <div class="db-part-hdr">&#127970; Office Report - Income, Expense &amp; Staff</div>
+                        <div class="print-header">
+                            <h2>Meridian Construction Company</h2>
+                            <p>Office Report - Income, Expense &amp; Staff</p>
+                        </div>
+                        <div id="offrepContent"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2242,8 +2248,7 @@
                 saveData();
                 renderSites();
                 renderDash();
-                const dbView = document.getElementById("view-daybook");
-                if (dbView && dbView.style.display !== "none") renderDayBook();
+                refreshDaybookPage();
                 notif("\u26A1 Demo data loaded for Book B (Nov 8 - 11)");
             }
 
@@ -2278,10 +2283,7 @@
                 saveData();
                 renderSites();
                 renderDash();
-                const dbView = document.getElementById("view-daybook");
-                if (dbView && dbView.style.display !== "none") renderDayBook();
-                const offRepView = document.getElementById("view-offrep");
-                if (offRepView && offRepView.style.display !== "none") renderOfficeReport();
+                refreshDaybookPage();
                 notif("\u2714 Demo data removed. Clean sites & staff details restored.");
             }
 
@@ -2519,11 +2521,12 @@
 
             // -- NAVIGATION --
             function showTab(t) {
-                ["dash", "sites", "accts", "vendors", "labours", "daybook", "offrep"].forEach(v => {
+                if (t === "offrep") { dbMode = "office"; t = "daybook"; } // Office Report now lives inside the Day Book
+                ["dash", "sites", "accts", "vendors", "labours", "daybook"].forEach(v => {
                     const el = document.getElementById("view-" + v);
                     if (el) el.style.display = t === v ? "block" : "none";
                 });
-                ["dash", "accts", "vendors", "labours", "daybook", "offrep"].forEach(v => {
+                ["dash", "accts", "vendors", "labours", "daybook"].forEach(v => {
                     const el = document.getElementById("nt-" + v);
                     if (el) {
                         const extra = v === "daybook" ? " daybook-tab" : "";
@@ -2535,8 +2538,7 @@
                 if (t === "accts") renderAccounts();
                 if (t === "vendors") renderVendors();
                 if (t === "labours") renderLabours();
-                if (t === "daybook") renderDayBook();
-                if (t === "offrep") renderOfficeReport();
+                if (t === "daybook") renderDaybookPage();
             }
 
             // -- DASHBOARD --
@@ -2853,8 +2855,7 @@
                 editCtx = null;
                 closeModal("editEntryModal");
                 saveData(); renderOffice(); renderDash();
-                const rep = document.getElementById("view-offrep");
-                if (rep && rep.style.display !== "none") renderOfficeReport();
+                refreshDaybookPage();
                 notif("Entry updated");
             }
 
@@ -2912,7 +2913,7 @@
                     st.name = nm; st.address = g("eg-addr");
                     if (nm !== c.old) office.expenses.forEach(e => { if (e.staffName === c.old) e.staffName = nm; });
                     saveData(); renderOffice(); renderDash();
-                    const rep = document.getElementById("view-offrep"); if (rep && rep.style.display !== "none") renderOfficeReport();
+                    refreshDaybookPage();
                 } else if (c.kind === "bankAcc") {
                     const acc = bankAccounts[c.i]; const bk = g("eg-bk"), no = g("eg-no");
                     if (!bk || !no) { notif("Enter bank name and account number"); return; }
@@ -3597,8 +3598,7 @@
                 closeModal("editEntryModal");
                 const sec = type === "cash" ? "cash" : type === "other" ? "other" : type === "addwork" ? "addwork" : type.startsWith("mat") ? "mat" : "lab";
                 refreshBody(siteIdx, sec); refreshHdr(siteIdx); renderDash();
-                const dbView = document.getElementById("view-daybook");
-                if (dbView && dbView.style.display !== "none") renderDayBook();
+                refreshDaybookPage();
                 notif("Entry updated"); editCtx = null;
             }
 
@@ -4908,6 +4908,26 @@
 
             // -- DAY BOOK --
             let dbFilters = { from: "", to: "", site: "", type: "" };
+            let dbMode = "all"; // all | sites | office
+
+            function setDbMode(m) { dbMode = m; renderDaybookPage(); }
+            function renderDaybookPage() {
+                const bar = document.getElementById("dbModeBar");
+                if (bar) {
+                    const b = (m, label) => `<button class="${dbMode === m ? "on" : ""}" onclick="setDbMode('${m}')">${label}</button>`;
+                    bar.innerHTML = `<span class="db-mode-lbl">Report</span><div class="db-seg">${b("all", "&#128218; All")}${b("sites", "&#127959; Sites")}${b("office", "&#127970; Office Report")}</div>`;
+                }
+                const showS = dbMode !== "office", showO = dbMode !== "sites";
+                const sw = document.getElementById("dbSitesWrap"), ow = document.getElementById("dbOfficeWrap");
+                if (sw) sw.style.display = showS ? "" : "none";
+                if (ow) ow.style.display = showO ? "" : "none";
+                if (showS) renderDayBook();
+                if (showO) renderOfficeReport();
+            }
+            function refreshDaybookPage() {
+                const v = document.getElementById("view-daybook");
+                if (v && v.style.display !== "none") renderDaybookPage();
+            }
 
             function inDbRange(date) {
                 const { from, to } = dbFilters;
@@ -4922,12 +4942,14 @@
                 const ids = ["db-from", "db-to", "db-site", "db-type"];
                 const keys = ["from", "to", "site", "type"];
                 ids.forEach((id, k) => { const el = document.getElementById(id); if (el) dbFilters[keys[k]] = el.value; });
-                renderDayBook();
+                orFilters.from = dbFilters.from; orFilters.to = dbFilters.to; // one date range for both reports
+                renderDaybookPage();
             }
 
             function clearDbFilters() {
                 dbFilters = { from: "", to: "", site: "", type: "" };
-                renderDayBook();
+                orFilters.from = ""; orFilters.to = "";
+                renderDaybookPage();
             }
 
             function renderDayBook() {
@@ -5207,12 +5229,14 @@
             function orFilter() {
                 const m = { "or-from": "from", "or-to": "to", "or-view": "view", "or-staff": "staff" };
                 Object.keys(m).forEach(id => { const el = document.getElementById(id); if (el) orFilters[m[id]] = el.value; });
-                renderOfficeReport();
+                dbFilters.from = orFilters.from; dbFilters.to = orFilters.to; // one date range for both reports
+                renderDaybookPage();
             }
 
             function clearOrFilters() {
                 orFilters = { from: "", to: "", view: "all", staff: "" };
-                renderOfficeReport();
+                dbFilters.from = ""; dbFilters.to = "";
+                renderDaybookPage();
             }
 
             function renderOfficeReport() {
