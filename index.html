@@ -1901,7 +1901,7 @@
         <div class="gs-bar">
             <div class="gs-wrap">
                 <span class="gs-ico">&#128269;</span>
-                <input id="gsInput" type="text" autocomplete="off" placeholder="Search suppliers, workers, sites, bank accounts, staff, bill no..."
+                <input id="gsInput" type="text" autocomplete="off" placeholder="Search or go to... suppliers, staff, a site, summary, bill no"
                     oninput="gsRun()" onfocus="gsRun()" onkeydown="gsKey(event)">
                 <span class="gs-kbd">/</span>
                 <button class="gs-clear" id="gsClear" onclick="gsReset()" title="Clear">&#10005;</button>
@@ -4399,6 +4399,20 @@
 
             // -- GLOBAL SEARCH --
             let gsItems = [], gsSel = -1;
+            const GS_SECS = [["cash", "Cash", "cash receipts receipt received"], ["mat", "Materials", "material materials supplier bills"], ["lab", "Labour", "labour labor worker wages"], ["other", "Other Expense", "other expense expenses"], ["addwork", "Additional Work", "additional work extra addwork"], ["sum", "Summary", "summary totals report"]];
+            function gotoSiteSection(i, sec) {
+                if (sec) { openSec[i] = sec; siteQ[i] = ""; }
+                openSite = i; document.body.classList.add("lock-scroll");
+                showTab("dash");
+                setTimeout(() => { const el = document.getElementById("sc-" + i); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+            }
+            function gotoOffice(tab) {
+                officeTab = tab;
+                showTab("dash");
+                if (!officeOpen) { officeOpen = true; document.body.classList.add("lock-scroll"); }
+                renderOffice();
+                setTimeout(() => { const el = document.getElementById("officePanel"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+            }
             function gsHi(text, q) {
                 const t = String(text == null ? "" : text); const i = t.toLowerCase().indexOf(q);
                 if (i < 0 || !q) return esc(t);
@@ -4413,13 +4427,36 @@
                 if (!q) { panel.classList.remove("open"); panel.innerHTML = ""; return; }
                 const has = (...f) => f.some(x => x != null && String(x).toLowerCase().includes(q));
                 const groups = [];
-                const add = (title, rows) => { if (rows.length) groups.push({ title, rows: rows.slice(0, 6) }); };
+                const add = (title, rows, max) => { if (rows.length) groups.push({ title, rows: rows.slice(0, max || 6) }); };
+                // "Go to": pages, the office panel and each site's sections
+                const toks = q.split(/\s+/).filter(Boolean);
+                const tmatch = text => toks.every(t => text.includes(t));
+                const goRows = [];
+                const page = (label, keys, go, sub) => { if (tmatch((label + " " + keys).toLowerCase())) goRows.push({ label, sub: sub || "Go to page", go }); };
+                page("Dashboard", "dashboard home overview", () => showTab("dash"));
+                page("Bank Account Statements", "bank accounts statements deposits", () => showTab("accts"));
+                page("Suppliers", "suppliers vendors payables ledger", () => showTab("vendors"));
+                page("Workers", "workers labour ledger payables", () => showTab("labours"));
+                page("Daybook", "daybook day book transactions register", () => { dbMode = "all"; showTab("daybook"); });
+                page("Daybook \u203A Sites", "daybook day book sites transactions register", () => { dbMode = "sites"; showTab("daybook"); });
+                page("Daybook \u203A Office Report", "daybook day book office report income expense staff", () => { dbMode = "office"; showTab("daybook"); });
+                page("Office Income & Expenditure", "office income expense expenditure", () => gotoOffice("income"), "Dashboard \u203A Office");
+                page("Office \u203A Income", "office income receipts", () => gotoOffice("income"), "Office panel");
+                page("Office \u203A Expense", "office expense expenditure", () => gotoOffice("expense"), "Office panel");
+                page("Staff", "staff employees salary team office", () => gotoOffice("staff"), "Office panel \u203A Staff");
+                sites.forEach((st, i) => GS_SECS.forEach(([k, l, kw]) => {
+                    const secText = (l + " " + kw).toLowerCase();
+                    if (tmatch((st.name + " " + secText).toLowerCase()) && toks.some(t => secText.includes(t)))
+                        goRows.push({ label: st.name + " \u203A " + l, sub: "Open site section", go: () => gotoSiteSection(i, k) });
+                }));
+                goRows.sort((a, b) => (tmatch(a.label.toLowerCase()) ? 0 : 1) - (tmatch(b.label.toLowerCase()) ? 0 : 1)); // label matches first
+                add("Go to", goRows, 8);
                 add("Suppliers", buildPartyMap("vendor").filter(p => p.name !== "(Unknown)" && has(p.name, p.phone, p.upi))
                     .map(p => ({ label: p.name, sub: "Balance " + fmt(p.pending + p.openOut) + (p.phone ? " · " + p.phone : ""), go: () => { vsFilters.q = p.name; showTab("vendors"); } })));
                 add("Workers", buildPartyMap("worker").filter(p => p.name !== "(Unknown)" && has(p.name, p.phone, p.upi, p.position))
                     .map(p => ({ label: p.name, sub: (p.position ? p.position + " · " : "") + "Pending " + fmt(p.pending) + (p.phone ? " · " + p.phone : ""), go: () => { wkFilters.q = p.name; showTab("labours"); } })));
                 add("Sites", sites.map((st, i) => ({ st, i })).filter(x => has(x.st.name))
-                    .map(x => ({ label: x.st.name, sub: "Open site", go: () => goSite(x.i) })));
+                    .map(x => ({ label: x.st.name, sub: "Open site", go: () => gotoSiteSection(x.i) })));
                 const bills = [];
                 sites.forEach(st => {
                     st.matCats.forEach(cat => (st.mat[cat] || []).forEach(e => { if (e.det && has(e.bill, e.item)) bills.push({ label: (e.bill ? "Bill " + e.bill : e.item), sub: e.det + " · " + st.name, go: () => { vsFilters.q = e.det; showTab("vendors"); } }); }));
