@@ -2247,55 +2247,40 @@
                 return [s1, s2];
             }
 
-            function loadBookBDemoData() {
-                try { localStorage.removeItem("mc_demo_disabled"); } catch (e) { }
-                sites = getDemoDataForBookB();
-                saveData();
-                renderSites();
-                renderDash();
-                refreshDaybookPage();
-                notif("\u26A1 Demo data loaded for Book B (Nov 8 - 11)");
-            }
-
-            function removeBookBDemoData() {
-                if (!confirm("Remove demo data from Book B?\n\nThis will remove all demo transactions and restore your clean sites and staff details with zero balance.")) return;
-                try { localStorage.setItem("mc_demo_disabled", "1"); } catch (e) { }
-
-                // Clean sites with 0 transactions
-                sites = [
-                    mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15),
-                    mkSite("Site 2", 15),
-                    mkSite("Site 3", 15)
-                ];
-
-                // Clean staff details with no transactions
-                office = {
-                    income: [],
-                    expenses: [],
-                    staff: [
-                        { name: "Muhammed Rashid", address: "Site Supervisor" },
-                        { name: "Abdul Salam", address: "Site Engineer" },
-                        { name: "Noufal K", address: "Accounts / Office" }
-                    ]
+            // Old demo data (Book B) used to be auto-loaded and saved to the cloud. It is never loaded any more;
+            // this removes any copies of it that are still stored. Only entries that exactly match the demo entries are removed.
+            function purgeDemoRecords() {
+                const demo = getDemoDataForBookB();
+                const keys = new Set();
+                const keysFor = (st, sink) => {
+                    (st.cash || []).forEach(e => sink("cash", e, [e.date, e.amt, e.part]));
+                    (st.other || []).forEach(e => sink("other", e, [e.date, e.amt, e.purpose]));
+                    Object.keys(st.mat || {}).forEach(c => (st.mat[c] || []).forEach(e => sink("mat|" + c, e, [e.date, e.amt, e.det, e.bill])));
+                    Object.keys(st.lab || {}).forEach(c => ((st.lab[c] && st.lab[c].daily) || []).forEach(e => sink("lab|" + c, e, [e.date, e.amt, e.part, e.voucher])));
                 };
-                vendors = [];
-                labourers = [];
-                bankAccounts = [];
-                openSite = null;
-                openSec = {};
-                openCat = {};
-
-                saveData();
-                renderSites();
-                renderDash();
-                refreshDaybookPage();
-                notif("\u2714 Demo data removed. Clean sites & staff details restored.");
+                demo.forEach(ds => keysFor(ds, (k, e, f) => keys.add(ds.name + "|" + k + "|" + f.join("|"))));
+                const demoNames = new Set(demo.map(d => d.name));
+                let removed = 0;
+                const isDemo = (st, k, f) => demoNames.has(st.name) && keys.has(st.name + "|" + k + "|" + f.join("|"));
+                const strip = st => {
+                    const keep = (arr, k, fn) => (arr || []).filter(e => { const d = isDemo(st, k, fn(e)); if (d) removed++; return !d; });
+                    st.cash = keep(st.cash, "cash", e => [e.date, e.amt, e.part]);
+                    st.other = keep(st.other, "other", e => [e.date, e.amt, e.purpose]);
+                    Object.keys(st.mat || {}).forEach(c => { st.mat[c] = keep(st.mat[c], "mat|" + c, e => [e.date, e.amt, e.det, e.bill]); });
+                    Object.keys(st.lab || {}).forEach(c => { if (st.lab[c]) st.lab[c].daily = keep(st.lab[c].daily, "lab|" + c, e => [e.date, e.amt, e.part, e.voucher]); });
+                };
+                sites.forEach(strip);
+                // a demo-only site that is now empty goes away completely (Arun Villa - Thrissur)
+                const before = sites.length;
+                sites = sites.filter(st => !(st.name === "Arun Villa - Thrissur" && !bookHasTransactions([st])));
+                if (sites.length !== before) removed++;
+                if (removed) { saveData(); }
+                return removed;
             }
 
             // -- LOAD --
             async function loadData() {
                 fbConnected = false; // set again only after this book loads from the cloud
-                const demoDisabled = (() => { try { return localStorage.getItem("mc_demo_disabled") === "1"; } catch (e) { return false; } })();
                 // Try Firebase first
                 if (window.firebaseReady && window.db) {
                     try {
@@ -2310,11 +2295,8 @@
                                 labourers = d.labourers || [];
                                 bankAccounts = d.bankAccounts || [];
                                 office = d.office || { income: [], expenses: [], staff: [] };
-                                if (curBook === "B" && !bookHasTransactions(sites) && !demoDisabled) {
-                                    sites = getDemoDataForBookB();
-                                    saveData();
-                                }
                                 fbConnected = true;
+                                purgeDemoRecords();
                                 setCloudStatus("synced", "&#9728; Cloud Synced");
                                 // Also save to localStorage as backup
                                 localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts, office }));
@@ -2339,7 +2321,6 @@
             }
 
             function loadLocal() {
-                const demoDisabled = (() => { try { return localStorage.getItem("mc_demo_disabled") === "1"; } catch (e) { return false; } })();
                 try {
                     const raw = localStorage.getItem(STORE_KEY);
                     if (raw) {
@@ -2349,32 +2330,25 @@
                         labourers = d.labourers || [];
                         bankAccounts = d.bankAccounts || [];
                         office = d.office || { income: [], expenses: [], staff: [] };
-                        if (curBook === "B" && !bookHasTransactions(sites) && !demoDisabled) {
-                            sites = getDemoDataForBookB();
-                        }
                     } else {
                         sites = [];
                         if (curBook === "A") {
                             for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                         } else if (curBook === "B") {
-                            if (demoDisabled) {
-                                sites = [
-                                    mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15),
-                                    mkSite("Site 2", 15),
-                                    mkSite("Site 3", 15)
-                                ];
-                                office = {
-                                    income: [],
-                                    expenses: [],
-                                    staff: [
-                                        { name: "Muhammed Rashid", address: "Site Supervisor" },
-                                        { name: "Abdul Salam", address: "Site Engineer" },
-                                        { name: "Noufal K", address: "Accounts / Office" }
-                                    ]
-                                };
-                            } else {
-                                sites = getDemoDataForBookB();
-                            }
+                            sites = [
+                                mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15),
+                                mkSite("Site 2", 15),
+                                mkSite("Site 3", 15)
+                            ];
+                            office = {
+                                income: [],
+                                expenses: [],
+                                staff: [
+                                    { name: "Muhammed Rashid", address: "Site Supervisor" },
+                                    { name: "Abdul Salam", address: "Site Engineer" },
+                                    { name: "Noufal K", address: "Accounts / Office" }
+                                ]
+                            };
                         }
                         vendors = [];
                         labourers = [];
@@ -2388,15 +2362,12 @@
                     bankAccounts = [];
                     office = { income: [], expenses: [], staff: [] };
                     if (curBook === "B") {
-                        if (demoDisabled) {
-                            sites = [mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15)];
-                        } else {
-                            sites = getDemoDataForBookB();
-                        }
+                        sites = [mkSite("AMEERA KOYUNGARA (MUSLIHAFA)", 15)];
                     } else {
                         for (let i = 1; i <= 20; i++) sites.push(mkSite("Site " + i));
                     }
                 }
+                purgeDemoRecords();
             }
 
             // -- SAVE (local instant + cloud debounced) --
@@ -2461,10 +2432,6 @@
                 if (lbl) lbl.textContent = BOOKS[curBook].label + " \u00B7 " + BOOKS[curBook].desc;
                 document.body.classList.toggle("book-b", curBook === "B");
                 document.title = "Meridian Construction - " + BOOKS[curBook].label;
-                const demoBtn = document.getElementById("btnDemoData");
-                if (demoBtn) demoBtn.style.display = curBook === "B" ? "" : "none";
-                const remDemoBtn = document.getElementById("btnRemoveDemoData");
-                if (remDemoBtn) remDemoBtn.style.display = curBook === "B" ? "" : "none";
             }
 
             // -- CALC --
