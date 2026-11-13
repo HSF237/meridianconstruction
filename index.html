@@ -1808,6 +1808,36 @@
             border-bottom-color: #1A3C5E;
             background: #fff
         }
+    
+        /* -- Global search + supplier filters ---------- */
+        .gs-bar{background:#fff;border-bottom:1px solid #ddd;padding:9px 18px}
+        .gs-wrap{position:relative;max-width:640px;margin:0 auto}
+        .gs-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.55;pointer-events:none}
+        .gs-wrap input{width:100%;padding:10px 70px 10px 40px;border:1.5px solid #d5dbe3;border-radius:22px;font-size:13px;background:#F5F7FA;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+        .gs-wrap input:focus{border-color:#1A3C5E;background:#fff;box-shadow:0 0 0 3px rgba(26,60,94,.12)}
+        .gs-kbd{position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:10px;color:#888;border:1px solid #ccc;border-radius:4px;padding:1px 6px;background:#fff;pointer-events:none}
+        .gs-clear{display:none;position:absolute;right:11px;top:50%;transform:translateY(-50%);border:none;background:#d5dbe3;color:#444;width:20px;height:20px;border-radius:50%;font-size:10px;cursor:pointer;line-height:20px;padding:0}
+        .gs-clear:hover{background:#c2cad4}
+        .gs-panel{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #d5dbe3;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);max-height:60vh;overflow-y:auto;z-index:500}
+        .gs-panel.open{display:block}
+        .gs-grp{padding:9px 14px 4px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#888}
+        .gs-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;font-size:13px}
+        .gs-row:hover,.gs-row.sel{background:#EAF1F8}
+        .gs-sub{font-size:11px;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%}
+        .gs-row mark{background:#FFE9A8;color:inherit;border-radius:2px;padding:0 1px}
+        .gs-empty{padding:18px;text-align:center;color:#888}
+        .pf-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:12px 14px;background:#fff;border-bottom:1px solid #eee}
+        .pf-f{display:flex;flex-direction:column;gap:3px;min-width:140px}
+        .pf-f label{font-size:10px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.4px}
+        .pf-f select,.pf-sw input{padding:7px 9px;border:1px solid #ccd3dc;border-radius:7px;font-size:12px;background:#fff;outline:none}
+        .pf-f select:focus,.pf-sw input:focus{border-color:#1A3C5E}
+        .pf-search{flex:1;min-width:200px}
+        .pf-sw{position:relative}
+        .pf-sw span{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.5}
+        .pf-sw input{width:100%;padding-left:30px}
+        .pf-stats{padding:8px 14px;background:#fafbfc;border-bottom:1px solid #eee;display:flex;gap:16px;flex-wrap:wrap}
+        .pf-clear{padding:7px 12px;font-size:11px}
+        @media print{.gs-bar,.pf-bar{display:none!important}}
     </style>
 </head>
 
@@ -1846,6 +1876,17 @@
                 <button class="btn btn-amber" id="btnDemoData" style="font-size:11px" onclick="loadBookBDemoData()" title="Load sample demo data for Book B">&#9889; Demo Data</button>
                 <button class="btn btn-grey" id="btnRemoveDemoData" style="font-size:11px" onclick="removeBookBDemoData()" title="Remove demo transactions and restore clean sites &amp; staff">&#10006; Remove Demo</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
+            </div>
+        </div>
+
+        <div class="gs-bar">
+            <div class="gs-wrap">
+                <span class="gs-ico">&#128269;</span>
+                <input id="gsInput" type="text" autocomplete="off" placeholder="Search suppliers, workers, sites, bank accounts, staff, bill no..."
+                    oninput="gsRun()" onfocus="gsRun()" onkeydown="gsKey(event)">
+                <span class="gs-kbd">/</span>
+                <button class="gs-clear" id="gsClear" onclick="gsReset()" title="Clear">&#10005;</button>
+                <div class="gs-panel" id="gsPanel"></div>
             </div>
         </div>
 
@@ -2385,7 +2426,7 @@
                     sites = []; vendors = []; labourers = []; bankAccounts = []; office = { income: [], expenses: [], staff: [] };
                     openSite = null; openSec = {}; openCat = {}; officeOpen = false; officeTab = "income";
                     acctSite = 0; vendSite = 0; labSite = 0; openBankAcc = null;
-                    vsFilters = { site: "" }; wkFilters = { site: "" };
+                    vsFilters = { site: "", q: "", status: "", sort: "pending" }; wkFilters = { site: "", q: "", status: "", sort: "pending" };
                     dbFilters = { from: "", to: "", site: "", type: "" };
                     orFilters = { from: "", to: "", view: "all", staff: "" };
                     document.body.classList.remove("lock-scroll");
@@ -2964,8 +3005,8 @@
                 }, 50);
             }
 
-            let vsFilters = { site: "" };
-            let wkFilters = { site: "" };
+            let vsFilters = { site: "", q: "", status: "", sort: "pending" };
+            let wkFilters = { site: "", q: "", status: "", sort: "pending" };
 
             // -- SITES LIST --
             function renderSites() {
@@ -3857,6 +3898,7 @@
                 if (inp) inp.value = name;
                 if (dl) { const opt = document.createElement("option"); opt.value = name; dl.appendChild(opt); }
                 closeModal("addPartyModal");
+                if (siteIdx === -1) { if (type === "vendor") renderVendors(); else renderLabours(); }
                 notif(name + " added — contact details saved");
             }
 
@@ -4197,28 +4239,58 @@
                     ? `<th>Date</th><th>Site</th><th>Material</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th>`
                     : `<th>Date</th><th>Site</th><th>Category</th><th>Voucher</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th>`;
                 const list = buildPartyMap(type);
-                const siteIdx = type === "vendor" ? (vsFilters.site !== "" ? parseInt(vsFilters.site) : -1) : (wkFilters.site !== "" ? parseInt(wkFilters.site) : -1);
-                const filtered = siteIdx >= 0 ? list.filter(p => p.sites.has(sites[siteIdx]?.name)) : list;
-                const siteOptions = `<option value="">All Sites</option>` + sites.map((s, i) => `<option value="${i}"${String(type === "vendor" ? vsFilters.site : wkFilters.site) === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
-                const filterChange = type === "vendor" ? "vsFilters.site=this.value;renderVendors()" : "wkFilters.site=this.value;renderLabours()";
+                const F = type === "vendor" ? vsFilters : wkFilters;
+                const siteIdx = (F.site !== "" && F.site != null) ? parseInt(F.site) : -1;
                 const isV = type === "vendor";
                 const opnOf = p => (isV && siteIdx < 0) ? p.openOut : 0; // opening balance is not site-specific
                 const balOf = p => p.pending + opnOf(p);
+                const fq = (F.q || "").trim().toLowerCase();
+                const fStatus = F.status || "", fSort = F.sort || "pending";
+                const filtered = list.filter(p => {
+                    if (siteIdx >= 0 && !p.sites.has(sites[siteIdx]?.name)) return false;
+                    if (fq) {
+                        const hit = p.name.toLowerCase().includes(fq) || (p.phone || "").toLowerCase().includes(fq) || (p.upi || "").toLowerCase().includes(fq)
+                            || [...p.sites].some(x => String(x).toLowerCase().includes(fq))
+                            || p.entries.some(e => String(e.bill || e.voucher || "").toLowerCase().includes(fq) || String(e.item || e.cat || "").toLowerCase().includes(fq));
+                        if (!hit) return false;
+                    }
+                    const bl = balOf(p);
+                    if (fStatus === "pending" && !(bl > 0.005)) return false;
+                    if (fStatus === "settled" && Math.abs(bl) > 0.005) return false;
+                    if (fStatus === "noentries" && p.entries.length) return false;
+                    return true;
+                });
+                filtered.sort((x, y) => {
+                    if (fSort === "name") return x.name.localeCompare(y.name);
+                    if (fSort === "total") return y.total - x.total || x.name.localeCompare(y.name);
+                    if (fSort === "paid") return y.paid - x.paid || x.name.localeCompare(y.name);
+                    return balOf(y) - balOf(x) || x.name.localeCompare(y.name);
+                });
+                const siteOptions = `<option value="">All Sites</option>` + sites.map((s, i) => `<option value="${i}"${String(F.site) === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
+                const opt = (v, t, cur) => `<option value="${v}"${cur === v ? " selected" : ""}>${t}</option>`;
+                const statusOpts = opt("", "All", fStatus) + opt("pending", "Pending balance", fStatus) + opt("settled", "Paid up", fStatus) + opt("noentries", "No entries yet", fStatus);
+                const sortOpts = opt("pending", "Pending (high &rarr; low)", fSort) + opt("name", "Name (A &rarr; Z)", fSort) + opt("total", "Total (high &rarr; low)", fSort) + opt("paid", "Paid (high &rarr; low)", fSort);
                 const grandTotal = filtered.reduce((a, p) => a + p.total, 0);
                 const grandPaid = filtered.reduce((a, p) => a + p.paid, 0);
                 const grandOpen = filtered.reduce((a, p) => a + opnOf(p), 0);
                 const grandPending = filtered.reduce((a, p) => a + balOf(p), 0);
+                const addBtn = isV ? `<button class="btn btn-green" style="font-size:11px;padding:4px 10px" onclick="openAddPartyModal('vendor',-1)">+ Add Supplier</button>` : "";
                 let html = `<div class="dash-tbl-wrap">
-                  <div class="dash-tbl-hdr"><span>${label}</span><button class="btn btn-grey" style="font-size:11px;padding:4px 10px" onclick="window.print()">&#128424; Print</button></div>
-                  <div class="db-filter-bar"><div class="form-row fg3" style="margin-bottom:0;align-items:center">
-                    <div class="fi"><label>Filter by Site</label><select onchange="${filterChange}">${siteOptions}</select></div>
-                    <div class="db-stats">
-                      ${isV ? `<span>Opening: <strong>${fmt(grandOpen)}</strong></span>` : ""}
-                      <span>Total: <strong style="color:#185FA5">${fmt(grandTotal)}</strong></span>
-                      <span style="color:#1D9E75">Paid: <strong>${fmt(grandPaid)}</strong></span>
-                      <span style="color:#BA7517">Pending: <strong>${fmt(grandPending)}</strong></span>
-                    </div>
-                  </div></div>`;
+                  <div class="dash-tbl-hdr"><span>${label}</span><span style="display:flex;gap:6px">${addBtn}<button class="btn btn-grey" style="font-size:11px;padding:4px 10px" onclick="window.print()">&#128424; Print</button></span></div>
+                  <div class="pf-bar">
+                    <div class="pf-f pf-search"><label>Search</label><div class="pf-sw"><span>&#128269;</span><input type="text" id="psq-${type}" value="${esc(F.q || "")}" autocomplete="off" placeholder="${isV ? "Name, phone, UPI, bill no, material..." : "Name, phone, UPI, voucher, category..."}" oninput="partyFilter('${type}','q',this.value,this)"></div></div>
+                    <div class="pf-f"><label>Site</label><select onchange="partyFilter('${type}','site',this.value)">${siteOptions}</select></div>
+                    <div class="pf-f"><label>Status</label><select onchange="partyFilter('${type}','status',this.value)">${statusOpts}</select></div>
+                    <div class="pf-f"><label>Sort by</label><select onchange="partyFilter('${type}','sort',this.value)">${sortOpts}</select></div>
+                    <button class="btn btn-outline pf-clear" onclick="partyFilterClear('${type}')">Clear filters</button>
+                  </div>
+                  <div class="db-stats pf-stats">
+                    ${isV ? `<span>Opening: <strong>${fmt(grandOpen)}</strong></span>` : ""}
+                    <span>Total: <strong style="color:#185FA5">${fmt(grandTotal)}</strong></span>
+                    <span style="color:#1D9E75">Paid: <strong>${fmt(grandPaid)}</strong></span>
+                    <span style="color:#BA7517">Pending: <strong>${fmt(grandPending)}</strong></span>
+                    <span style="color:#888">Showing <strong>${filtered.length}</strong> of ${list.length}</span>
+                  </div>`;
                 if (isV) {
                     // Sundry creditors = suppliers we owe
                     const cr = filtered.filter(p => balOf(p) > 0.005).sort((a, b) => balOf(b) - balOf(a));
@@ -4228,10 +4300,11 @@
                     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;padding:10px 0">${box("Sundry Creditors (we owe)", "#BA7517", cr)}</div>`;
                 }
                 if (filtered.length === 0) {
-                    html += `<p style="text-align:center;color:#aaa;padding:40px">No data yet. ${type === "vendor" ? "Add material entries in sites." : "Add labour entries in sites."}</p>`;
+                    html += `<p style="text-align:center;color:#aaa;padding:40px">${list.length ? "Nothing matches your search or filters." : "No data yet. " + (type === "vendor" ? "Add material entries in sites." : "Add labour entries in sites.")}</p>`;
                 } else {
                     html += `<div class="tbl-wrap"><table class="etbl"><thead><tr><th>${type === "vendor" ? "Supplier" : "Worker"}</th><th>Sites</th><th class="r">Entries</th>${isV ? '<th class="r">Opening</th>' : ''}<th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th style="width:160px">UPI / Phone</th><th class="r">Action</th></tr></thead><tbody>`;
                     filtered.forEach((p, idx) => {
+                        const payAmt = p.pending + (isV ? p.openOut : 0); // full balance, regardless of the site filter
                         const dtRows = p.entries.length
                             ? p.entries.map(e => type === "vendor"
                                 ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item || e.cat)}</td><td>${esc(e.bill) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
@@ -4248,7 +4321,7 @@
                           <td class="r" style="color:${balOf(p) > 0 ? '#BA7517' : '#1D9E75'};font-weight:700">${fmt(balOf(p))}</td>
                           <td style="font-size:11px">${esc(p.upi) || '<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone) || ''}</span></td>
                           <td class="r" style="white-space:nowrap;display:flex;gap:5px;justify-content:flex-end;align-items:center">
-                            ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : balOf(p) > 0 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${balOf(p)})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                            ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : payAmt > 0.005 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${payAmt})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
                             ${p.name === "(Unknown)" ? "" : `<button class="btn btn-outline" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();openEditGeneric('party','${type}','${jsq(p.name)}')" title="Edit">&#9998;</button>`}
                             <button class="btn btn-red" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();deleteParty('${type}','${jsq(p.name)}',${p.entries.length})">&#10005;</button>
                           </td>
@@ -4262,6 +4335,94 @@
                 html += `</div>`;
                 container.innerHTML = html;
             }
+
+            function partyFilter(type, key, value, el) {
+                const F = type === "vendor" ? vsFilters : wkFilters;
+                F[key] = value;
+                const pos = (el && el.selectionStart != null) ? el.selectionStart : null;
+                if (type === "vendor") renderVendors(); else renderLabours();
+                if (key === "q") {
+                    const n = document.getElementById("psq-" + type);
+                    if (n) { n.focus(); try { if (pos != null) n.setSelectionRange(pos, pos); } catch (e) { } }
+                }
+            }
+            function partyFilterClear(type) {
+                const F = type === "vendor" ? vsFilters : wkFilters;
+                F.site = ""; F.q = ""; F.status = ""; F.sort = "pending";
+                if (type === "vendor") renderVendors(); else renderLabours();
+            }
+
+            // -- GLOBAL SEARCH --
+            let gsItems = [], gsSel = -1;
+            function gsHi(text, q) {
+                const t = String(text == null ? "" : text); const i = t.toLowerCase().indexOf(q);
+                if (i < 0 || !q) return esc(t);
+                return esc(t.slice(0, i)) + "<mark>" + esc(t.slice(i, i + q.length)) + "</mark>" + esc(t.slice(i + q.length));
+            }
+            function gsRun() {
+                const inp = document.getElementById("gsInput"), panel = document.getElementById("gsPanel"), clr = document.getElementById("gsClear");
+                if (!inp || !panel) return;
+                const q = inp.value.trim().toLowerCase();
+                clr.style.display = inp.value ? "block" : "none";
+                gsItems = []; gsSel = -1;
+                if (!q) { panel.classList.remove("open"); panel.innerHTML = ""; return; }
+                const has = (...f) => f.some(x => x != null && String(x).toLowerCase().includes(q));
+                const groups = [];
+                const add = (title, rows) => { if (rows.length) groups.push({ title, rows: rows.slice(0, 6) }); };
+                add("Suppliers", buildPartyMap("vendor").filter(p => p.name !== "(Unknown)" && has(p.name, p.phone, p.upi))
+                    .map(p => ({ label: p.name, sub: "Balance " + fmt(p.pending + p.openOut) + (p.phone ? " · " + p.phone : ""), go: () => { vsFilters.q = p.name; showTab("vendors"); } })));
+                add("Workers", buildPartyMap("worker").filter(p => p.name !== "(Unknown)" && has(p.name, p.phone, p.upi))
+                    .map(p => ({ label: p.name, sub: "Pending " + fmt(p.pending) + (p.phone ? " · " + p.phone : ""), go: () => { wkFilters.q = p.name; showTab("labours"); } })));
+                add("Sites", sites.map((st, i) => ({ st, i })).filter(x => has(x.st.name))
+                    .map(x => ({ label: x.st.name, sub: "Open site", go: () => goSite(x.i) })));
+                const bills = [];
+                sites.forEach(st => {
+                    st.matCats.forEach(cat => (st.mat[cat] || []).forEach(e => { if (e.det && has(e.bill, e.item)) bills.push({ label: (e.bill ? "Bill " + e.bill : e.item), sub: e.det + " · " + st.name, go: () => { vsFilters.q = e.det; showTab("vendors"); } }); }));
+                    st.labCats.forEach(cat => ((st.lab[cat] && st.lab[cat].daily) || []).forEach(e => { if (e.part && has(e.voucher)) bills.push({ label: "Voucher " + e.voucher, sub: e.part + " · " + st.name, go: () => { wkFilters.q = e.part; showTab("labours"); } }); }));
+                });
+                add("Bills & vouchers", bills);
+                add("Bank accounts", bankAccounts.filter(a => has(a.bkName, a.accName, a.accNo))
+                    .map(a => ({ label: (a.bkName || "Bank") + (a.accNo ? " (··" + String(a.accNo).slice(-4) + ")" : ""), sub: a.accName || "", go: () => showTab("accts") })));
+                add("Office staff", ((office && office.staff) || []).filter(x => has(x.name, x.address))
+                    .map(x => ({ label: x.name, sub: x.address || "Staff", go: () => showTab("offrep") })));
+                let html = "";
+                groups.forEach(g => {
+                    html += `<div class="gs-grp">${g.title}</div>`;
+                    g.rows.forEach(r => { gsItems.push(r); html += `<div class="gs-row" data-i="${gsItems.length - 1}" onmousedown="event.preventDefault();gsPick(${gsItems.length - 1})"><span>${gsHi(r.label, q)}</span><span class="gs-sub">${esc(r.sub)}</span></div>`; });
+                });
+                panel.innerHTML = html || `<div class="gs-empty">No results for &ldquo;${esc(inp.value.trim())}&rdquo;</div>`;
+                panel.classList.add("open");
+            }
+            function gsPick(i) { const it = gsItems[i]; if (!it) return; gsReset(); it.go(); }
+            function gsReset() {
+                const inp = document.getElementById("gsInput"), panel = document.getElementById("gsPanel"), clr = document.getElementById("gsClear");
+                if (inp) { inp.value = ""; inp.blur(); }
+                if (panel) { panel.classList.remove("open"); panel.innerHTML = ""; }
+                if (clr) clr.style.display = "none";
+                gsItems = []; gsSel = -1;
+            }
+            function gsKey(e) {
+                const panel = document.getElementById("gsPanel");
+                if (e.key === "Escape") { gsReset(); return; }
+                if (!gsItems.length) return;
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                    e.preventDefault();
+                    gsSel = (gsSel + (e.key === "ArrowDown" ? 1 : -1) + gsItems.length) % gsItems.length;
+                    panel.querySelectorAll(".gs-row").forEach(r => r.classList.toggle("sel", +r.dataset.i === gsSel));
+                    const el = panel.querySelector(".gs-row.sel"); if (el) el.scrollIntoView({ block: "nearest" });
+                } else if (e.key === "Enter") { e.preventDefault(); gsPick(gsSel >= 0 ? gsSel : 0); }
+            }
+            document.addEventListener("keydown", e => {
+                if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+                const t = e.target, tag = t && t.tagName;
+                if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+                const inp = document.getElementById("gsInput"); if (!inp || inp.offsetParent === null) return;
+                e.preventDefault(); inp.focus();
+            });
+            document.addEventListener("click", e => {
+                if (e.target.closest && e.target.closest(".gs-wrap")) return;
+                const panel = document.getElementById("gsPanel"); if (panel) panel.classList.remove("open");
+            });
 
             function renderVendors() { renderPartyPage("vendor"); }
             function renderLabours() { renderPartyPage("worker"); }
