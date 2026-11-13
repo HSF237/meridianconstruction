@@ -1838,6 +1838,17 @@
         .pf-stats{padding:8px 14px;background:#fafbfc;border-bottom:1px solid #eee;display:flex;gap:16px;flex-wrap:wrap}
         .pf-clear{padding:7px 12px;font-size:11px}
         @media print{.gs-bar,.pf-bar{display:none!important}}
+    
+        /* -- Per-site section search ------------------- */
+        .ss-bar{display:flex;align-items:center;gap:12px;padding:10px 0 4px}
+        .ss-sw{position:relative;flex:1;max-width:420px}
+        .ss-sw span{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.5;pointer-events:none}
+        .ss-sw input{width:100%;padding:8px 32px 8px 32px;border:1.5px solid #d5dbe3;border-radius:20px;font-size:12px;background:#F5F7FA;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+        .ss-sw input:focus{border-color:#1A3C5E;background:#fff;box-shadow:0 0 0 3px rgba(26,60,94,.12)}
+        .ss-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:#d5dbe3;color:#444;width:18px;height:18px;border-radius:50%;font-size:9px;cursor:pointer;line-height:18px;padding:0;display:none}
+        .ss-sw input:not(:placeholder-shown)+.ss-x{display:block}
+        .ss-count{font-size:11px;color:#777}
+        @media print{.ss-bar{display:none!important}}
     </style>
 </head>
 
@@ -2090,6 +2101,7 @@
             let officeTab = "income";
             let openSite = null;
             let openSec = {};
+            let siteQ = {};
             let openCat = {};
             let addCatCtx = null;
             let addPartyCtx = null;
@@ -3039,6 +3051,7 @@
       </div>
       <div class="site-body${isOpen ? " open" : ""}" id="sb-${i}">${isOpen ? bodyHTML(i) : ""}</div>`;
                     wrap.appendChild(div);
+                    if (isOpen) siteApplyQ(i);
                 });
             }
 
@@ -3062,6 +3075,7 @@
     <div class="sec-tabs">
       ${["cash", "mat", "lab", "other", "addwork", "sum"].map((s, j) => `<div class="sec-tab${sec === s ? " on" : ""}" onclick="setSec(${i},'${s}')">${["&#128176; Cash", "&#129521; Materials", "&#128119; Labour", "&#128196; Other Expense", "&#128295; Additional Work", "&#128202; Summary"][j]}</div>`).join("")}
     </div>
+    ${sec !== "sum" ? `<div class="ss-bar"><div class="ss-sw"><span>&#128269;</span><input type="text" id="ssq-${i}" value="${esc(siteQ[i] || "")}" placeholder="Search in this section..." autocomplete="off" oninput="siteSearch(${i},this.value)" onkeydown="if(event.key==='Escape')siteSearch(${i},'',true)"><button class="ss-x" onclick="siteSearch(${i},'',true)" title="Clear">&#10005;</button></div><span class="ss-count" id="ssc-${i}"></span></div>` : ""}
     <div class="sec-panel${sec === "cash" ? " on" : ""}">${sec === "cash" ? cashHTML(i) : ""}</div>
     <div class="sec-panel${sec === "mat" ? " on" : ""}">${sec === "mat" ? matHTML(i) : ""}</div>
     <div class="sec-panel${sec === "lab" ? " on" : ""}">${sec === "lab" ? labHTML(i) : ""}</div>
@@ -3071,8 +3085,24 @@
             }
 
             function setSec(i, sec) {
-                openSec[i] = sec;
+                openSec[i] = sec; siteQ[i] = "";
                 document.getElementById("sb-" + i).innerHTML = bodyHTML(i);
+            }
+
+            // Filters the entry rows of the open section of one site (rows are only hidden, so edit/delete still hit the right entry)
+            function siteSearch(i, v, clear) {
+                siteQ[i] = v || "";
+                if (clear) { const inp = document.getElementById("ssq-" + i); if (inp) { inp.value = ""; inp.focus(); } }
+                siteApplyQ(i);
+            }
+            function siteApplyQ(i) {
+                const sb = document.getElementById("sb-" + i); if (!sb) return;
+                const q = (siteQ[i] || "").trim().toLowerCase();
+                const rows = [...sb.querySelectorAll(".sec-panel.on .tbl-wrap tbody tr")].filter(r => !r.classList.contains("sub-row") && !r.classList.contains("empty-row"));
+                let shown = 0;
+                rows.forEach(r => { const ok = !q || r.textContent.toLowerCase().includes(q); r.style.display = ok ? "" : "none"; if (ok) shown++; });
+                const c = document.getElementById("ssc-" + i);
+                if (c) c.textContent = q ? (shown ? `Showing ${shown} of ${rows.length} entries (totals below cover all entries)` : "No matching entries") : "";
             }
 
             // -- CASH --
@@ -3968,7 +3998,7 @@
                 if (labBody && labSite === i && sec === "lab") { labBody.innerHTML = labHTML(i); return; }
                 openSec[i] = sec || openSec[i] || "cash";
                 const sb = document.getElementById("sb-" + i);
-                if (sb) sb.innerHTML = bodyHTML(i);
+                if (sb) { sb.innerHTML = bodyHTML(i); siteApplyQ(i); }
             }
 
             // -- ACCOUNTS / VENDORS / LABOURS VIEWS --
