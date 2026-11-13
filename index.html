@@ -4220,13 +4220,12 @@
                     </div>
                   </div></div>`;
                 if (isV) {
-                    // Sundry creditors = suppliers we owe; sundry debtors = suppliers who owe us (advance / overpaid)
+                    // Sundry creditors = suppliers we owe
                     const cr = filtered.filter(p => balOf(p) > 0.005).sort((a, b) => balOf(b) - balOf(a));
-                    const dr = filtered.filter(p => balOf(p) < -0.005).sort((a, b) => balOf(a) - balOf(b));
                     const tot = arr => arr.reduce((t, p) => t + Math.abs(balOf(p)), 0);
                     const rowsOf = arr => arr.length ? arr.map(p => `<tr><td>${esc(p.name)}</td><td class="r">${fmt(Math.abs(balOf(p)))}</td></tr>`).join("") : `<tr class="empty-row"><td colspan="2">None</td></tr>`;
                     const box = (title, color, arr) => `<div class="tbl-wrap"><table class="etbl"><thead><tr><th style="color:${color}">${title}</th><th class="r">Amount</th></tr></thead><tbody>${rowsOf(arr)}</tbody><tfoot><tr><td><strong>Total</strong></td><td class="r"><strong style="color:${color}">${fmt(tot(arr))}</strong></td></tr></tfoot></table></div>`;
-                    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;padding:10px 0">${box("Sundry Creditors (we owe)", "#BA7517", cr)}${box("Sundry Debtors (they owe us)", "#1D9E75", dr)}</div>`;
+                    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;padding:10px 0">${box("Sundry Creditors (we owe)", "#BA7517", cr)}</div>`;
                 }
                 if (filtered.length === 0) {
                     html += `<p style="text-align:center;color:#aaa;padding:40px">No data yet. ${type === "vendor" ? "Add material entries in sites." : "Add labour entries in sites."}</p>`;
