@@ -2031,6 +2031,11 @@
                         onkeydown="if(event.key==='Enter')confirmAddParty()">
                     <div id="addPartyUPIErr" style="color:#C00000;font-size:11px;margin-top:3px;display:none"></div>
                 </div>
+                <div class="fi" style="margin-bottom:10px" id="addPartyPosWrap">
+                    <label>Position / Trade <span style="color:#888;font-weight:400">(optional)</span></label>
+                    <input type="text" id="addPartyPos" placeholder="e.g. Mason, Carpenter, Electrician"
+                        onkeydown="if(event.key==='Enter')confirmAddParty()">
+                </div>
                 <div class="fi" style="margin-bottom:10px" id="addPartyOpenWrap">
                     <label>Opening Balance (&#8377;) <span style="color:#888;font-weight:400">(optional - amount already owed to this supplier)</span></label>
                     <input type="number" id="addPartyOpen" placeholder="0" step="0.01"
@@ -2671,7 +2676,7 @@
 
                 // Staff table — shows salary paid per staff member
                 const staffRows = office.staff.length === 0
-                    ? '<tr class="empty-row"><td colspan="5">No staff added yet</td></tr>'
+                    ? '<tr class="empty-row"><td colspan="7">No staff added yet</td></tr>'
                     : office.staff.map((s, j) => {
                         const salaryPaid = office.expenses
                             .filter(e => isStaffSalary(e) && e.staffName === s.name)
@@ -2679,7 +2684,9 @@
                         return `<tr>
                             <td class="muted">${j + 1}</td>
                             <td><strong>${esc(s.name)}</strong></td>
-                            <td>${esc(s.address) || "-"}</td>
+                            <td>${esc(staffPos(s)) || "-"}</td>
+                            <td>${esc(s.phone) || "-"}</td>
+                            <td class="r">${s.salary ? fmt(s.salary) : '<span style="color:#bbb">-</span>'}</td>
                             <td class="r" style="color:#C00000;font-weight:700">${salaryPaid > 0 ? fmt(salaryPaid) : '<span style="color:#bbb">-</span>'}</td>
                             <td style="white-space:nowrap"><button class="edit-btn" onclick="editStaffAsk(${j})" title="Edit (password needed)">&#9998;</button><button class="del-btn" onclick="delOfficeStaff(${j})">&#10005;</button></td>
                           </tr>`;
@@ -2792,11 +2799,14 @@
         <div class="office-col-hdr" style="background:#2E75B6;margin:-14px -14px 14px;border-radius:0">&#128119; Staff &nbsp;<span style="font-size:10px;font-weight:400;opacity:.85">(${office.staff.length} members)</span></div>
         <div class="form-row fg3" style="margin-bottom:14px">
           <div class="fi"><label>Staff Name</label><input type="text" id="ofs-name" placeholder="Full name"></div>
-          <div class="fi"><label>Address</label><input type="text" id="ofs-addr" placeholder="Home address"></div>
+          <div class="fi"><label>Position</label><input type="text" id="ofs-pos" placeholder="e.g. Site Engineer, Accountant"></div>
+          <div class="fi"><label>Phone</label><input type="tel" id="ofs-phone" placeholder="Mobile number"></div>
+          <div class="fi"><label>Joining Date</label><input type="date" id="ofs-join"></div>
+          <div class="fi"><label>Monthly Salary (&#8377;)</label><input type="number" id="ofs-sal" placeholder="0" min="0"></div>
           <div class="fi" style="display:flex;align-items:flex-end"><button class="btn btn-blue" style="width:100%" onclick="addOfficeStaff()">+ Add Staff</button></div>
         </div>
         <div class="tbl-wrap"><table class="etbl">
-          <thead><tr><th style="width:28px">#</th><th>Name</th><th>Address</th><th class="r">Salary Paid</th><th></th></tr></thead>
+          <thead><tr><th style="width:28px">#</th><th>Name</th><th>Position</th><th>Phone</th><th class="r">Monthly Salary</th><th class="r">Salary Paid</th><th></th></tr></thead>
           <tbody>${staffRows}</tbody>
         </table></div>
       </div>` : ''}
@@ -2871,7 +2881,7 @@
                     const st = office.staff[a]; if (!st) return;
                     editCtx = { kind, j: a, old: st.name };
                     title = "Edit Staff";
-                    html = f("eg-name", "Staff Name", st.name) + f("eg-addr", "Address", st.address);
+                    html = f("eg-name", "Staff Name", st.name) + f("eg-pos", "Position", staffPos(st)) + f("eg-phone", "Phone", st.phone, "tel") + f("eg-join", "Joining Date", st.joined, "date") + f("eg-sal", "Monthly Salary (&#8377;)", st.salary || "", "number", 'min="0"');
                     const n = office.expenses.filter(e => e.staffName === st.name).length;
                     if (n) html += `<div style="font-size:11px;color:#666;margin-top:-2px">Renaming also updates ${n} salary entr${n === 1 ? "y" : "ies"} for this person.</div>`;
                 } else if (kind === "bankAcc") {
@@ -2895,6 +2905,7 @@
                     title = a === "vendor" ? "Edit Supplier" : "Edit Worker";
                     const n = buildPartyMap(a).find(p => p.name === b);
                     html = f("eg-name", "Name", rec.name) + f("eg-phone", "Phone", rec.phone, "tel") + f("eg-upi", "UPI ID", rec.upi) +
+                        (a === "worker" ? f("eg-pos", "Position / Trade", rec.position || "") : "") +
                         (a === "vendor" ? f("eg-open", "Opening Balance (&#8377;) - positive = you owe them", rec.openingBal || 0, "number", 'step="0.01"') : "") +
                         (n && n.entries.length ? `<div style="font-size:11px;color:#666">Renaming also updates the name on ${n.entries.length} entr${n.entries.length === 1 ? "y" : "ies"} in this book.</div>` : "");
                 } else return;
@@ -2910,7 +2921,7 @@
                     const st = office.staff[c.j]; const nm = g("eg-name");
                     if (!nm) { notif("Enter a name"); return; }
                     if (office.staff.some((x, k) => k !== c.j && x.name.toLowerCase() === nm.toLowerCase())) { notif(nm + " already exists"); return; }
-                    st.name = nm; st.address = g("eg-addr");
+                    st.name = nm; st.position = g("eg-pos"); delete st.address; st.phone = g("eg-phone"); st.joined = g("eg-join"); st.salary = parseFloat(g("eg-sal")) || 0;
                     if (nm !== c.old) office.expenses.forEach(e => { if (e.staffName === c.old) e.staffName = nm; });
                     saveData(); renderOffice(); renderDash();
                     refreshDaybookPage();
@@ -2938,6 +2949,7 @@
                     let rec = arr.find(p => p.name === c.old);
                     if (!rec) { rec = { name: c.old }; arr.push(rec); }
                     rec.name = nm; rec.phone = g("eg-phone"); rec.upi = g("eg-upi");
+                    if (c.type === "worker") rec.position = g("eg-pos");
                     if (c.type === "vendor") {
                         const nb = parseFloat(g("eg-open")) || 0;
                         if (nb !== (parseFloat(rec.openingBal) || 0)) rec.openingPaid = 0;
@@ -2994,10 +3006,10 @@
             }
 
             function addOfficeStaff() {
-                const name = val("ofs-name"), address = val("ofs-addr");
+                const name = val("ofs-name"), position = val("ofs-pos"), phone = val("ofs-phone"), joined = val("ofs-join"), salary = num("ofs-sal");
                 if (!name) { notif("Enter staff name"); return; }
                 if (office.staff.find(s => s.name.toLowerCase() === name.toLowerCase())) { notif("Staff already exists"); return; }
-                office.staff.push({ name, address });
+                office.staff.push({ name, position, phone, joined, salary });
                 saveData(); renderOffice(); notif(name + " added to staff");
             }
 
@@ -3886,6 +3898,8 @@
                 document.getElementById("addPartyPhone").value = "";
                 document.getElementById("addPartyUPI").value = "";
                 document.getElementById("addPartyOpen").value = "";
+                document.getElementById("addPartyPos").value = "";
+                document.getElementById("addPartyPosWrap").style.display = type === "vendor" ? "none" : "";
                 document.getElementById("addPartyOpenWrap").style.display = type === "vendor" ? "" : "none";
                 document.getElementById("addPartyNameErr").textContent = "Name is required";
                 document.getElementById("addPartyNameErr").style.display = "none";
@@ -3915,6 +3929,7 @@
                     return;
                 }
                 const rec = { name, phone, upi };
+                if (type === "worker") rec.position = document.getElementById("addPartyPos").value.trim();
                 if (type === "vendor") { rec.openingBal = parseFloat(document.getElementById("addPartyOpen").value) || 0; rec.openingPaid = 0; }
                 arr.push(rec);
                 saveData();
@@ -4250,7 +4265,9 @@
                     }
                 });
                 const vrec = new Map(vendors.map(v => [v.name, v]));
+                const prec = new Map((type === "vendor" ? vendors : labourers).map(v => [v.name, v]));
                 Object.values(map).forEach(p => {
+                    p.position = ((prec.get(p.name) || {}).position) || "";
                     const r = type === "vendor" ? vrec.get(p.name) : null;
                     const ob = r ? (parseFloat(r.openingBal) || 0) : 0;
                     const op = r ? (parseFloat(r.openingPaid) || 0) : 0;
@@ -4277,7 +4294,7 @@
                 const filtered = list.filter(p => {
                     if (siteIdx >= 0 && !p.sites.has(sites[siteIdx]?.name)) return false;
                     if (fq) {
-                        const hit = p.name.toLowerCase().includes(fq) || (p.phone || "").toLowerCase().includes(fq) || (p.upi || "").toLowerCase().includes(fq)
+                        const hit = p.name.toLowerCase().includes(fq) || (p.phone || "").toLowerCase().includes(fq) || (p.upi || "").toLowerCase().includes(fq) || (p.position || "").toLowerCase().includes(fq)
                             || [...p.sites].some(x => String(x).toLowerCase().includes(fq))
                             || p.entries.some(e => String(e.bill || e.voucher || "").toLowerCase().includes(fq) || String(e.item || e.cat || "").toLowerCase().includes(fq));
                         if (!hit) return false;
@@ -4306,7 +4323,7 @@
                 let html = `<div class="dash-tbl-wrap">
                   <div class="dash-tbl-hdr"><span>${label}</span><span style="display:flex;gap:6px">${addBtn}<button class="btn btn-grey" style="font-size:11px;padding:4px 10px" onclick="window.print()">&#128424; Print</button></span></div>
                   <div class="pf-bar">
-                    <div class="pf-f pf-search"><label>Search</label><div class="pf-sw"><span>&#128269;</span><input type="text" id="psq-${type}" value="${esc(F.q || "")}" autocomplete="off" placeholder="${isV ? "Name, phone, UPI, bill no, material..." : "Name, phone, UPI, voucher, category..."}" oninput="partyFilter('${type}','q',this.value,this)"></div></div>
+                    <div class="pf-f pf-search"><label>Search</label><div class="pf-sw"><span>&#128269;</span><input type="text" id="psq-${type}" value="${esc(F.q || "")}" autocomplete="off" placeholder="${isV ? "Name, phone, UPI, bill no, material..." : "Name, position, phone, UPI, voucher..."}" oninput="partyFilter('${type}','q',this.value,this)"></div></div>
                     <div class="pf-f"><label>Site</label><select onchange="partyFilter('${type}','site',this.value)">${siteOptions}</select></div>
                     <div class="pf-f"><label>Status</label><select onchange="partyFilter('${type}','status',this.value)">${statusOpts}</select></div>
                     <div class="pf-f"><label>Sort by</label><select onchange="partyFilter('${type}','sort',this.value)">${sortOpts}</select></div>
@@ -4340,7 +4357,7 @@
                             ).join("")
                             : `<tr class="empty-row"><td colspan="7">No entries</td></tr>`;
                         html += `<tr style="cursor:pointer" onclick="togglePartyDetails('${type}',${idx})">
-                          <td><strong>${esc(p.name)}</strong></td>
+                          <td><strong>${esc(p.name)}</strong>${p.position ? `<div style="font-size:10px;color:#888">${esc(p.position)}</div>` : ""}</td>
                           <td style="font-size:11px;color:#888">${esc([...p.sites].join(", ")) || '-'}</td>
                           <td class="r">${p.entries.length}</td>
                           ${isV ? `<td class="r">${fmt(opnOf(p))}</td>` : ""}
@@ -4399,8 +4416,8 @@
                 const add = (title, rows) => { if (rows.length) groups.push({ title, rows: rows.slice(0, 6) }); };
                 add("Suppliers", buildPartyMap("vendor").filter(p => p.name !== "(Unknown)" && has(p.name, p.phone, p.upi))
                     .map(p => ({ label: p.name, sub: "Balance " + fmt(p.pending + p.openOut) + (p.phone ? " · " + p.phone : ""), go: () => { vsFilters.q = p.name; showTab("vendors"); } })));
-                add("Workers", buildPartyMap("worker").filter(p => p.name !== "(Unknown)" && has(p.name, p.phone, p.upi))
-                    .map(p => ({ label: p.name, sub: "Pending " + fmt(p.pending) + (p.phone ? " · " + p.phone : ""), go: () => { wkFilters.q = p.name; showTab("labours"); } })));
+                add("Workers", buildPartyMap("worker").filter(p => p.name !== "(Unknown)" && has(p.name, p.phone, p.upi, p.position))
+                    .map(p => ({ label: p.name, sub: (p.position ? p.position + " · " : "") + "Pending " + fmt(p.pending) + (p.phone ? " · " + p.phone : ""), go: () => { wkFilters.q = p.name; showTab("labours"); } })));
                 add("Sites", sites.map((st, i) => ({ st, i })).filter(x => has(x.st.name))
                     .map(x => ({ label: x.st.name, sub: "Open site", go: () => goSite(x.i) })));
                 const bills = [];
@@ -4411,8 +4428,8 @@
                 add("Bills & vouchers", bills);
                 add("Bank accounts", bankAccounts.filter(a => has(a.bkName, a.accName, a.accNo))
                     .map(a => ({ label: (a.bkName || "Bank") + (a.accNo ? " (··" + String(a.accNo).slice(-4) + ")" : ""), sub: a.accName || "", go: () => showTab("accts") })));
-                add("Office staff", ((office && office.staff) || []).filter(x => has(x.name, x.address))
-                    .map(x => ({ label: x.name, sub: x.address || "Staff", go: () => showTab("offrep") })));
+                add("Office staff", ((office && office.staff) || []).filter(x => has(x.name, x.position, x.address, x.phone))
+                    .map(x => ({ label: x.name, sub: staffPos(x) || "Staff", go: () => showTab("offrep") })));
                 let html = "";
                 groups.forEach(g => {
                     html += `<div class="gs-grp">${g.title}</div>`;
@@ -4909,6 +4926,7 @@
             // -- DAY BOOK --
             let dbFilters = { from: "", to: "", site: "", type: "" };
             let dbMode = "all"; // all | sites | office
+            const staffPos = st => (st && (st.position || st.address)) || ""; // older records stored the role in "address"
 
             function setDbMode(m) { dbMode = m; renderDaybookPage(); }
             function renderDaybookPage() {
@@ -5274,13 +5292,13 @@
 
                 const staffList = office.staff.filter(s => !f.staff || s.name === f.staff);
                 let tSal = 0;
-                const staffRows = staffList.length === 0 ? '<tr class="empty-row"><td colspan="5">No staff found.</td></tr>'
+                const staffRows = staffList.length === 0 ? '<tr class="empty-row"><td colspan="7">No staff found.</td></tr>'
                     : staffList.map((s, j) => {
                         const pays = office.expenses.filter(e => isSal(e) && e.staffName === s.name && inR(e.date));
                         const paid = pays.reduce((a, e) => a + (e.amt || 0), 0);
                         tSal += paid;
-                        return `<tr><td>${j + 1}</td><td><strong>${esc(s.name)}</strong></td><td>${esc(s.address) || "-"}</td><td class="r">${pays.length}</td><td class="r">${fmt(paid)}</td></tr>`;
-                    }).join("") + `<tr class="db-total-row"><td colspan="4">TOTAL SALARY PAID</td><td class="r">${fmt(tSal)}</td></tr>`;
+                        return `<tr><td>${j + 1}</td><td><strong>${esc(s.name)}</strong></td><td>${esc(staffPos(s)) || "-"}</td><td>${esc(s.phone) || "-"}</td><td class="r">${s.salary ? fmt(s.salary) : "-"}</td><td class="r">${pays.length}</td><td class="r">${fmt(paid)}</td></tr>`;
+                    }).join("") + `<tr class="db-total-row"><td colspan="6">TOTAL SALARY PAID</td><td class="r">${fmt(tSal)}</td></tr>`;
 
                 const sec = (title, color, head, body) => `
                   <div style="margin-top:16px">
@@ -5307,7 +5325,7 @@
                 </div>
                 ${showInc ? sec("&#128176; Office Income", "#1D9E75", "<th>Date</th><th>Category</th><th>Client</th><th>Notes</th><th class='r'>Amount</th>", incRows) : ""}
                 ${showExp ? sec("&#128176; Office Expense", "#C00000", "<th>Date</th><th>Category</th><th>Staff</th><th class='r'>Amount</th>", expRows) : ""}
-                ${showStaff ? sec("&#128119; Staff Salary Summary", "#2E75B6", "<th style='width:28px'>#</th><th>Name</th><th>Address</th><th class='r'>Payments</th><th class='r'>Salary Paid</th>", staffRows) : ""}`;
+                ${showStaff ? sec("&#128119; Staff Salary Summary", "#2E75B6", "<th style='width:28px'>#</th><th>Name</th><th>Position</th><th>Phone</th><th class='r'>Monthly Salary</th><th class='r'>Payments</th><th class='r'>Salary Paid</th>", staffRows) : ""}`;
             }
 
             // -- BOOT --
