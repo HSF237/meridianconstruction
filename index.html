@@ -2048,6 +2048,74 @@
             </div>
         </div>
 
+        <!-- Add / Edit Bill modal -->
+        <div class="modal-bg" id="billModal">
+            <div class="modal" style="width:560px">
+                <h3 id="billTitle">Add Bill</h3>
+                <div class="fi" style="margin-bottom:10px">
+                    <label>Supplier</label>
+                    <select id="bl-sup" onchange="billSupChanged()"></select>
+                </div>
+                <div id="bl-new-sup" style="display:none;margin-bottom:10px">
+                    <div class="form-row" style="grid-template-columns:2fr 1fr;gap:8px">
+                        <div class="fi"><label>New Supplier Name</label><input type="text" id="bl-ns-name" placeholder="Full name" onkeydown="if(event.key==='Enter')saveBill()"></div>
+                        <div class="fi"><label>Phone <span style="color:#888;font-weight:400">(optional)</span></label><input type="tel" id="bl-ns-phone" placeholder="Mobile"></div>
+                    </div>
+                </div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Date</label><input type="date" id="bl-date"></div>
+                    <div class="fi"><label>Site</label><select id="bl-site" onchange="billSiteChanged()"></select></div>
+                </div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Category</label><select id="bl-cat" onchange="billCatChanged()"></select></div>
+                    <div class="fi" id="bl-new-cat" style="display:none"><label>New Category</label><input type="text" id="bl-nc-name" placeholder="e.g. Cement, Steel, Paint" onkeydown="if(event.key==='Enter')saveBill()"></div>
+                </div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Bill / Invoice No</label><input type="text" id="bl-bill" placeholder="e.g. INV-2041" onkeydown="if(event.key==='Enter')saveBill()"></div>
+                    <div class="fi"><label>Material / Description</label><input type="text" id="bl-item" placeholder="e.g. Cement 50kg bags" onkeydown="if(event.key==='Enter')saveBill()"></div>
+                </div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr 1.2fr;gap:10px">
+                    <div class="fi"><label>Qty <span style="color:#888;font-weight:400">(optional)</span></label><input type="text" id="bl-qty" placeholder="e.g. 50 bags" onkeydown="if(event.key==='Enter')saveBill()"></div>
+                    <div class="fi"><label>Total (&#8377;)</label><input type="number" id="bl-amt" min="0" step="0.01" placeholder="0" oninput="billCalcRem()" onkeydown="if(event.key==='Enter')saveBill()"></div>
+                    <div class="fi"><label>Paid now (&#8377;)</label>
+                        <div style="display:flex;gap:4px">
+                            <input type="number" id="bl-paid" min="0" step="0.01" placeholder="0" oninput="billCalcRem()" onkeydown="if(event.key==='Enter')saveBill()" style="flex:1">
+                            <button type="button" class="btn btn-outline" style="font-size:10px;padding:4px 8px;white-space:nowrap" onclick="billPayFull()" title="Set paid = total">Full</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Payment method</label><select id="bl-method"></select></div>
+                    <div class="fi"><label>Remaining to pay (&#8377;)</label><input type="number" id="bl-rem" readonly placeholder="0"></div>
+                </div>
+                <div style="font-size:11px;color:#666;margin:2px 0 4px">Pay part now (e.g. half) and the rest later — the remaining amount shows as <strong>Pending</strong>. Leave Paid as 0 for a credit bill.</div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button class="btn btn-green" style="flex:1" onclick="saveBill()">&#10003; Save Bill</button>
+                    <button class="btn btn-grey" onclick="closeModal('billModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Record part payment on a bill -->
+        <div class="modal-bg" id="payBillModal">
+            <div class="modal" style="width:440px">
+                <h3>Record Payment on Bill</h3>
+                <div id="pb-info" style="margin-bottom:12px"></div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Date</label><input type="date" id="pb-date"></div>
+                    <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="pb-amt" min="0" step="0.01" placeholder="0" onkeydown="if(event.key==='Enter')savePayBill()"></div>
+                </div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Payment method</label><select id="pb-method"></select></div>
+                    <div class="fi"><label>Note <span style="color:#888;font-weight:400">(optional)</span></label><input type="text" id="pb-note" placeholder="e.g. half payment" onkeydown="if(event.key==='Enter')savePayBill()"></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button class="btn btn-green" style="flex:1" onclick="savePayBill()">&#10003; Record Payment</button>
+                    <button class="btn btn-grey" onclick="closeModal('payBillModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <div class="notif" id="notif"></div>
 
         <!-- Edit Entry Modal -->
@@ -4248,7 +4316,7 @@
                 const container = document.getElementById(type === "vendor" ? "view-vendors" : "view-labours");
                 const label = type === "vendor" ? "&#128722; Supplier Ledger &amp; Payables" : "&#128119; Worker Ledger &amp; Payables";
                 const detailCols = type === "vendor"
-                    ? `<th>Date</th><th>Site</th><th>Material</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th>`
+                    ? `<th>Date</th><th>Site</th><th>Material</th><th>Bill No</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th>Method</th><th style="width:110px">Action</th>`
                     : `<th>Date</th><th>Site</th><th>Category</th><th>Voucher</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th>`;
                 const list = buildPartyMap(type);
                 const F = type === "vendor" ? vsFilters : wkFilters;
@@ -4286,7 +4354,8 @@
                 const grandPaid = filtered.reduce((a, p) => a + p.paid, 0);
                 const grandOpen = filtered.reduce((a, p) => a + opnOf(p), 0);
                 const grandPending = filtered.reduce((a, p) => a + balOf(p), 0);
-                const addBtn = isV ? `<button class="btn btn-green" style="font-size:11px;padding:4px 10px" onclick="openAddPartyModal('vendor',-1)">+ Add Supplier</button>` : "";
+                const addBtn = isV ? `<button class="btn btn-blue" style="font-size:11px;padding:4px 10px" onclick="openBillModal({})" title="Add a bill for any supplier">&#128196; Add Bill</button>
+                    <button class="btn btn-green" style="font-size:11px;padding:4px 10px" onclick="openAddPartyModal('vendor',-1)">+ Add Supplier</button>` : "";
                 let html = `<div class="dash-tbl-wrap">
                   <div class="dash-tbl-hdr"><span>${label}</span><span style="display:flex;gap:6px">${addBtn}<button class="btn btn-grey" style="font-size:11px;padding:4px 10px" onclick="window.print()">&#128424; Print</button></span></div>
                   <div class="pf-bar">
@@ -4319,11 +4388,11 @@
                         const payAmt = p.pending + (isV ? p.openOut : 0); // full balance, regardless of the site filter
                         const dtRows = p.entries.length
                             ? p.entries.map(e => type === "vendor"
-                                ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item || e.cat)}</td><td>${esc(e.bill) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
+                                ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item || e.cat)}</td><td>${esc(e.bill) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td><td>${methodPill(e)}</td><td style="white-space:nowrap"><button class="edit-btn" onclick="openBillModal({edit:{siteIdx:${e.siteIdx},cat:'${jsq(e.cat)}',idx:${e.entIdx}}})" title="Edit bill">&#9998;</button>${(e.pending || 0) > 0.005 ? ` <button class="btn btn-blue" style="padding:2px 8px;font-size:10px" onclick="openPayBill(${e.siteIdx},'${jsq(e.cat)}',${e.entIdx})" title="Record part payment">+ Pay</button>` : `<span style="color:#1D9E75;font-size:11px" title="Fully paid">&#10003;</span>`}</td></tr>`
                                 : `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.cat)}</td><td>${esc(e.voucher) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
                             ).join("")
-                            : `<tr class="empty-row"><td colspan="7">No entries</td></tr>`;
-                        html += `<tr style="cursor:pointer" onclick="togglePartyDetails('${type}',${idx})">
+                            : `<tr class="empty-row"><td colspan="${type === "vendor" ? 9 : 7}">No entries</td></tr>`;
+                        html += `<tr style="cursor:pointer" onclick="togglePartyDetails('${type}',${idx},'${jsq(p.name)}')">
                           <td><strong>${esc(p.name)}</strong>${p.position ? `<div style="font-size:10px;color:#888">${esc(p.position)}</div>` : ""}</td>
                           <td style="font-size:11px;color:#888">${esc([...p.sites].join(", ")) || '-'}</td>
                           <td class="r">${p.entries.length}</td>
@@ -4339,6 +4408,7 @@
                           </td>
                         </tr>
                         <tr id="pd-${type}-${idx}" style="display:none"><td colspan="9" style="padding:10px;background:#f5f5f5">
+                          ${isV && p.name !== "(Unknown)" ? `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-blue" style="font-size:11px;padding:4px 10px" onclick="openBillModal({supplier:'${jsq(p.name)}'})">&#128196; Add bill for ${esc(p.name)}</button></div>` : ""}
                           <table class="etbl" style="margin:0"><thead><tr>${detailCols}</tr></thead><tbody>${dtRows}</tbody></table>
                         </td></tr>`;
                     });
@@ -4346,6 +4416,11 @@
                 }
                 html += `</div>`;
                 container.innerHTML = html;
+                if (openPartyRow[type]) {
+                    const oi = filtered.findIndex(p => p.name === openPartyRow[type]);
+                    if (oi >= 0) { const el = document.getElementById("pd-" + type + "-" + oi); if (el) el.style.display = "table-row"; }
+                    else openPartyRow[type] = null;
+                }
             }
 
             function partyFilter(type, key, value, el) {
@@ -4490,12 +4565,250 @@
                 notif(name + " removed");
             }
 
-            function togglePartyDetails(type, idx) {
+            function togglePartyDetails(type, idx, name) {
                 const el = document.getElementById("pd-" + type + "-" + idx);
-                if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+                if (!el) return;
+                const show = el.style.display === "none";
+                el.style.display = show ? "table-row" : "none";
+                openPartyRow[type] = show ? (name || null) : null;
             }
             function toggleVendorDetails(idx) { togglePartyDetails("vendor", idx); }
             function toggleWorkerDetails(idx) { togglePartyDetails("worker", idx); }
+
+            // -- SUPPLIER BILLS: add / edit / part-pay --
+            let billCtx = null;
+            let payBillCtx = null;
+            const openPartyRow = { vendor: null, worker: null };
+            const PAY_METHODS = ["Cash", "UPI / GPay", "Bank Transfer", "Cheque"];
+            const round2 = n => Math.round((parseFloat(n) || 0) * 100) / 100;
+            const todayStr = () => new Date().toISOString().slice(0, 10);
+
+            function payMethodOpts(sel, withCredit) {
+                let html = PAY_METHODS.map(m => `<option value="${m}"${sel === m ? " selected" : ""}>${m}</option>`).join("");
+                if (withCredit) html += `<option value="Credit"${sel === "Credit" ? " selected" : ""}>Credit (not paid yet)</option>`;
+                return html;
+            }
+
+            function billMethodOf(e) {
+                if (e.payments && e.payments.length) return e.payments[e.payments.length - 1].method || e.method || "Cash";
+                if ((e.paid || 0) > 0) return e.method || "Cash";
+                return "Credit";
+            }
+
+            function methodPill(e) {
+                const m = billMethodOf(e);
+                const c = m === "Credit" ? "background:#FDECEC;color:#C00000" : m === "UPI / GPay" ? "background:#E6F1FB;color:#185FA5" : m === "Bank Transfer" ? "background:#E8EEF6;color:#1A3C5E" : m === "Cheque" ? "background:#FDF6EC;color:#BA7517" : "background:#EAF3DE;color:#3B6D11";
+                return `<span style="white-space:nowrap;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;${c}">${esc(m)}</span>`;
+            }
+
+            function openBillModal(opts = {}) {
+                if (!sites.length) { notif("Add a site first — bills are stored against a site and category"); return; }
+                const edit = opts.edit || null;
+                billCtx = edit ? { mode: "edit", siteIdx: edit.siteIdx, cat: edit.cat, idx: edit.idx } : { mode: "add" };
+                const sel = document.getElementById("bl-sup");
+                const names = vendors.map(v => v.name);
+                let extraName = "";
+                if (edit) {
+                    const arr = ((sites[edit.siteIdx] || {}).mat || {})[edit.cat];
+                    if (!arr || !arr[edit.idx]) { notif("Bill not found"); return; }
+                    extraName = arr[edit.idx].det || "";
+                } else if (opts.supplier && !names.includes(opts.supplier)) extraName = opts.supplier;
+                const list = names.slice();
+                if (extraName && !list.includes(extraName)) list.push(extraName);
+                sel.innerHTML = list.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("") + `<option value="__new">+ New supplier…</option>`;
+                const ssel = document.getElementById("bl-site");
+                ssel.innerHTML = sites.map((s, i) => `<option value="${i}">${esc(s.name)}</option>`).join("");
+                const nsWrap = document.getElementById("bl-new-sup");
+                if (edit) {
+                    const e = sites[edit.siteIdx].mat[edit.cat][edit.idx];
+                    document.getElementById("billTitle").textContent = "Edit Bill";
+                    if (e.det) sel.value = e.det;
+                    ssel.value = String(edit.siteIdx);
+                    billFillCats(edit.cat);
+                    document.getElementById("bl-date").value = e.date || todayStr();
+                    document.getElementById("bl-bill").value = e.bill || "";
+                    document.getElementById("bl-item").value = e.item || "";
+                    document.getElementById("bl-qty").value = e.qty || "";
+                    document.getElementById("bl-amt").value = e.amt || 0;
+                    document.getElementById("bl-paid").value = e.paid || 0;
+                    document.getElementById("bl-method").innerHTML = payMethodOpts(billMethodOf(e), true);
+                    nsWrap.style.display = "none";
+                    document.getElementById("bl-ns-name").value = "";
+                    document.getElementById("bl-ns-phone").value = "";
+                } else {
+                    document.getElementById("billTitle").textContent = "Add Bill";
+                    if (opts.supplier && names.includes(opts.supplier)) { sel.value = opts.supplier; nsWrap.style.display = "none"; }
+                    else if (opts.supplier) { sel.value = "__new"; nsWrap.style.display = ""; document.getElementById("bl-ns-name").value = opts.supplier; document.getElementById("bl-ns-phone").value = ""; }
+                    else if (names.length) { sel.value = names[0]; nsWrap.style.display = "none"; }
+                    else { sel.value = "__new"; nsWrap.style.display = ""; }
+                    ssel.value = String(opts.siteIdx != null ? opts.siteIdx : 0);
+                    billFillCats("");
+                    document.getElementById("bl-date").value = todayStr();
+                    document.getElementById("bl-bill").value = "";
+                    document.getElementById("bl-item").value = "";
+                    document.getElementById("bl-qty").value = "";
+                    document.getElementById("bl-amt").value = "";
+                    document.getElementById("bl-paid").value = "";
+                    document.getElementById("bl-method").innerHTML = payMethodOpts("Cash", true);
+                    if (!opts.supplier) { document.getElementById("bl-ns-name").value = ""; document.getElementById("bl-ns-phone").value = ""; }
+                }
+                billCalcRem();
+                document.getElementById("billModal").classList.add("open");
+                setTimeout(() => { const f = document.querySelector("#bl-amt"); if (f) f.focus(); }, 50);
+            }
+
+            function billSupChanged() {
+                document.getElementById("bl-new-sup").style.display = document.getElementById("bl-sup").value === "__new" ? "" : "none";
+            }
+
+            function billSiteChanged() { billFillCats(""); }
+
+            function billFillCats(selCat) {
+                const si = parseInt(document.getElementById("bl-site").value, 10) || 0;
+                const s = sites[si] || {};
+                const cats = s.matCats || [];
+                const csel = document.getElementById("bl-cat");
+                csel.innerHTML = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("") + `<option value="__new">+ New category…</option>`;
+                document.getElementById("bl-new-cat").style.display = "none";
+                document.getElementById("bl-nc-name").value = "";
+                if (selCat && cats.includes(selCat)) csel.value = selCat;
+                else if (!cats.length) { csel.value = "__new"; document.getElementById("bl-new-cat").style.display = ""; }
+                else csel.selectedIndex = 0;
+            }
+
+            function billCatChanged() {
+                document.getElementById("bl-new-cat").style.display = document.getElementById("bl-cat").value === "__new" ? "" : "none";
+            }
+
+            function billPayFull() {
+                document.getElementById("bl-paid").value = document.getElementById("bl-amt").value;
+                billCalcRem();
+            }
+
+            function billCalcRem() {
+                const rem = round2(num("bl-amt") - num("bl-paid"));
+                const el = document.getElementById("bl-rem");
+                el.value = rem;
+                el.style.color = rem > 0 ? "#BA7517" : "#1D9E75";
+            }
+
+            function setEntryPaid(e, newPaid, method, date) {
+                newPaid = round2(Math.max(0, newPaid));
+                if (!e.payments) e.payments = [];
+                const sum = round2(e.payments.reduce((a, p) => a + (p.amount || 0), 0));
+                if (Math.abs(newPaid - sum) > 0.005) {
+                    if (newPaid > sum) {
+                        e.payments.push({ date: date || todayStr(), amount: round2(newPaid - sum), note: "Bill edit", method: method || "Cash" });
+                    } else {
+                        let acc = 0; const keep = [];
+                        for (const p of e.payments) {
+                            if (acc + (p.amount || 0) <= newPaid + 0.005) { keep.push(p); acc = round2(acc + (p.amount || 0)); }
+                            else { const need = round2(newPaid - acc); if (need > 0.005) keep.push({ ...p, amount: need }); acc = newPaid; break; }
+                        }
+                        e.payments = keep;
+                    }
+                } else if (e.payments.length && method && method !== "Credit") {
+                    e.payments[e.payments.length - 1].method = method;
+                }
+                e.paid = round2(e.payments.reduce((a, p) => a + (p.amount || 0), 0));
+                e.method = e.paid > 0 && method && method !== "Credit" ? method : "Credit";
+            }
+
+            function saveBill() {
+                if (!billCtx) return;
+                const isEdit = billCtx.mode === "edit";
+                const supSel = val("bl-sup");
+                let det = supSel;
+                if (supSel === "__new") {
+                    det = val("bl-ns-name").trim();
+                    if (!det) { notif("Enter the supplier name"); return; }
+                    if (!vendors.some(v => v.name.toLowerCase() === det.toLowerCase())) vendors.push({ name: det, phone: val("bl-ns-phone").trim(), upi: "" });
+                } else if (det && !vendors.some(v => v.name === det)) {
+                    vendors.push({ name: det, phone: "", upi: "" });
+                }
+                if (!det) { notif("Select a supplier"); return; }
+                const siteIdx = parseInt(val("bl-site"), 10);
+                if (isNaN(siteIdx) || !sites[siteIdx]) { notif("Select a site"); return; }
+                const s = sites[siteIdx];
+                let cat = val("bl-cat");
+                if (cat === "__new") {
+                    cat = val("bl-nc-name").trim();
+                    if (!cat) { notif("Enter a category name"); return; }
+                    if (!s.matCats.includes(cat)) s.matCats.push(cat);
+                }
+                if (!s.mat[cat]) s.mat[cat] = [];
+                const date = val("bl-date") || todayStr();
+                const bill = val("bl-bill").trim();
+                const item = val("bl-item").trim() || cat;
+                const qty = val("bl-qty").trim();
+                const amt = round2(num("bl-amt"));
+                let paid = round2(num("bl-paid"));
+                let method = val("bl-method") || "Cash";
+                if (!amt) { notif("Enter the total bill amount"); return; }
+                if (paid < 0) paid = 0;
+                if (paid > amt + 0.01) { notif("Paid (" + fmt(paid) + ") cannot be more than total (" + fmt(amt) + ")"); return; }
+                if (paid > 0 && method === "Credit") { notif("Choose a payment method (Cash / UPI / Bank / Cheque) for the paid amount"); return; }
+                if (paid === 0) method = "Credit";
+                if (isEdit) {
+                    const oldArr = ((sites[billCtx.siteIdx] || {}).mat || {})[billCtx.cat];
+                    const e = oldArr ? oldArr[billCtx.idx] : null;
+                    if (!e) { notif("Bill not found — reopen and try again"); return; }
+                    if (billCtx.siteIdx !== siteIdx || billCtx.cat !== cat) {
+                        oldArr.splice(oldArr.indexOf(e), 1);
+                        s.mat[cat].push(e);
+                    }
+                    e.date = date; e.det = det; e.item = item; e.qty = qty; e.bill = bill; e.amt = amt;
+                    setEntryPaid(e, paid, method, date);
+                } else {
+                    const p = date.split("-");
+                    const vch = "VCH-" + String(p[2] || "01").padStart(2, "0") + String(p[1] || "01").padStart(2, "0") + String(p[0] || "2000").slice(2) + "-" + nextMatVoucherSeq(siteIdx);
+                    const payments = paid > 0 ? [{ date, amount: paid, note: method, method }] : [];
+                    s.mat[cat].push({ date, det, item, qty, bill, voucher: vch, amt, paid, payments, method });
+                }
+                saveData();
+                closeModal("billModal");
+                renderVendors(); renderDash(); refreshDaybookPage();
+                notif(isEdit ? "Bill updated" : "Bill added — " + det + (paid > 0 ? " · paid " + fmt(paid) + " · pending " + fmt(round2(amt - paid)) : " · credit " + fmt(amt)));
+                billCtx = null;
+            }
+
+            function openPayBill(siteIdx, cat, idx) {
+                const s = sites[siteIdx];
+                const e = s && s.mat[cat] ? s.mat[cat][idx] : null;
+                if (!e) { notif("Bill not found"); return; }
+                const rem = round2((e.amt || 0) - (e.paid || 0));
+                if (rem <= 0.005) { notif("This bill is already fully paid"); return; }
+                payBillCtx = { siteIdx, cat, idx };
+                document.getElementById("pb-info").innerHTML = `<div style="font-size:12px;color:#444;line-height:1.7"><strong>${esc(e.det || "")}</strong> — ${esc(e.bill || e.item || "Bill")}<br>Total: <strong>${fmt(e.amt)}</strong> &nbsp; Paid: <strong style="color:#1D9E75">${fmt(e.paid || 0)}</strong> &nbsp; Remaining: <strong style="color:#BA7517">${fmt(rem)}</strong></div>`;
+                document.getElementById("pb-date").value = todayStr();
+                document.getElementById("pb-amt").value = rem;
+                document.getElementById("pb-amt").max = rem;
+                document.getElementById("pb-method").innerHTML = payMethodOpts("Cash", false);
+                document.getElementById("pb-note").value = "";
+                document.getElementById("payBillModal").classList.add("open");
+                setTimeout(() => document.getElementById("pb-amt").focus(), 50);
+            }
+
+            function savePayBill() {
+                if (!payBillCtx) return;
+                const e = sites[payBillCtx.siteIdx].mat[payBillCtx.cat][payBillCtx.idx];
+                const date = val("pb-date") || todayStr();
+                const amount = round2(num("pb-amt"));
+                const method = val("pb-method") || "Cash";
+                const note = val("pb-note").trim();
+                const rem = round2((e.amt || 0) - (e.paid || 0));
+                if (!amount) { notif("Enter the payment amount"); return; }
+                if (amount > rem + 0.01) { notif("Amount exceeds remaining " + fmt(rem)); return; }
+                if (!e.payments) e.payments = [];
+                e.payments.push({ date, amount, note: note || method, method });
+                e.paid = round2(e.payments.reduce((a, p) => a + (p.amount || 0), 0));
+                e.method = method;
+                saveData();
+                closeModal("payBillModal");
+                renderVendors(); renderDash(); refreshDaybookPage();
+                notif("Payment of " + fmt(amount) + " recorded — remaining " + fmt(round2((e.amt || 0) - (e.paid || 0))));
+                payBillCtx = null;
+            }
 
             function editPartyContact(type, name) {
                 const arr = type === "vendor" ? vendors : labourers;
