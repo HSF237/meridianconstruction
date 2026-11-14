@@ -2116,6 +2116,36 @@
             </div>
         </div>
 
+        <!-- Pay supplier: pick supplier, pick invoice, pay outstanding -->
+        <div class="modal-bg" id="paySupModal">
+            <div class="modal" style="width:540px">
+                <h3>Pay Supplier</h3>
+                <div class="fi" style="margin-bottom:10px">
+                    <label>Supplier</label>
+                    <select id="ps-sup" onchange="psSupplierChanged()"></select>
+                </div>
+                <div class="fi" style="margin-bottom:10px">
+                    <label>Invoice / Bill to pay</label>
+                    <select id="ps-inv" onchange="psFill()"></select>
+                </div>
+                <div id="ps-detail" style="margin-bottom:12px"></div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Amount (&#8377;)</label><input type="number" id="ps-amt" min="0" step="0.01" placeholder="0" onkeydown="if(event.key==='Enter')saveSupplierPayment()"></div>
+                    <div class="fi"><label>Date</label><input type="date" id="ps-date"></div>
+                </div>
+                <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="fi"><label>Payment method</label><select id="ps-method"></select></div>
+                    <div class="fi"><label>Note <span style="color:#888;font-weight:400">(optional)</span></label><input type="text" id="ps-note" placeholder="e.g. part payment" onkeydown="if(event.key==='Enter')saveSupplierPayment()"></div>
+                </div>
+                <div style="font-size:11px;color:#666;margin:2px 0 4px">Amount defaults to the invoice outstanding — reduce it to pay part of this invoice.</div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button class="btn btn-green" style="flex:1" onclick="saveSupplierPayment()">&#10003; Record Payment</button>
+                    <button class="btn btn-blue" onclick="paySupplierUPI()" title="Pay the entered amount by UPI">&#128242; UPI QR</button>
+                    <button class="btn btn-grey" onclick="closeModal('paySupModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <div class="notif" id="notif"></div>
 
         <!-- Edit Entry Modal -->
@@ -4355,6 +4385,7 @@
                 const grandOpen = filtered.reduce((a, p) => a + opnOf(p), 0);
                 const grandPending = filtered.reduce((a, p) => a + balOf(p), 0);
                 const addBtn = isV ? `<button class="btn btn-blue" style="font-size:11px;padding:4px 10px" onclick="openBillModal({})" title="Add a bill for any supplier">&#128196; Add Bill</button>
+                    <button class="btn btn-blue" style="font-size:11px;padding:4px 10px" onclick="openPaySupplier()" title="Pay a supplier against a specific invoice">&#128242; Pay Supplier</button>
                     <button class="btn btn-green" style="font-size:11px;padding:4px 10px" onclick="openAddPartyModal('vendor',-1)">+ Add Supplier</button>` : "";
                 let html = `<div class="dash-tbl-wrap">
                   <div class="dash-tbl-hdr"><span>${label}</span><span style="display:flex;gap:6px">${addBtn}<button class="btn btn-grey" style="font-size:11px;padding:4px 10px" onclick="window.print()">&#128424; Print</button></span></div>
@@ -4386,6 +4417,7 @@
                     html += `<div class="tbl-wrap"><table class="etbl"><thead><tr><th>${type === "vendor" ? "Supplier" : "Worker"}</th><th>Sites</th><th class="r">Entries</th>${isV ? '<th class="r">Opening</th>' : ''}<th class="r">Total</th><th class="r">Paid</th><th class="r">Pending</th><th style="width:160px">UPI / Phone</th><th class="r">Action</th></tr></thead><tbody>`;
                     filtered.forEach((p, idx) => {
                         const payAmt = p.pending + (isV ? p.openOut : 0); // full balance, regardless of the site filter
+                        const payAction = isV ? `openPaySupplier('${jsq(p.name)}')` : `payParty('worker','${jsq(p.name)}',${payAmt})`;
                         const dtRows = p.entries.length
                             ? p.entries.map(e => type === "vendor"
                                 ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item || e.cat)}</td><td>${esc(e.bill) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td><td>${methodPill(e)}</td><td style="white-space:nowrap"><button class="edit-btn" onclick="openBillModal({edit:{siteIdx:${e.siteIdx},cat:'${jsq(e.cat)}',idx:${e.entIdx}}})" title="Edit bill">&#9998;</button>${(e.pending || 0) > 0.005 ? ` <button class="btn btn-blue" style="padding:2px 8px;font-size:10px" onclick="openPayBill(${e.siteIdx},'${jsq(e.cat)}',${e.entIdx})" title="Record part payment">+ Pay</button>` : `<span style="color:#1D9E75;font-size:11px" title="Fully paid">&#10003;</span>`}</td></tr>`
@@ -4402,7 +4434,7 @@
                           <td class="r" style="color:${balOf(p) > 0 ? '#BA7517' : '#1D9E75'};font-weight:700">${fmt(balOf(p))}</td>
                           <td style="font-size:11px">${esc(p.upi) || '<span style="color:#ccc;font-size:10px">UPI not set</span>'}<br><span style="color:#888">${esc(p.phone) || ''}</span></td>
                           <td class="r" style="white-space:nowrap;display:flex;gap:5px;justify-content:flex-end;align-items:center">
-                            ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : payAmt > 0.005 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();payParty('${type}','${jsq(p.name)}',${payAmt})">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
+                            ${p.name === "(Unknown)" ? `<button class="btn btn-grey" style="padding:3px 8px;font-size:10px;opacity:.6;cursor:not-allowed" disabled title="Add a vendor/worker name to this entry before paying.">&#128242; Pay</button>` : payAmt > 0.005 ? `<button class="btn btn-blue" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();${payAction}">&#128242; Pay</button>` : '<span style="color:#1D9E75;font-size:11px">&#10003; Paid</span>'}
                             ${p.name === "(Unknown)" ? "" : `<button class="btn btn-outline" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();openEditGeneric('party','${type}','${jsq(p.name)}')" title="Edit">&#9998;</button>`}
                             <button class="btn btn-red" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();deleteParty('${type}','${jsq(p.name)}',${p.entries.length})">&#10005;</button>
                           </td>
@@ -4799,15 +4831,157 @@
                 const rem = round2((e.amt || 0) - (e.paid || 0));
                 if (!amount) { notif("Enter the payment amount"); return; }
                 if (amount > rem + 0.01) { notif("Amount exceeds remaining " + fmt(rem)); return; }
-                if (!e.payments) e.payments = [];
-                e.payments.push({ date, amount, note: note || method, method });
-                e.paid = round2(e.payments.reduce((a, p) => a + (p.amount || 0), 0));
-                e.method = method;
+                applyInvoicePayment({ type: "bill", siteIdx: payBillCtx.siteIdx, cat: payBillCtx.cat, idx: payBillCtx.idx }, amount, method, date, note, e.det);
                 saveData();
                 closeModal("payBillModal");
                 renderVendors(); renderDash(); refreshDaybookPage();
                 notif("Payment of " + fmt(amount) + " recorded — remaining " + fmt(round2((e.amt || 0) - (e.paid || 0))));
                 payBillCtx = null;
+            }
+
+            // -- PAY SUPPLIER: choose supplier, choose invoice, pay its outstanding --
+            let paySupCtx = null;   // supplier name currently selected
+            let paySupList = [];    // [{type:'bill'|'open', siteIdx, cat, idx, e, pending, siteName}]
+
+            function supplierOutstanding(name) {
+                const p = buildPartyMap("vendor").find(x => x.name === name);
+                return p ? round2((p.pending || 0) + (p.openOut || 0)) : 0;
+            }
+
+            function outstandingInvoicesFor(name) {
+                const out = [];
+                sites.forEach((s, siteIdx) => {
+                    (s.matCats || []).forEach(cat => {
+                        (s.mat[cat] || []).forEach((e, idx) => {
+                            if ((e.det || "") !== name) return;
+                            const pending = round2((e.amt || 0) - (e.paid || 0));
+                            if (pending > 0.005) out.push({ type: "bill", siteIdx, cat, idx, e, pending, siteName: s.name });
+                        });
+                    });
+                });
+                // oldest first, so the default choice is the earliest unpaid bill
+                out.sort((a, b) => String(a.e.date || "").localeCompare(String(b.e.date || "")));
+                const vr = vendors.find(v => v.name === name);
+                if (vr) {
+                    const ob = parseFloat(vr.openingBal) || 0, op = parseFloat(vr.openingPaid) || 0;
+                    const openOut = round2(ob > 0 ? Math.max(ob - op, 0) : ob);
+                    if (openOut > 0.005) out.unshift({ type: "open", pending: openOut, e: {} });
+                }
+                return out;
+            }
+
+            function openPaySupplier(name) {
+                const rows = buildPartyMap("vendor")
+                    .filter(p => p.name !== "(Unknown)" && round2((p.pending || 0) + (p.openOut || 0)) > 0.005)
+                    .map(p => ({ name: p.name, out: round2((p.pending || 0) + (p.openOut || 0)) }))
+                    .sort((a, b) => b.out - a.out || a.name.localeCompare(b.name));
+                if (!rows.length) { notif("No supplier has an outstanding balance"); return; }
+                const ssel = document.getElementById("ps-sup");
+                ssel.innerHTML = rows.map(r => `<option value="${esc(r.name)}">${esc(r.name)} — ${fmt(r.out)} outstanding</option>`).join("");
+                if (name && rows.some(r => r.name === name)) ssel.value = name;
+                document.getElementById("ps-date").value = todayStr();
+                document.getElementById("ps-method").innerHTML = payMethodOpts("Cash", false);
+                document.getElementById("ps-note").value = "";
+                psSupplierChanged();
+                document.getElementById("paySupModal").classList.add("open");
+                setTimeout(() => document.getElementById("ps-amt").focus(), 50);
+            }
+
+            function psSupplierChanged() {
+                paySupCtx = document.getElementById("ps-sup").value;
+                paySupList = outstandingInvoicesFor(paySupCtx);
+                const isel = document.getElementById("ps-inv");
+                if (!paySupList.length) {
+                    isel.innerHTML = `<option value="">No outstanding invoice</option>`;
+                    document.getElementById("ps-detail").innerHTML = "";
+                    document.getElementById("ps-amt").value = "";
+                    return;
+                }
+                isel.innerHTML = paySupList.map((x, i) => {
+                    const label = x.type === "open"
+                        ? `Opening balance · ${fmt(x.pending)} outstanding`
+                        : `${x.e.bill || "(no bill no)"} · ${x.e.date ? fmtDate(x.e.date) : "-"} · ${x.e.item || x.cat} · ${fmt(x.pending)} outstanding`;
+                    return `<option value="${i}">${esc(label)}</option>`;
+                }).join("");
+                psFill();
+            }
+
+            function psFill() {
+                const i = parseInt(document.getElementById("ps-inv").value, 10);
+                const x = paySupList[i];
+                if (!x) return;
+                const box = document.getElementById("ps-detail");
+                if (x.type === "open") {
+                    box.innerHTML = `<div style="background:#FDF6EC;border:1px solid #f0dfc0;border-radius:8px;padding:10px 12px;font-size:12px;color:#444">
+                        <strong>Opening balance</strong> — amount already owed before these bills<br>
+                        Outstanding: <strong style="color:#BA7517">${fmt(x.pending)}</strong></div>`;
+                } else {
+                    const e = x.e;
+                    box.innerHTML = `<div style="background:#F7F9FC;border:1px solid #e3e9f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;line-height:1.8">
+                        <strong>${esc(e.bill || "(no bill no)")}</strong>${e.voucher ? " · " + esc(e.voucher) : ""}<br>
+                        ${esc(x.siteName)} · ${esc(e.item || x.cat)}${e.qty ? " · " + esc(e.qty) : ""}<br>
+                        Total <strong>${fmt(e.amt)}</strong> &nbsp;·&nbsp; Already paid <strong style="color:#1D9E75">${fmt(e.paid || 0)}</strong> &nbsp;·&nbsp; Outstanding <strong style="color:#BA7517">${fmt(x.pending)}</strong>
+                    </div>`;
+                }
+                const amt = document.getElementById("ps-amt");
+                amt.value = x.pending;
+                amt.max = x.pending;
+            }
+
+            function applyInvoicePayment(x, amount, method, date, note, name) {
+                if (x.type === "open") {
+                    const vr = vendors.find(v => v.name === name);
+                    if (!vr) return;
+                    vr.openingPaid = round2((parseFloat(vr.openingPaid) || 0) + amount);
+                    return;
+                }
+                const e = sites[x.siteIdx].mat[x.cat][x.idx];
+                if (!e) return;
+                if (!e.payments) e.payments = [];
+                e.payments.push({ date, amount: round2(amount), note: note || method, method });
+                e.paid = round2(e.payments.reduce((a, p) => a + (p.amount || 0), 0));
+                e.method = method;
+            }
+
+            function saveSupplierPayment() {
+                const i = parseInt(document.getElementById("ps-inv").value, 10);
+                const x = paySupList[i];
+                if (!x) { notif("Choose an invoice to pay"); return; }
+                const amount = round2(num("ps-amt"));
+                const date = val("ps-date") || todayStr();
+                const method = val("ps-method") || "Cash";
+                const note = val("ps-note").trim();
+                const name = paySupCtx;
+                if (!amount) { notif("Enter the payment amount"); return; }
+                if (amount > x.pending + 0.01) { notif("Amount exceeds outstanding " + fmt(x.pending)); return; }
+                applyInvoicePayment(x, amount, method, date, note, name);
+                saveData();
+                closeModal("paySupModal");
+                renderVendors(); renderDash(); refreshDaybookPage();
+                notif("Paid " + fmt(amount) + " to " + name + " — outstanding now " + fmt(supplierOutstanding(name)));
+                paySupCtx = null; paySupList = [];
+            }
+
+            function paySupplierUPI() {
+                const i = parseInt(document.getElementById("ps-inv").value, 10);
+                const x = paySupList[i];
+                if (!x) { notif("Choose an invoice to pay"); return; }
+                const amount = round2(num("ps-amt"));
+                const name = paySupCtx;
+                if (!amount) { notif("Enter the payment amount"); return; }
+                if (amount > x.pending + 0.01) { notif("Amount exceeds outstanding " + fmt(x.pending)); return; }
+                let vr = vendors.find(v => v.name === name);
+                if (!vr || !vr.upi) {
+                    const upi = prompt("No UPI saved for " + name + ". Enter UPI ID to pay:", "");
+                    if (!upi) return;
+                    if (!vr) { vr = { name, phone: "", upi }; vendors.push(vr); } else vr.upi = upi;
+                    saveData();
+                }
+                const upiUrl = `upi://pay?pa=${encodeURIComponent(vr.upi)}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${encodeURIComponent("Payment - Meridian Construction")}`;
+                payCtx = { type: "vendor", name, target: x, amount };
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (isMobile) window.location.href = upiUrl;
+                showQRModal(name, amount, upiUrl, vr.phone || "", vr.upi || "");
             }
 
             function editPartyContact(type, name) {
@@ -4862,6 +5036,16 @@
             function markPayCtxPaid() {
                 if (!payCtx) { closeQR(); return; }
                 const today = new Date().toISOString().slice(0, 10);
+                // Invoice-level UPI payment: settle only the chosen invoice
+                if (payCtx.target) {
+                    const x = payCtx.target, nm = payCtx.name, amt = round2(payCtx.amount || x.pending);
+                    applyInvoicePayment(x, amt, "UPI / GPay", today, "UPI Payment", nm);
+                    saveData(); closeQR(); closeModal("paySupModal");
+                    renderVendors(); renderDash(); refreshDaybookPage();
+                    notif("UPI payment of " + fmt(amt) + " recorded for " + nm + " — outstanding now " + fmt(supplierOutstanding(nm)));
+                    payCtx = null; paySupCtx = null; paySupList = [];
+                    return;
+                }
                 if (payCtx.type === "vendor") {
                     const vr = vendors.find(v => v.name === payCtx.name);
                     if (vr && (parseFloat(vr.openingBal) || 0) > 0) vr.openingPaid = parseFloat(vr.openingBal);
