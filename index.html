@@ -1013,6 +1013,26 @@
             color: #534AB7
         }
 
+        .db-type-officeinc {
+            color: #1D9E75;
+            font-weight: 600
+        }
+
+        .db-type-officeexp {
+            color: #C00000;
+            font-weight: 600
+        }
+
+        .db-office-badge {
+            background: #E8EEF6;
+            color: #1A3C5E;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 99px;
+            white-space: nowrap
+        }
+
         .db-total-row td {
             background: #1A3C5E;
             color: #fff;
@@ -1950,18 +1970,18 @@
                     </div>
                     <div class="db-mode-bar" id="dbModeBar"></div>
                     <div id="dbSitesWrap">
-                        <div class="db-part-hdr">&#127959; Sites - Transaction Register</div>
+                        <div class="db-part-hdr">&#128218; Transaction Register - Sites &amp; Office</div>
                         <div class="print-header">
                             <h2>Meridian Construction Company</h2>
                             <p>Day Book - Transaction Register</p>
                         </div>
                         <div id="daybookContent"></div>
                     </div>
-                    <div id="dbOfficeWrap">
-                        <div class="db-part-hdr">&#127970; Office Report - Income, Expense &amp; Staff</div>
+                    <div id="dbOfficeWrap" style="display:none">
+                        <div class="db-part-hdr">&#128119; Office - Staff Salary Summary</div>
                         <div class="print-header">
                             <h2>Meridian Construction Company</h2>
-                            <p>Office Report - Income, Expense &amp; Staff</p>
+                            <p>Office - Staff Salary Summary</p>
                         </div>
                         <div id="offrepContent"></div>
                     </div>
@@ -5434,14 +5454,12 @@
                 const bar = document.getElementById("dbModeBar");
                 if (bar) {
                     const b = (m, label) => `<button class="${dbMode === m ? "on" : ""}" onclick="setDbMode('${m}')">${label}</button>`;
-                    bar.innerHTML = `<span class="db-mode-lbl">Report</span><div class="db-seg">${b("all", "&#128218; All")}${b("sites", "&#127959; Sites")}${b("office", "&#127970; Office Report")}</div>`;
+                    bar.innerHTML = `<span class="db-mode-lbl">Report</span><div class="db-seg">${b("all", "&#128218; All")}${b("sites", "&#127959; Sites")}${b("office", "&#127970; Office")}</div>`;
                 }
-                const showS = dbMode !== "office", showO = dbMode !== "sites";
-                const sw = document.getElementById("dbSitesWrap"), ow = document.getElementById("dbOfficeWrap");
-                if (sw) sw.style.display = showS ? "" : "none";
-                if (ow) ow.style.display = showO ? "" : "none";
-                if (showS) renderDayBook();
-                if (showO) renderOfficeReport();
+                const ow = document.getElementById("dbOfficeWrap");
+                if (ow) ow.style.display = dbMode === "office" ? "" : "none";
+                renderDayBook();
+                if (dbMode === "office") renderOfficeReport();
             }
             function refreshDaybookPage() {
                 const v = document.getElementById("view-daybook");
@@ -5475,11 +5493,11 @@
                 const siteOptions = `<option value="">All Sites</option>` +
                     sites.map((s, i) => `<option value="${i}"${dbFilters.site === String(i) ? " selected" : ""}>${esc(s.name)}</option>`).join("");
 
-                const siteIdx = dbFilters.site !== "" ? parseInt(dbFilters.site) : -1;
+                const siteIdx = dbMode === "office" ? -1 : (dbFilters.site !== "" ? parseInt(dbFilters.site) : -1);
 
                 const collectEntries = () => {
                 const entries = [];
-                sites.forEach((s, idx) => {
+                if (dbMode !== "office") sites.forEach((s, idx) => {
                     if (siteIdx >= 0 && siteIdx !== idx) return;
 
                     s.cash.forEach((r, k) => {
@@ -5518,6 +5536,19 @@
                         entries.push({ date: r.date || "", site: s.name, type: "Additional Work", typeKey: "addwork", part: r.work || "", ref: "", dr: r.amt || 0, cr: 0, ed: [idx, "addwork", k, ""] });
                     });
                 });
+                if (dbMode !== "sites" && siteIdx < 0) {
+                    const isSalR = r => (r.cat || "").toLowerCase().includes("staff salary");
+                    (office.income || []).forEach((r, k) => {
+                        if (!inDbRange(r.date)) return;
+                        const part = [r.cat, r.client, r.desc].filter(Boolean).join(" · ");
+                        entries.push({ date: r.date || "", site: "Office", type: "Office - Income", typeKey: "officeinc", part: part || "-", ref: "", dr: 0, cr: r.amt || 0, officeEd: ["income", k] });
+                    });
+                    (office.expenses || []).forEach((r, k) => {
+                        if (!inDbRange(r.date)) return;
+                        const sal = isSalR(r);
+                        entries.push({ date: r.date || "", site: "Office", type: sal ? "Office - Staff Salary" : "Office - Expense", typeKey: "officeexp", part: sal ? (r.staffName || "-") : (r.cat || "-"), ref: "", dr: r.amt || 0, cr: 0, officeEd: ["expenses", k] });
+                    });
+                }
                 return entries;
                 };
                 const entries = collectEntries();
@@ -5644,16 +5675,20 @@
 
                         grp.forEach((e, j) => {
                             grpDr += e.dr; grpCr += e.cr;
-                            const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : e.typeKey === "other" ? "db-type-lab" : "db-type-lab";
+                            const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : e.typeKey === "officeinc" ? "db-type-officeinc" : e.typeKey === "officeexp" ? "db-type-officeexp" : "db-type-lab";
+                            const siteCell = e.officeEd ? `<span class="db-office-badge">&#127970; Office</span>` : esc(e.site);
+                            const editCell = e.officeEd
+                                ? `<button class="edit-btn" onclick="openEditOffice('${e.officeEd[0]}',${e.officeEd[1]})" title="Edit">&#9998;</button>`
+                                : e.ed ? `<button class="edit-btn" onclick="openEditEntry(${e.ed[0]},'${jsq(e.ed[1])}',${e.ed[2]},'${jsq(e.ed[3])}')" title="Edit">&#9998;</button>` : "";
                             tableRows += `<tr>
                             <td>${j === 0 && dateKey === "-" ? "<span style='color:#aaa'>-</span>" : ""}</td>
-                            <td style="font-size:11px">${esc(e.site)}</td>
+                            <td style="font-size:11px">${siteCell}</td>
                             <td class="${typeClass}" style="font-size:11px">${esc(e.type)}</td>
                             <td>${esc(e.part) || "-"}</td>
                             <td class="muted">${esc(e.ref) || "-"}</td>
                             <td class="r">${e.dr > 0 ? fmt(e.dr) : "<span style='color:#ddd'>-</span>"}</td>
                             <td class="r" style="color:#1D9E75">${e.cr > 0 ? fmt(e.cr) : "<span style='color:#ddd'>-</span>"}</td>
-                            <td>${e.ed ? `<button class="edit-btn" onclick="openEditEntry(${e.ed[0]},'${jsq(e.ed[1])}',${e.ed[2]},'${jsq(e.ed[3])}')" title="Edit">&#9998;</button>` : ""}</td>
+                            <td>${editCell}</td>
                         </tr>`;
                         });
 
@@ -5706,7 +5741,7 @@
               <div class="form-row fg4" style="margin-bottom:0">
                 <div class="fi"><label>From Date</label><input type="date" id="db-from" value="${esc(dbFilters.from)}" onchange="dbFilter()"></div>
                 <div class="fi"><label>To Date</label><input type="date" id="db-to" value="${esc(dbFilters.to)}" onchange="dbFilter()"></div>
-                <div class="fi"><label>Site</label><select id="db-site" onchange="dbFilter()">${siteOptions}</select></div>
+                ${dbMode === "office" ? "" : `<div class="fi"><label>Site</label><select id="db-site" onchange="dbFilter()">${siteOptions}</select></div>`}
                 <div class="fi"><label>Type</label><select id="db-type" onchange="dbFilter()">
                   <option value=""${!tf ? " selected" : ""}>All Types</option>
                   <option value="receipt"${tf === "receipt" ? " selected" : ""}>Receipts Only</option>
@@ -5714,6 +5749,8 @@
                   <option value="labour"${tf === "labour" ? " selected" : ""}>Labour Only</option>
                   <option value="other"${tf === "other" ? " selected" : ""}>Other Expense Only</option>
                   <option value="addwork"${tf === "addwork" ? " selected" : ""}>Additional Work Only</option>
+                  <option value="officeinc"${tf === "officeinc" ? " selected" : ""}>Office Income Only</option>
+                  <option value="officeexp"${tf === "officeexp" ? " selected" : ""}>Office Expense Only</option>
                 </select></div>
               </div>
               <div class="db-stats">
@@ -5723,7 +5760,7 @@
                 ${dbFilters.from ? `<span style="background:#EEF3F8;color:#1A3C5E;padding:2px 8px;border-radius:4px;font-weight:700">&#128218; Opening Bal (${fmtDate(dbFilters.from)}): ${balCell(getOpeningBalOn(dbFilters.from))}</span>` : ""}
                 <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearDbFilters()">Clear Filters</button>
               </div>
-              <div style="font-size:11px;color:#6B7A88;margin-top:6px">Opening / Closing Balance = receipts &minus; expenses, carried forward from the first entry (for the selected Site and Type). Entries with no date are counted at the start.${bookOpeningBal > 0 ? ` <strong style="color:#1A3C5E">Book B Opening Balance: ₹${fmt(bookOpeningBal)}</strong>` : ""}</div>
+              <div style="font-size:11px;color:#6B7A88;margin-top:6px">Opening / Closing Balance = receipts &minus; expenses, carried forward from the first entry (for the selected Site and Type). Entries with no date are counted at the start.${bookOpeningBal > 0 ? ` <strong style="color:#1A3C5E">Book B Opening Balance: ${fmt(bookOpeningBal)}</strong>` : ""}</div>
             </div>
             <div class="tbl-wrap" style="margin-top:0">
               <table class="etbl">
@@ -5746,15 +5783,13 @@
             let orFilters = { from: "", to: "", view: "all", staff: "" };
 
             function orFilter() {
-                const m = { "or-from": "from", "or-to": "to", "or-view": "view", "or-staff": "staff" };
-                Object.keys(m).forEach(id => { const el = document.getElementById(id); if (el) orFilters[m[id]] = el.value; });
-                dbFilters.from = orFilters.from; dbFilters.to = orFilters.to; // one date range for both reports
+                const el = document.getElementById("or-staff");
+                if (el) orFilters.staff = el.value;
                 renderDaybookPage();
             }
 
             function clearOrFilters() {
-                orFilters = { from: "", to: "", view: "all", staff: "" };
-                dbFilters.from = ""; dbFilters.to = "";
+                orFilters.staff = "";
                 renderDaybookPage();
             }
 
@@ -5762,35 +5797,10 @@
                 const wrap = document.getElementById("offrepContent");
                 if (!wrap) return;
                 const f = orFilters;
-                const inR = d => !((f.from && (!d || d < f.from)) || (f.to && (!d || d > f.to)));
+                const inR = d => !((dbFilters.from && (!d || d < dbFilters.from)) || (dbFilters.to && (!d || d > dbFilters.to)));
                 const isSal = r => r.cat && r.cat.toLowerCase().includes("staff salary");
-                const byDate = (a, b) => (b.date || "").localeCompare(a.date || ""); // newest first
-
-                const inc = office.income.filter(r => inR(r.date)).sort(byDate);
-                let exp = office.expenses.filter(r => inR(r.date)).sort(byDate);
-                if (f.view === "salary") exp = exp.filter(isSal);
-                if (f.staff) exp = exp.filter(r => isSal(r) && r.staffName === f.staff);
-
-                const showInc = (f.view === "all" || f.view === "income") && !f.staff;
-                const showExp = f.view === "all" || f.view === "expense" || f.view === "salary" || !!f.staff;
-                const showStaff = f.view === "all" || f.view === "staff" || f.view === "salary" || !!f.staff;
-
-                const tInc = inc.reduce((a, r) => a + (r.amt || 0), 0);
-                const tExp = exp.reduce((a, r) => a + (r.amt || 0), 0);
-                const bal = tInc - tExp;
-
                 const staffOpts = `<option value="">All Staff</option>` + office.staff.map(s =>
                     `<option value="${esc(s.name)}"${f.staff === s.name ? " selected" : ""}>${esc(s.name)}</option>`).join("");
-                const vopt = (v, l) => `<option value="${v}"${f.view === v ? " selected" : ""}>${l}</option>`;
-
-                const incRows = inc.length === 0 ? '<tr class="empty-row"><td colspan="5">No income entries.</td></tr>'
-                    : inc.map(r => `<tr><td>${r.date ? fmtDate(r.date) : "-"}</td><td>${esc(r.cat)}</td><td>${esc(r.client) || "-"}</td><td>${esc(r.desc) || "-"}</td><td class="r">${fmt(r.amt || 0)}</td></tr>`).join("")
-                    + `<tr class="db-total-row"><td colspan="4">TOTAL INCOME</td><td class="r">${fmt(tInc)}</td></tr>`;
-
-                const expRows = exp.length === 0 ? '<tr class="empty-row"><td colspan="4">No expense entries.</td></tr>'
-                    : exp.map(r => `<tr><td>${r.date ? fmtDate(r.date) : "-"}</td><td>${esc(r.cat)}</td><td>${esc(r.staffName) || "-"}</td><td class="r">${fmt(r.amt || 0)}</td></tr>`).join("")
-                    + `<tr class="db-total-row"><td colspan="3">TOTAL EXPENSE</td><td class="r">${fmt(tExp)}</td></tr>`;
-
                 const staffList = office.staff.filter(s => !f.staff || s.name === f.staff);
                 let tSal = 0;
                 const staffRows = staffList.length === 0 ? '<tr class="empty-row"><td colspan="7">No staff found.</td></tr>'
@@ -5800,33 +5810,22 @@
                         tSal += paid;
                         return `<tr><td>${j + 1}</td><td><strong>${esc(s.name)}</strong></td><td>${esc(staffPos(s)) || "-"}</td><td>${esc(s.phone) || "-"}</td><td class="r">${s.salary ? fmt(s.salary) : "-"}</td><td class="r">${pays.length}</td><td class="r">${fmt(paid)}</td></tr>`;
                     }).join("") + `<tr class="db-total-row"><td colspan="6">TOTAL SALARY PAID</td><td class="r">${fmt(tSal)}</td></tr>`;
-
-                const sec = (title, color, head, body) => `
-                  <div style="margin-top:16px">
-                    <div style="background:${color};color:#fff;padding:7px 14px;font-weight:700;font-size:12px">${title}</div>
-                    <div class="tbl-wrap" style="margin-top:0"><table class="etbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
-                  </div>`;
-
                 wrap.innerHTML = `
                 <div class="db-filter-bar">
-                  <div class="form-row fg4" style="margin-bottom:0">
-                    <div class="fi"><label>From Date</label><input type="date" id="or-from" value="${esc(f.from)}" onchange="orFilter()"></div>
-                    <div class="fi"><label>To Date</label><input type="date" id="or-to" value="${esc(f.to)}" onchange="orFilter()"></div>
-                    <div class="fi"><label>Report</label><select id="or-view" onchange="orFilter()">
-                      ${vopt("all", "All (Income, Expense, Staff)")}${vopt("income", "Office Income Only")}${vopt("expense", "Office Expense Only")}${vopt("staff", "Staff Summary Only")}${vopt("salary", "Staff Salary Only")}
-                    </select></div>
-                    <div class="fi"><label>Staff</label><select id="or-staff" onchange="orFilter()">${staffOpts}</select></div>
-                  </div>
                   <div class="db-stats">
-                    <span style="color:#1D9E75">&#9650; Income: <strong>${fmt(tInc)}</strong></span>
-                    <span style="color:#C00000">&#9660; Expense: <strong>${fmt(tExp)}</strong></span>
-                    <span style="color:${bal >= 0 ? "#1D9E75" : "#C00000"}">Balance: <strong>${fmt(bal)}</strong></span>
-                    <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearOrFilters()">Clear Filters</button>
+                    <span style="font-size:11px;color:#6B7A88">Salary payments are Office Expenses categorised "Staff Salary". Date range follows the register filters above.</span>
+                    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                      <select id="or-staff" onchange="orFilter()" style="font-size:12px;padding:4px 8px;border:1.5px solid #d7dee8;border-radius:7px;background:#fff">${staffOpts}</select>
+                      <button class="btn btn-outline" style="font-size:11px;padding:3px 10px" onclick="clearOrFilters()">Clear</button>
+                    </span>
                   </div>
                 </div>
-                ${showInc ? sec("&#128176; Office Income", "#1D9E75", "<th>Date</th><th>Category</th><th>Client</th><th>Notes</th><th class='r'>Amount</th>", incRows) : ""}
-                ${showExp ? sec("&#128176; Office Expense", "#C00000", "<th>Date</th><th>Category</th><th>Staff</th><th class='r'>Amount</th>", expRows) : ""}
-                ${showStaff ? sec("&#128119; Staff Salary Summary", "#2E75B6", "<th style='width:28px'>#</th><th>Name</th><th>Position</th><th>Phone</th><th class='r'>Monthly Salary</th><th class='r'>Payments</th><th class='r'>Salary Paid</th>", staffRows) : ""}`;
+                <div class="tbl-wrap" style="margin-top:0">
+                  <table class="etbl">
+                    <thead><tr><th style="width:28px">#</th><th>Name</th><th>Position</th><th>Phone</th><th class="r">Monthly Salary</th><th class="r">Payments</th><th class="r">Salary Paid</th></tr></thead>
+                    <tbody>${staffRows}</tbody>
+                  </table>
+                </div>`;
             }
 
             // -- BOOT --
