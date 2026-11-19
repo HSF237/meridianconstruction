@@ -2108,6 +2108,7 @@
                     <div class="fi"><label>Payment method</label><select id="bl-method"></select></div>
                     <div class="fi"><label>Remaining to pay (&#8377;)</label><input type="number" id="bl-rem" readonly placeholder="0"></div>
                 </div>
+                <div class="fi" id="bl-att" style="margin:6px 0 8px"></div>
                 <div style="font-size:11px;color:#666;margin:2px 0 4px">Pay part now (e.g. half) and the rest later — the remaining amount shows as <strong>Pending</strong>. Leave Paid as 0 for a credit bill.</div>
                 <div style="display:flex;gap:8px;margin-top:12px">
                     <button class="btn btn-green" style="flex:1" onclick="saveBill()">&#10003; Save Bill</button>
@@ -2755,7 +2756,7 @@
                         <td>${fmtDate(r.date)}</td>
                         <td>${esc(r.cat)}${isStaffSalary(r) && r.staffName ? ` <span style="font-size:10px;color:#2E75B6;font-weight:700">&#128119; ${esc(r.staffName)}</span>` : ''}</td>
                         <td class="r" style="color:#C00000;font-weight:700">${fmt(r.amt)}</td>
-                        <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditOffice('expenses',${office.expenses.indexOf(r)})" title="Edit">&#9998;</button><button class="del-btn" onclick="delOfficeExpense(${office.expenses.indexOf(r)})">&#10005;</button></td>
+                        <td style="white-space:nowrap">${attBtn(r)}<button class="edit-btn" onclick="openEditOffice('expenses',${office.expenses.indexOf(r)})" title="Edit">&#9998;</button><button class="del-btn" onclick="delOfficeExpense(${office.expenses.indexOf(r)})">&#10005;</button></td>
                       </tr>`).join("") +
                     `<tr class="sub-row"><td colspan="3">Total${expSearch ? ' (filtered)' : ''}</td><td class="r">${fmt(filtExpTotal)}</td><td></td></tr>`;
 
@@ -2865,6 +2866,7 @@
                 </select>
               </div>
             </div>
+            ${attBoxHtml("ofe-att")}
             <div class="fi" style="display:flex;justify-content:flex-end;margin-bottom:12px">
               <button class="btn btn-red" onclick="addOfficeExpense()">+ Add Expense</button>
             </div>
@@ -2924,6 +2926,7 @@
                 }
                 fields += `
                     <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="eo-amt" value="${e.amt || 0}" min="0"></div>`;
+                if (!isInc) { attReset("eo-att", e.att, e.attLink); fields += attBoxHtml("eo-att"); }
                 document.getElementById("editEntryTitle").textContent = isInc ? "Edit Office Income" : "Edit Office Expense";
                 document.getElementById("editEntryFields").innerHTML = fields;
                 document.getElementById("editEntryModal").classList.add("open");
@@ -2945,6 +2948,7 @@
                     const staffName = isSal ? gv("eo-staff") : "";
                     if (isSal && !staffName) { notif("Select a staff member for Salary"); return; }
                     e.staffName = staffName;
+                    attApply(e, attGet("eo-att"));
                 }
                 office[kind].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
                 editCtx = null;
@@ -3079,7 +3083,10 @@
                 if (!cat) { notif("Enter a category"); return; }
                 if (!amt) { notif("Enter an amount"); return; }
                 if (isSal && !staffName) { notif("Select a staff member for Salary"); return; }
-                office.expenses.push({ date, cat, staffName, amt });
+                const ne = { date, cat, staffName, amt };
+                attApply(ne, attGet("ofe-att"));
+                office.expenses.push(ne);
+                attReset("ofe-att");
                 office.expenses.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
                 saveData(); renderOffice(); renderDash(); notif("Expense entry added");
             }
@@ -3362,7 +3369,7 @@
                     const pending = (r.amt || 0) - (r.paid || 0);
                     return `<tr>
               <td class="muted">${j + 1}</td><td>${fmtDate(r.date)}</td><td>${esc(r.det) || "-"}</td><td>${esc(r.item || cat)}</td><td class="muted">${esc(r.qty) || "-"}</td><td class="muted">${esc(r.bill) || "-"}</td><td class="muted">${esc(r.voucher) || "-"}</td><td class="r">${fmt(r.amt)}</td><td class="r" style="color:#1D9E75">${fmt(r.paid || 0)}</td><td class="r" style="color:${pending > 0 ? '#BA7517' : '#1D9E75'}">${pending > 0 ? fmt(pending) : 'Paid'}</td>
-              <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditEntry(${i},'mat-${jsq(cat)}',${j},'${jsq(cat)}')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td>
+              <td style="white-space:nowrap">${attBtn(r)}<button class="edit-btn" onclick="openEditEntry(${i},'mat-${jsq(cat)}',${j},'${jsq(cat)}')" title="Edit">&#9998;</button><button class="del-btn" onclick="delEntry(${i},'mat-${jsq(cat)}',${j})">&#10005;</button></td>
             </tr>`;
                 }).join("")}
         ${rows.length > 0 ? `<tr class="sub-row"><td colspan="7">Sub Total - ${esc(cat)}</td><td class="r">${fmt(sub)}</td><td class="r">${fmt(paidSub)}</td><td class="r">${fmt(sub - paidSub)}</td><td></td></tr>` : ""}
@@ -4440,7 +4447,7 @@
                         const payAction = isV ? `openPaySupplier('${jsq(p.name)}')` : `payParty('worker','${jsq(p.name)}',${payAmt})`;
                         const dtRows = p.entries.length
                             ? p.entries.map(e => type === "vendor"
-                                ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item || e.cat)}</td><td>${esc(e.bill) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td><td>${methodPill(e)}</td><td style="white-space:nowrap"><button class="edit-btn" onclick="openBillModal({edit:{siteIdx:${e.siteIdx},cat:'${jsq(e.cat)}',idx:${e.entIdx}}})" title="Edit bill">&#9998;</button>${(e.pending || 0) > 0.005 ? ` <button class="btn btn-blue" style="padding:2px 8px;font-size:10px" onclick="openPayBill(${e.siteIdx},'${jsq(e.cat)}',${e.entIdx})" title="Record part payment">+ Pay</button>` : `<span style="color:#1D9E75;font-size:11px" title="Fully paid">&#10003;</span>`}</td></tr>`
+                                ? `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.item || e.cat)}</td><td>${esc(e.bill) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td><td>${methodPill(e)}</td><td style="white-space:nowrap">${attBtn(e)}<button class="edit-btn" onclick="openBillModal({edit:{siteIdx:${e.siteIdx},cat:'${jsq(e.cat)}',idx:${e.entIdx}}})" title="Edit bill">&#9998;</button>${(e.pending || 0) > 0.005 ? ` <button class="btn btn-blue" style="padding:2px 8px;font-size:10px" onclick="openPayBill(${e.siteIdx},'${jsq(e.cat)}',${e.entIdx})" title="Record part payment">+ Pay</button>` : `<span style="color:#1D9E75;font-size:11px" title="Fully paid">&#10003;</span>`}</td></tr>`
                                 : `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.siteName)}</td><td>${esc(e.cat)}</td><td>${esc(e.voucher) || '-'}</td><td class="r">${fmt(e.amt)}</td><td class="r">${fmt(e.paid || 0)}</td><td class="r">${fmt(e.pending)}</td></tr>`
                             ).join("")
                             : `<tr class="empty-row"><td colspan="${type === "vendor" ? 9 : 7}">No entries</td></tr>`;
@@ -4653,6 +4660,90 @@
                 return `<span style="white-space:nowrap;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;${c}">${esc(m)}</span>`;
             }
 
+            // -- INVOICE ATTACHMENTS: each file is its own small Firestore doc, so the main book stays small --
+            const ATT_PDF_MAX = 700 * 1024;
+            const ATT_ST = {};
+            function attReadDataUrl(file) {
+                return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("Could not read the file")); r.readAsDataURL(file); });
+            }
+            function attCompressImage(file) {
+                return new Promise((res, rej) => {
+                    const url = URL.createObjectURL(file), img = new Image();
+                    img.onload = () => {
+                        let max = 1500, q = 0.72, out = "";
+                        for (let t = 0; t < 6; t++) {
+                            const k = Math.min(1, max / Math.max(img.width, img.height));
+                            const c = document.createElement("canvas");
+                            c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+                            const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+                            out = c.toDataURL("image/jpeg", q);
+                            if (out.length * 0.75 <= ATT_PDF_MAX) break;
+                            max = Math.round(max * 0.75); q = Math.max(0.5, q - 0.06);
+                        }
+                        URL.revokeObjectURL(url); res(out);
+                    };
+                    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Could not read that image")); };
+                    img.src = url;
+                });
+            }
+            async function attUpload(file) {
+                if (!window.firebaseReady || !window.db) throw new Error("Not connected to the cloud — try again in a moment");
+                let type = file.type || "", data;
+                if (type === "application/pdf") {
+                    if (file.size > ATT_PDF_MAX) throw new Error("PDF is too big (max ~700 KB). Compress it, or paste a link instead.");
+                    data = await attReadDataUrl(file);
+                } else if (type.startsWith("image/")) {
+                    data = await attCompressImage(file); type = "image/jpeg";
+                } else throw new Error("Attach a PDF or an image");
+                const id = "att_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+                await window.fsSetDoc(window.fsDoc(window.db, "meridian", id), { data, name: file.name || "invoice", type, updated: new Date().toISOString() });
+                return { id, name: file.name || "invoice", type };
+            }
+            async function attOpen(id) {
+                const w = window.open("", "_blank");
+                try {
+                    const snap = await window.fsGetDoc(window.fsDoc(window.db, "meridian", id));
+                    if (!snap.exists()) throw new Error("missing");
+                    const blob = await (await fetch(snap.data().data)).blob();
+                    const u = URL.createObjectURL(blob);
+                    if (w) w.location = u; else window.location.href = u;
+                } catch (err) { if (w) w.close(); notif("Could not open the attachment"); }
+            }
+            function attBtn(e) {
+                if (!e) return "";
+                if (e.att && e.att.id) return `<button class="edit-btn" onclick="event.stopPropagation();attOpen('${jsq(e.att.id)}')" title="View invoice: ${esc(e.att.name || "")}">&#128206;</button>`;
+                if (e.attLink) return `<a class="edit-btn" href="${esc(e.attLink)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open invoice link" style="text-decoration:none">&#128206;</a>`;
+                return "";
+            }
+            function attReset(box, att, link) { ATT_ST[box] = { att: att || null, link: link || "" }; }
+            function attGet(box) {
+                const st = ATT_ST[box] || { att: null, link: "" };
+                let l = (st.link || "").trim();
+                if (l && !/^https?:\/\//i.test(l)) l = "https://" + l;
+                return { att: st.att, link: l };
+            }
+            function attInner(box) {
+                const st = ATT_ST[box] || { att: null, link: "" };
+                const cur = st.att ? `<span style="font-size:11px;color:#1D9E75">&#10003; ${esc(st.att.name)}</span> <button type="button" class="btn btn-outline" style="font-size:10px;padding:2px 7px" onclick="attView('${box}')">View</button> <button type="button" class="btn btn-outline" style="font-size:10px;padding:2px 7px;color:#C00000" onclick="attRemove('${box}')">Remove</button>` : `<span style="font-size:11px;color:#888">No file attached</span>`;
+                return `<label>Invoice copy <span style="color:#888;font-weight:400">(PDF / photo, optional)</span></label>
+                  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px"><button type="button" class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="attChoose('${box}')">&#128206; ${st.att ? "Replace" : "Attach"} file</button>${cur}</div>
+                  <input type="text" placeholder="…or paste a Google Drive / web link" value="${esc(st.link || "")}" oninput="ATT_ST['${box}'].link=this.value" autocomplete="off">`;
+            }
+            function attBoxHtml(box) { if (!ATT_ST[box]) attReset(box); return `<div class="fi" id="${box}" style="margin-bottom:9px">${attInner(box)}</div>`; }
+            function attRender(box) { const el = document.getElementById(box); if (el) el.innerHTML = attInner(box); }
+            function attChoose(box) {
+                const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*,application/pdf";
+                inp.onchange = async () => {
+                    const f = inp.files && inp.files[0]; if (!f) return;
+                    try { notif("Uploading…"); const a = await attUpload(f); if (!ATT_ST[box]) attReset(box); ATT_ST[box].att = a; attRender(box); notif("Attached " + a.name); }
+                    catch (err) { notif(err.message || "Upload failed"); }
+                };
+                inp.click();
+            }
+            function attRemove(box) { if (ATT_ST[box]) ATT_ST[box].att = null; attRender(box); }
+            function attView(box) { const a = ATT_ST[box] && ATT_ST[box].att; if (a) attOpen(a.id); }
+            function attApply(e, A) { if (A.att) e.att = A.att; else delete e.att; if (A.link) e.attLink = A.link; else delete e.attLink; }
+
             function openBillModal(opts = {}) {
                 if (!sites.length) { notif("Add a site first — bills are stored against a site and category"); return; }
                 const edit = opts.edit || null;
@@ -4684,6 +4775,7 @@
                     document.getElementById("bl-amt").value = e.amt || 0;
                     document.getElementById("bl-paid").value = e.paid || 0;
                     document.getElementById("bl-method").innerHTML = payMethodOpts(billMethodOf(e), true);
+                    attReset("bl-att", e.att, e.attLink);
                     nsWrap.style.display = "none";
                     document.getElementById("bl-ns-name").value = "";
                     document.getElementById("bl-ns-phone").value = "";
@@ -4702,9 +4794,11 @@
                     document.getElementById("bl-amt").value = "";
                     document.getElementById("bl-paid").value = "";
                     document.getElementById("bl-method").innerHTML = payMethodOpts("Cash", true);
+                    attReset("bl-att");
                     if (!opts.supplier) { document.getElementById("bl-ns-name").value = ""; document.getElementById("bl-ns-phone").value = ""; }
                 }
                 billCalcRem();
+                attRender("bl-att");
                 document.getElementById("billModal").classList.add("open");
                 setTimeout(() => { const f = document.querySelector("#bl-amt"); if (f) f.focus(); }, 50);
             }
@@ -4770,6 +4864,7 @@
                 if (!billCtx) return;
                 const isEdit = billCtx.mode === "edit";
                 const supSel = val("bl-sup");
+                const A = attGet("bl-att");
                 let det = supSel;
                 if (supSel === "__new") {
                     det = val("bl-ns-name").trim();
@@ -4810,12 +4905,15 @@
                         s.mat[cat].push(e);
                     }
                     e.date = date; e.det = det; e.item = item; e.qty = qty; e.bill = bill; e.amt = amt;
+                    attApply(e, A);
                     setEntryPaid(e, paid, method, date);
                 } else {
                     const p = date.split("-");
                     const vch = "VCH-" + String(p[2] || "01").padStart(2, "0") + String(p[1] || "01").padStart(2, "0") + String(p[0] || "2000").slice(2) + "-" + nextMatVoucherSeq(siteIdx);
                     const payments = paid > 0 ? [{ date, amount: paid, note: method, method }] : [];
-                    s.mat[cat].push({ date, det, item, qty, bill, voucher: vch, amt, paid, payments, method });
+                    const ne = { date, det, item, qty, bill, voucher: vch, amt, paid, payments, method };
+                    attApply(ne, A);
+                    s.mat[cat].push(ne);
                 }
                 saveData();
                 closeModal("billModal");
@@ -4917,16 +5015,36 @@
                     document.getElementById("ps-amt").value = "";
                     return;
                 }
-                isel.innerHTML = paySupList.map((x, i) => {
+                isel.innerHTML = (paySupList.length > 1 ? `<option value="all">All outstanding — ${fmt(paySupTotal())} (oldest first)</option>` : "") + paySupList.map((x, i) => {
                     const label = x.type === "open"
                         ? `Opening balance · ${fmt(x.pending)} outstanding`
                         : `${x.e.bill || "(no bill no)"} · ${x.e.date ? fmtDate(x.e.date) : "-"} · ${x.e.item || x.cat} · ${fmt(x.pending)} outstanding`;
                     return `<option value="${i}">${esc(label)}</option>`;
                 }).join("");
+                if (paySupList.length > 1) isel.value = "all";
                 psFill();
             }
 
+            function paySupTotal() { return round2(paySupList.reduce((a, x) => a + (x.pending || 0), 0)); }
+            function psAlloc(amount) {
+                let left = round2(amount); const out = [];
+                for (const x of paySupList) {
+                    if (left <= 0.004) break;
+                    const a = round2(Math.min(left, x.pending));
+                    if (a > 0) { out.push({ x, amt: a }); left = round2(left - a); }
+                }
+                return out;
+            }
             function psFill() {
+                if (document.getElementById("ps-inv").value === "all") {
+                    const tot = paySupTotal();
+                    document.getElementById("ps-detail").innerHTML = `<div style="background:#F0F8F4;border:1px solid #cfe8da;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;line-height:1.7">
+                        <strong>Payment against total outstanding</strong><br>
+                        ${paySupList.length} unpaid item${paySupList.length > 1 ? "s" : ""} &nbsp;·&nbsp; Total outstanding <strong style="color:#BA7517">${fmt(tot)}</strong><br>
+                        <span style="color:#666">Enter any amount — it is applied to the oldest bills first, so each bill's paid / pending stays correct.</span></div>`;
+                    const am = document.getElementById("ps-amt"); am.value = tot; am.max = tot;
+                    return;
+                }
                 const i = parseInt(document.getElementById("ps-inv").value, 10);
                 const x = paySupList[i];
                 if (!x) return;
@@ -4963,7 +5081,23 @@
                 e.method = method;
             }
 
+            function saveSupplierPaymentAll() {
+                const amount = round2(num("ps-amt")), tot = paySupTotal();
+                const date = val("ps-date") || todayStr(), method = val("ps-method") || "Cash";
+                const note = val("ps-note").trim() || "Payment against total", name = paySupCtx;
+                if (!amount) { notif("Enter the payment amount"); return; }
+                if (amount > tot + 0.01) { notif("Amount exceeds total outstanding " + fmt(tot)); return; }
+                const al = psAlloc(amount);
+                al.forEach(a => applyInvoicePayment(a.x, a.amt, method, date, note, name));
+                saveData();
+                closeModal("paySupModal");
+                renderVendors(); renderDash(); refreshDaybookPage();
+                notif("Paid " + fmt(amount) + " to " + name + " across " + al.length + " bill" + (al.length > 1 ? "s" : "") + " — outstanding now " + fmt(supplierOutstanding(name)));
+                paySupCtx = null; paySupList = [];
+            }
+
             function saveSupplierPayment() {
+                if (document.getElementById("ps-inv").value === "all") { saveSupplierPaymentAll(); return; }
                 const i = parseInt(document.getElementById("ps-inv").value, 10);
                 const x = paySupList[i];
                 if (!x) { notif("Choose an invoice to pay"); return; }
@@ -4983,8 +5117,9 @@
             }
 
             function paySupplierUPI() {
+                const isAll = document.getElementById("ps-inv").value === "all";
                 const i = parseInt(document.getElementById("ps-inv").value, 10);
-                const x = paySupList[i];
+                const x = isAll ? { pending: paySupTotal() } : paySupList[i];
                 if (!x) { notif("Choose an invoice to pay"); return; }
                 const amount = round2(num("ps-amt"));
                 const name = paySupCtx;
@@ -4998,7 +5133,7 @@
                     saveData();
                 }
                 const upiUrl = `upi://pay?pa=${encodeURIComponent(vr.upi)}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${encodeURIComponent("Payment - Meridian Construction")}`;
-                payCtx = { type: "vendor", name, target: x, amount };
+                payCtx = isAll ? { type: "vendor", name, alloc: psAlloc(amount), amount } : { type: "vendor", name, target: x, amount };
                 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                 if (isMobile) window.location.href = upiUrl;
                 showQRModal(name, amount, upiUrl, vr.phone || "", vr.upi || "");
@@ -5056,6 +5191,15 @@
             function markPayCtxPaid() {
                 if (!payCtx) { closeQR(); return; }
                 const today = new Date().toISOString().slice(0, 10);
+                if (payCtx.alloc) {
+                    const nm = payCtx.name, amt = payCtx.amount;
+                    payCtx.alloc.forEach(a => applyInvoicePayment(a.x, a.amt, "UPI / GPay", today, "UPI Payment", nm));
+                    saveData(); closeQR(); closeModal("paySupModal");
+                    renderVendors(); renderDash(); refreshDaybookPage();
+                    notif("UPI payment of " + fmt(amt) + " recorded for " + nm + " — outstanding now " + fmt(supplierOutstanding(nm)));
+                    payCtx = null; paySupCtx = null; paySupList = [];
+                    return;
+                }
                 // Invoice-level UPI payment: settle only the chosen invoice
                 if (payCtx.target) {
                     const x = payCtx.target, nm = payCtx.name, amt = round2(payCtx.amount || x.pending);
@@ -5508,7 +5652,7 @@
                     s.matCats.forEach(cat => {
                         (s.mat[cat] || []).forEach((r, k) => {
                             if (!inDbRange(r.date)) return;
-                            entries.push({ date: r.date || "", site: s.name, type: "Material - " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0, ed: [idx, "mat-" + cat, k, cat] });
+                            entries.push({ date: r.date || "", site: s.name, type: "Material - " + cat, typeKey: "material", part: r.det || "", ref: r.bill || "", dr: r.amt || 0, cr: 0, attE: r, ed: [idx, "mat-" + cat, k, cat] });
                         });
                     });
 
@@ -5546,7 +5690,7 @@
                     (office.expenses || []).forEach((r, k) => {
                         if (!inDbRange(r.date)) return;
                         const sal = isSalR(r);
-                        entries.push({ date: r.date || "", site: "Office", type: sal ? "Office - Staff Salary" : "Office - Expense", typeKey: "officeexp", part: sal ? (r.staffName || "-") : (r.cat || "-"), ref: "", dr: r.amt || 0, cr: 0, officeEd: ["expenses", k] });
+                        entries.push({ date: r.date || "", site: "Office", type: sal ? "Office - Staff Salary" : "Office - Expense", typeKey: "officeexp", part: sal ? (r.staffName || "-") : (r.cat || "-"), ref: "", dr: r.amt || 0, cr: 0, attE: r, officeEd: ["expenses", k] });
                     });
                 }
                 return entries;
@@ -5677,9 +5821,9 @@
                             grpDr += e.dr; grpCr += e.cr;
                             const typeClass = e.typeKey === "receipt" ? "db-type-receipt" : e.typeKey === "material" ? "db-type-mat" : e.typeKey === "officeinc" ? "db-type-officeinc" : e.typeKey === "officeexp" ? "db-type-officeexp" : "db-type-lab";
                             const siteCell = e.officeEd ? `<span class="db-office-badge">&#127970; Office</span>` : esc(e.site);
-                            const editCell = e.officeEd
+                            const editCell = attBtn(e.attE) + (e.officeEd
                                 ? `<button class="edit-btn" onclick="openEditOffice('${e.officeEd[0]}',${e.officeEd[1]})" title="Edit">&#9998;</button>`
-                                : e.ed ? `<button class="edit-btn" onclick="openEditEntry(${e.ed[0]},'${jsq(e.ed[1])}',${e.ed[2]},'${jsq(e.ed[3])}')" title="Edit">&#9998;</button>` : "";
+                                : e.ed ? `<button class="edit-btn" onclick="openEditEntry(${e.ed[0]},'${jsq(e.ed[1])}',${e.ed[2]},'${jsq(e.ed[3])}')" title="Edit">&#9998;</button>` : "");
                             tableRows += `<tr>
                             <td>${j === 0 && dateKey === "-" ? "<span style='color:#aaa'>-</span>" : ""}</td>
                             <td style="font-size:11px">${siteCell}</td>
