@@ -1913,6 +1913,7 @@
                     <button class="bk-btn" id="bk-B" onclick="switchBook('B')" title="Book B: new books">B</button>
                 </div>
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
+                <button class="btn btn-outline" style="font-size:11px;color:#fff;border-color:rgba(255,255,255,.5)" onclick="gdOpen()" title="Google Drive backup &amp; invoice storage">&#9729; Drive</button>
                 <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
             </div>
@@ -2164,6 +2165,14 @@
                     <button class="btn btn-blue" onclick="paySupplierUPI()" title="Pay the entered amount by UPI">&#128242; UPI QR</button>
                     <button class="btn btn-grey" onclick="closeModal('paySupModal')">Cancel</button>
                 </div>
+            </div>
+        </div>
+
+        <div class="modal-bg" id="gdModal">
+            <div class="modal" style="width:440px">
+                <h3>&#9729; Google Drive</h3>
+                <div id="gdBody"></div>
+                <div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn btn-grey" onclick="closeModal('gdModal')">Close</button></div>
             </div>
         </div>
 
@@ -2493,6 +2502,7 @@
             function saveData() {
                 // Always save locally instantly
                 try { localStorage.setItem(STORE_KEY, JSON.stringify({ sites, vendors, labourers, bankAccounts, office })); } catch (e) { }
+                try { gdAutoBackup(); } catch (e) { }
 
                 // Debounce cloud save (always to the book that was open when the change was made)
                 if (saveTimer) clearTimeout(saveTimer);
@@ -4660,6 +4670,99 @@
                 return `<span style="white-space:nowrap;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;${c}">${esc(m)}</span>`;
             }
 
+            // -- GOOGLE DRIVE: invoice files + daily data backup (Firebase stays the live database) --
+            const GDRIVE_CLIENT_ID = "";   // paste the OAuth Client ID here once; until then it can be entered in the Drive panel
+            const GD = { token: null, exp: 0 };
+            const gdLS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ""; if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } return ""; };
+            function gdClientId() { return GDRIVE_CLIENT_ID || gdLS("mc_gclient"); }
+            function gdValid() { return !!GD.token && Date.now() < GD.exp - 60000; }
+            function gdLoadLib() {
+                return new Promise((res, rej) => {
+                    if (window.google && google.accounts && google.accounts.oauth2) return res();
+                    const sc = document.createElement("script"); sc.src = "https://accounts.google.com/gsi/client"; sc.async = true;
+                    sc.onload = () => res(); sc.onerror = () => rej(new Error("Could not load Google sign-in (check internet)"));
+                    document.head.appendChild(sc);
+                });
+            }
+            function gdAuth() {
+                return new Promise(async (res, rej) => {
+                    const cid = gdClientId(); if (!cid) return rej(new Error("Enter the Google Client ID first"));
+                    try { await gdLoadLib(); } catch (e) { return rej(e); }
+                    const tc = google.accounts.oauth2.initTokenClient({
+                        client_id: cid, scope: "https://www.googleapis.com/auth/drive.file", prompt: gdLS("mc_gd") ? "" : "consent",
+                        callback: r => {
+                            if (r.error) return rej(new Error(r.error));
+                            GD.token = r.access_token; GD.exp = Date.now() + (r.expires_in || 3600) * 1000; gdLS("mc_gd", "1"); gdPanel(); res(GD.token);
+                        },
+                        error_callback: e => rej(new Error((e && e.type) || "Sign-in was cancelled or blocked"))
+                    });
+                    tc.requestAccessToken();
+                });
+            }
+            async function gdFetch(url, opts = {}) {
+                if (!gdValid()) await gdAuth();
+                opts.headers = Object.assign({}, opts.headers, { Authorization: "Bearer " + GD.token });
+                const r = await fetch(url, opts);
+                if (!r.ok) throw new Error("Drive error " + r.status);
+                return r;
+            }
+            async function gdFolder() {
+                const cached = gdLS("mc_gfolder");
+                if (cached) { try { await gdFetch("https://www.googleapis.com/drive/v3/files/" + cached + "?fields=id,trashed").then(r => r.json()).then(j => { if (j.trashed) throw new Error("trashed"); }); return cached; } catch (e) { gdLS("mc_gfolder", null); } }
+                const q = encodeURIComponent("name='Meridian Construction' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+                const found = await (await gdFetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&fields=files(id)")).json();
+                let id = found.files && found.files[0] && found.files[0].id;
+                if (!id) id = (await (await gdFetch("https://www.googleapis.com/drive/v3/files?fields=id", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Meridian Construction", mimeType: "application/vnd.google-apps.folder" }) })).json()).id;
+                gdLS("mc_gfolder", id); return id;
+            }
+            async function gdFind(name) {
+                const fid = await gdFolder();
+                const q = encodeURIComponent("name='" + name.replace(/'/g, "\\'") + "' and '" + fid + "' in parents and trashed=false");
+                const j = await (await gdFetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&fields=files(id)")).json();
+                return j.files && j.files[0] ? j.files[0].id : null;
+            }
+            async function gdUpload(name, mime, data, existingId) {
+                const meta = existingId ? { name } : { name, parents: [await gdFolder()] };
+                const b = "mcb" + Date.now();
+                const body = new Blob([`--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: ${mime}\r\n\r\n`, data, `\r\n--${b}--`]);
+                const url = "https://www.googleapis.com/upload/drive/v3/files" + (existingId ? "/" + existingId : "") + "?uploadType=multipart&fields=id,name";
+                return (await gdFetch(url, { method: existingId ? "PATCH" : "POST", headers: { "Content-Type": "multipart/related; boundary=" + b }, body })).json();
+            }
+            async function gdBackup(manual) {
+                const dump = {}; 
+                Object.keys(BOOKS).forEach(k => { try { dump[k] = JSON.parse(localStorage.getItem(BOOKS[k].store) || "null"); } catch (e) { dump[k] = null; } });
+                dump[curBook] = { sites, vendors, labourers, bankAccounts, office };
+                const today = new Date().toISOString().slice(0, 10);
+                const name = "meridian-backup-" + today + ".json";
+                const id = await gdFind(name);
+                await gdUpload(name, "application/json", JSON.stringify({ exported: new Date().toISOString(), books: dump }), id);
+                gdLS("mc_gbk", today); gdPanel();
+                if (manual) notif("Backup saved to Google Drive (" + name + ")");
+            }
+            let gdBkTimer = null;
+            function gdAutoBackup() {
+                if (!gdClientId() || !gdLS("mc_gd") || !gdValid() || gdLS("mc_gbk") === new Date().toISOString().slice(0, 10)) return;
+                clearTimeout(gdBkTimer); gdBkTimer = setTimeout(() => gdBackup(false).catch(() => { }), 20000);
+            }
+            // after a first visit, quietly re-link on the first tap of each session so uploads and backups keep working
+            document.addEventListener("click", function once() {
+                document.removeEventListener("click", once);
+                if (gdClientId() && gdLS("mc_gd") && !gdValid()) gdAuth().catch(() => { });
+            });
+            function gdOpen() { gdPanel(); document.getElementById("gdModal").classList.add("open"); }
+            function gdPanel() {
+                const box = document.getElementById("gdBody"); if (!box) return;
+                const cid = gdClientId(), on = gdValid(), last = gdLS("mc_gbk");
+                box.innerHTML = (cid ? "" : `<div class="fi" style="margin-bottom:10px"><label>Google OAuth Client ID</label><input type="text" id="gd-cid" placeholder="xxxxxxxx.apps.googleusercontent.com"><div style="font-size:11px;color:#666;margin-top:4px">One-time setup — see the steps your developer gave you.</div></div>`)
+                    + `<div style="font-size:12px;line-height:1.8;margin-bottom:10px">Status: <strong style="color:${on ? "#1D9E75" : "#BA7517"}">${on ? "Connected" : (gdLS("mc_gd") ? "Tap Connect to re-link" : "Not connected")}</strong><br>Last backup: <strong>${last || "never"}</strong><br><span style="color:#666">New invoice attachments are saved in the “Meridian Construction” folder on this Google account's Drive, and the data is backed up there once a day.</span></div>`
+                    + `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-green" onclick="gdConnect()">${on ? "Reconnect" : "Connect Google Drive"}</button>${on ? `<button class="btn btn-blue" onclick="gdBackup(true).catch(e=>notif(e.message))">Backup now</button><button class="btn btn-outline" onclick="gdFolder().then(id=>window.open('https://drive.google.com/drive/folders/'+id,'_blank')).catch(e=>notif(e.message))">Open folder</button>` : ""}${gdLS("mc_gd") ? `<button class="btn btn-grey" onclick="gdDisconnect()">Disconnect</button>` : ""}</div>`;
+            }
+            function gdConnect() {
+                const el = document.getElementById("gd-cid"); if (el && el.value.trim()) gdLS("mc_gclient", el.value.trim());
+                gdAuth().then(() => notif("Google Drive connected")).catch(e => notif(e.message));
+            }
+            function gdDisconnect() { GD.token = null; GD.exp = 0; gdLS("mc_gd", null); gdLS("mc_gfolder", null); gdPanel(); notif("Disconnected from Google Drive"); }
+
             // -- INVOICE ATTACHMENTS: each file is its own small Firestore doc, so the main book stays small --
             const ATT_PDF_MAX = 700 * 1024;
             const ATT_ST = {};
@@ -4687,6 +4790,17 @@
                 });
             }
             async function attUpload(file) {
+                if (gdClientId() && gdLS("mc_gd")) {
+                    try {
+                        if (!gdValid()) await gdAuth();
+                        let dtype = file.type || "", blob = file;
+                        if (dtype.startsWith("image/")) { const du = await attCompressImage(file); blob = await (await fetch(du)).blob(); dtype = "image/jpeg"; }
+                        else if (dtype !== "application/pdf") throw new Error("Attach a PDF or an image");
+                        else if (file.size > 10 * 1024 * 1024) throw new Error("PDF is too big (max 10 MB)");
+                        const up = await gdUpload((file.name || "invoice").replace(/\.[^.]+$/, "") + "-" + Date.now().toString(36) + (dtype === "application/pdf" ? ".pdf" : ".jpg"), dtype, blob);
+                        return { drive: up.id, name: file.name || "invoice", type: dtype };
+                    } catch (err) { if (/Attach a PDF|too big/.test(err.message)) throw err; notif("Drive unavailable — saving to the app instead"); }
+                }
                 if (!window.firebaseReady || !window.db) throw new Error("Not connected to the cloud — try again in a moment");
                 let type = file.type || "", data;
                 if (type === "application/pdf") {
@@ -4711,6 +4825,7 @@
             }
             function attBtn(e) {
                 if (!e) return "";
+                if (e.att && e.att.drive) return `<a class="edit-btn" href="https://drive.google.com/file/d/${esc(e.att.drive)}/view" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="View invoice: ${esc(e.att.name || "")}" style="text-decoration:none">&#128206;</a>`;
                 if (e.att && e.att.id) return `<button class="edit-btn" onclick="event.stopPropagation();attOpen('${jsq(e.att.id)}')" title="View invoice: ${esc(e.att.name || "")}">&#128206;</button>`;
                 if (e.attLink) return `<a class="edit-btn" href="${esc(e.attLink)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open invoice link" style="text-decoration:none">&#128206;</a>`;
                 return "";
@@ -4741,7 +4856,7 @@
                 inp.click();
             }
             function attRemove(box) { if (ATT_ST[box]) ATT_ST[box].att = null; attRender(box); }
-            function attView(box) { const a = ATT_ST[box] && ATT_ST[box].att; if (a) attOpen(a.id); }
+            function attView(box) { const a = ATT_ST[box] && ATT_ST[box].att; if (!a) return; if (a.drive) window.open("https://drive.google.com/file/d/" + a.drive + "/view", "_blank"); else attOpen(a.id); }
             function attApply(e, A) { if (A.att) e.att = A.att; else delete e.att; if (A.link) e.attLink = A.link; else delete e.attLink; }
 
             function openBillModal(opts = {}) {
