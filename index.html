@@ -4671,7 +4671,7 @@
             }
 
             // -- GOOGLE DRIVE: invoice files + daily data backup (Firebase stays the live database) --
-            const GDRIVE_CLIENT_ID = "";   // paste the OAuth Client ID here once; until then it can be entered in the Drive panel
+            const GDRIVE_CLIENT_ID = "1067477174772-u5c6kjvo2n9ujf6vj6ua5fpfpqm985em.apps.googleusercontent.com";   // paste the OAuth Client ID here once; until then it can be entered in the Drive panel
             const GD = { token: null, exp: 0 };
             const gdLS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ""; if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } return ""; };
             function gdClientId() { return GDRIVE_CLIENT_ID || gdLS("mc_gclient"); }
