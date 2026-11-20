@@ -5130,13 +5130,13 @@
                     document.getElementById("ps-amt").value = "";
                     return;
                 }
-                isel.innerHTML = (paySupList.length > 1 ? `<option value="all">All outstanding — ${fmt(paySupTotal())} (oldest first)</option>` : "") + paySupList.map((x, i) => {
+                isel.innerHTML = `<option value="all">Pay against total outstanding — ${fmt(paySupTotal())} (no bill needed)</option>` + paySupList.map((x, i) => {
                     const label = x.type === "open"
                         ? `Opening balance · ${fmt(x.pending)} outstanding`
                         : `${x.e.bill || "(no bill no)"} · ${x.e.date ? fmtDate(x.e.date) : "-"} · ${x.e.item || x.cat} · ${fmt(x.pending)} outstanding`;
                     return `<option value="${i}">${esc(label)}</option>`;
                 }).join("");
-                if (paySupList.length > 1) isel.value = "all";
+                isel.value = "all";
                 psFill();
             }
 
