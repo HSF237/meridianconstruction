@@ -2936,7 +2936,7 @@
                 }
                 fields += `
                     <div class="fi" style="margin-bottom:9px"><label>Amount (&#8377;)</label><input type="number" id="eo-amt" value="${e.amt || 0}" min="0"></div>`;
-                if (!isInc) { attReset("eo-att", e.att, e.attLink); fields += attBoxHtml("eo-att"); }
+                if (!isInc) { attReset("eo-att", attList(e), e.attLink); fields += attBoxHtml("eo-att"); }
                 document.getElementById("editEntryTitle").textContent = isInc ? "Edit Office Income" : "Edit Office Expense";
                 document.getElementById("editEntryFields").innerHTML = fields;
                 document.getElementById("editEntryModal").classList.add("open");
@@ -4823,41 +4823,48 @@
                     if (w) w.location = u; else window.location.href = u;
                 } catch (err) { if (w) w.close(); notif("Could not open the attachment"); }
             }
+            function attList(e) { return !e ? [] : (Array.isArray(e.atts) ? e.atts : (e.att ? [e.att] : [])); }
+            function attHref(a) { return a.drive ? "https://drive.google.com/file/d/" + a.drive + "/view" : ""; }
             function attBtn(e) {
                 if (!e) return "";
-                if (e.att && e.att.drive) return `<a class="edit-btn" href="https://drive.google.com/file/d/${esc(e.att.drive)}/view" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="View invoice: ${esc(e.att.name || "")}" style="text-decoration:none">&#128206;</a>`;
-                if (e.att && e.att.id) return `<button class="edit-btn" onclick="event.stopPropagation();attOpen('${jsq(e.att.id)}')" title="View invoice: ${esc(e.att.name || "")}">&#128206;</button>`;
-                if (e.attLink) return `<a class="edit-btn" href="${esc(e.attLink)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open invoice link" style="text-decoration:none">&#128206;</a>`;
-                return "";
+                let h = attList(e).map(a => a.drive
+                    ? `<a class="edit-btn" href="${esc(attHref(a))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="View invoice: ${esc(a.name || "")}" style="text-decoration:none">&#128206;</a>`
+                    : `<button class="edit-btn" onclick="event.stopPropagation();attOpen('${jsq(a.id)}')" title="View invoice: ${esc(a.name || "")}">&#128206;</button>`).join("");
+                if (e.attLink) h += `<a class="edit-btn" href="${esc(e.attLink)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open invoice link" style="text-decoration:none">&#128279;</a>`;
+                return h;
             }
-            function attReset(box, att, link) { ATT_ST[box] = { att: att || null, link: link || "" }; }
+            function attReset(box, atts, link) { ATT_ST[box] = { atts: [].concat(atts || []), link: link || "" }; }
             function attGet(box) {
-                const st = ATT_ST[box] || { att: null, link: "" };
+                const st = ATT_ST[box] || { atts: [], link: "" };
                 let l = (st.link || "").trim();
                 if (l && !/^https?:\/\//i.test(l)) l = "https://" + l;
-                return { att: st.att, link: l };
+                return { atts: st.atts || [], link: l };
             }
             function attInner(box) {
-                const st = ATT_ST[box] || { att: null, link: "" };
-                const cur = st.att ? `<span style="font-size:11px;color:#1D9E75">&#10003; ${esc(st.att.name)}</span> <button type="button" class="btn btn-outline" style="font-size:10px;padding:2px 7px" onclick="attView('${box}')">View</button> <button type="button" class="btn btn-outline" style="font-size:10px;padding:2px 7px;color:#C00000" onclick="attRemove('${box}')">Remove</button>` : `<span style="font-size:11px;color:#888">No file attached</span>`;
-                return `<label>Invoice copy <span style="color:#888;font-weight:400">(PDF / photo, optional)</span></label>
-                  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px"><button type="button" class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="attChoose('${box}')">&#128206; ${st.att ? "Replace" : "Attach"} file</button>${cur}</div>
+                const st = ATT_ST[box] || { atts: [], link: "" };
+                const rows = (st.atts || []).map((a, i) => `<div style="display:flex;gap:6px;align-items:center;margin-bottom:3px"><span style="font-size:11px;color:#1D9E75;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">&#10003; ${esc(a.name)}</span><button type="button" class="btn btn-outline" style="font-size:10px;padding:2px 7px" onclick="attView('${box}',${i})">View</button><button type="button" class="btn btn-outline" style="font-size:10px;padding:2px 7px;color:#C00000" onclick="attRemove('${box}',${i})">Remove</button></div>`).join("");
+                return `<label>Invoice copies <span style="color:#888;font-weight:400">(PDF / photos — add as many as needed)</span></label>
+                  ${rows || `<div style="font-size:11px;color:#888;margin-bottom:3px">No file attached</div>`}
+                  <div style="margin:4px 0 5px"><button type="button" class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="attChoose('${box}')">&#128206; ${(st.atts || []).length ? "Attach another file" : "Attach file"}</button></div>
                   <input type="text" placeholder="…or paste a Google Drive / web link" value="${esc(st.link || "")}" oninput="ATT_ST['${box}'].link=this.value" autocomplete="off">`;
             }
             function attBoxHtml(box) { if (!ATT_ST[box]) attReset(box); return `<div class="fi" id="${box}" style="margin-bottom:9px">${attInner(box)}</div>`; }
             function attRender(box) { const el = document.getElementById(box); if (el) el.innerHTML = attInner(box); }
             function attChoose(box) {
-                const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*,application/pdf";
+                const inp = document.createElement("input"); inp.type = "file"; inp.multiple = true; inp.accept = "image/*,application/pdf";
                 inp.onchange = async () => {
-                    const f = inp.files && inp.files[0]; if (!f) return;
-                    try { notif("Uploading…"); const a = await attUpload(f); if (!ATT_ST[box]) attReset(box); ATT_ST[box].att = a; attRender(box); notif("Attached " + a.name); }
-                    catch (err) { notif(err.message || "Upload failed"); }
+                    const files = [...(inp.files || [])]; if (!files.length) return;
+                    if (!ATT_ST[box]) attReset(box);
+                    for (const f of files) {
+                        try { notif("Uploading " + f.name + "…"); const a = await attUpload(f); ATT_ST[box].atts.push(a); attRender(box); notif("Attached " + a.name); }
+                        catch (err) { notif((f.name || "File") + ": " + (err.message || "Upload failed")); }
+                    }
                 };
                 inp.click();
             }
-            function attRemove(box) { if (ATT_ST[box]) ATT_ST[box].att = null; attRender(box); }
-            function attView(box) { const a = ATT_ST[box] && ATT_ST[box].att; if (!a) return; if (a.drive) window.open("https://drive.google.com/file/d/" + a.drive + "/view", "_blank"); else attOpen(a.id); }
-            function attApply(e, A) { if (A.att) e.att = A.att; else delete e.att; if (A.link) e.attLink = A.link; else delete e.attLink; }
+            function attRemove(box, i) { if (ATT_ST[box]) ATT_ST[box].atts.splice(i, 1); attRender(box); }
+            function attView(box, i) { const a = ATT_ST[box] && ATT_ST[box].atts[i]; if (!a) return; if (a.drive) window.open(attHref(a), "_blank"); else attOpen(a.id); }
+            function attApply(e, A) { if (A.atts && A.atts.length) e.atts = A.atts; else delete e.atts; delete e.att; if (A.link) e.attLink = A.link; else delete e.attLink; }
 
             function openBillModal(opts = {}) {
                                 const edit = opts.edit || null;
@@ -4889,7 +4896,7 @@
                     document.getElementById("bl-amt").value = e.amt || 0;
                     document.getElementById("bl-paid").value = e.paid || 0;
                     document.getElementById("bl-method").innerHTML = payMethodOpts(billMethodOf(e), true);
-                    attReset("bl-att", e.att, e.attLink);
+                    attReset("bl-att", attList(e), e.attLink);
                     nsWrap.style.display = "none";
                     document.getElementById("bl-ns-name").value = "";
                     document.getElementById("bl-ns-phone").value = "";
