@@ -4860,8 +4860,7 @@
             function attApply(e, A) { if (A.att) e.att = A.att; else delete e.att; if (A.link) e.attLink = A.link; else delete e.attLink; }
 
             function openBillModal(opts = {}) {
-                if (!sites.length) { notif("Add a site first — bills are stored against a site and category"); return; }
-                const edit = opts.edit || null;
+                                const edit = opts.edit || null;
                 billCtx = edit ? { mode: "edit", siteIdx: edit.siteIdx, cat: edit.cat, idx: edit.idx } : { mode: "add" };
                 const sel = document.getElementById("bl-sup");
                 const names = vendors.map(v => v.name);
@@ -4875,13 +4874,13 @@
                 if (extraName && !list.includes(extraName)) list.push(extraName);
                 sel.innerHTML = list.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("") + `<option value="__new">+ New supplier…</option>`;
                 const ssel = document.getElementById("bl-site");
-                ssel.innerHTML = sites.map((s, i) => `<option value="${i}">${esc(s.name)}</option>`).join("");
+                ssel.innerHTML = `<option value="__gen">General — no site (supplier bill)</option>` + sites.map((s, i) => s.general ? "" : `<option value="${i}">${esc(s.name)}</option>`).join("");
                 const nsWrap = document.getElementById("bl-new-sup");
                 if (edit) {
                     const e = sites[edit.siteIdx].mat[edit.cat][edit.idx];
                     document.getElementById("billTitle").textContent = "Edit Bill";
                     if (e.det) sel.value = e.det;
-                    ssel.value = String(edit.siteIdx);
+                    ssel.value = sites[edit.siteIdx] && sites[edit.siteIdx].general ? "__gen" : String(edit.siteIdx);
                     billFillCats(edit.cat);
                     document.getElementById("bl-date").value = e.date || todayStr();
                     document.getElementById("bl-bill").value = e.bill || "";
@@ -4900,7 +4899,7 @@
                     else if (opts.supplier) { sel.value = "__new"; nsWrap.style.display = ""; document.getElementById("bl-ns-name").value = opts.supplier; document.getElementById("bl-ns-phone").value = ""; }
                     else if (names.length) { sel.value = names[0]; nsWrap.style.display = "none"; }
                     else { sel.value = "__new"; nsWrap.style.display = ""; }
-                    ssel.value = String(opts.siteIdx != null ? opts.siteIdx : 0);
+                    ssel.value = opts.siteIdx != null && sites[opts.siteIdx] && !sites[opts.siteIdx].general ? String(opts.siteIdx) : "__gen";
                     billFillCats("");
                     document.getElementById("bl-date").value = todayStr();
                     document.getElementById("bl-bill").value = "";
@@ -4922,11 +4921,17 @@
                 document.getElementById("bl-new-sup").style.display = document.getElementById("bl-sup").value === "__new" ? "" : "none";
             }
 
+            function genSiteIdx(create) {
+                let i = sites.findIndex(s => s.general);
+                if (i < 0 && create) { const g = mkSite("General (No Site)", 0); g.general = true; sites.push(g); i = sites.length - 1; }
+                return i;
+            }
+
             function billSiteChanged() { billFillCats(""); }
 
             function billFillCats(selCat) {
-                const si = parseInt(document.getElementById("bl-site").value, 10) || 0;
-                const s = sites[si] || {};
+                const sv = document.getElementById("bl-site").value;
+                const s = sv === "__gen" ? (sites[genSiteIdx(false)] || { matCats: [...DEF_MAT] }) : (sites[parseInt(sv, 10) || 0] || {});
                 const cats = s.matCats || [];
                 const csel = document.getElementById("bl-cat");
                 csel.innerHTML = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("") + `<option value="__new">+ New category…</option>`;
@@ -4989,7 +4994,7 @@
                     vendors.push({ name: det, phone: "", upi: "" });
                 }
                 if (!det) { notif("Select a supplier"); return; }
-                const siteIdx = parseInt(val("bl-site"), 10);
+                const siteIdx = val("bl-site") === "__gen" ? genSiteIdx(true) : parseInt(val("bl-site"), 10);
                 if (isNaN(siteIdx) || !sites[siteIdx]) { notif("Select a site"); return; }
                 const s = sites[siteIdx];
                 let cat = val("bl-cat");
