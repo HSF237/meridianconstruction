@@ -11,6 +11,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCkhf_MbNk-8GAqKBXCeJQ2pk1V_sLyzPU",
@@ -24,6 +25,11 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        const auth = getAuth(app);
+        window.fbSignIn = () => signInWithPopup(auth, new GoogleAuthProvider());
+        window.fbSignOut = () => signOut(auth);
+        onAuthStateChanged(auth, u => { window.fbUser = u || null; window.authReady = true; window.dispatchEvent(new Event("authChanged")); });
 
         window.db = db;
         window.fsDoc = doc;
@@ -1889,13 +1895,8 @@
         <div class="lock-box">
             <div class="lock-logo">&#127959;</div>
             <h2>Meridian Construction</h2>
-            <p>Enter your password to continue</p>
-            <div class="lock-input-wrap">
-                <input id="lockInput" type="password" placeholder="Password" autocomplete="current-password"
-                    onkeydown="if(event.key==='Enter')unlock()">
-                <button class="lock-eye" onclick="toggleLockEye(this)" title="Show/hide">&#128065;</button>
-            </div>
-            <button id="lockBtn" onclick="unlock()">Unlock</button>
+            <p>Sign in with the office Google account</p>
+            <button id="lockBtn" onclick="mcSignIn()">Sign in with Google</button>
             <div id="lockErr"></div>
         </div>
     </div>
@@ -1914,6 +1915,7 @@
                 </div>
                 <span class="cloud-status cloud-syncing" id="cloudStatus">&#9881; Connecting...</span>
                 <button class="btn btn-outline" style="font-size:11px;color:#fff;border-color:rgba(255,255,255,.5)" onclick="gdOpen()" title="Google Drive backup &amp; invoice storage">&#9729; Drive</button>
+                <button class="btn btn-grey" style="font-size:11px" onclick="mcSignOut()" title="Sign out of this device">Sign out</button>
                 <button class="btn btn-green" onclick="toggleAddSite()">+ Add Site</button>
                 <button class="btn btn-red" style="font-size:11px" onclick="clearAllData()">Reset</button>
             </div>
@@ -5420,18 +5422,31 @@
                 document.getElementById("pwdConfirmDesc").textContent = desc;
                 document.getElementById("pwdConfirmInput").value = "";
                 document.getElementById("pwdConfirmErr").textContent = "";
+                pinGet().then(h => { if (h === null) document.getElementById("pwdConfirmErr").textContent = "No admin password is set yet — what you type now becomes the admin password."; });
                 document.getElementById("pwdConfirmModal").classList.add("open");
                 setTimeout(() => document.getElementById("pwdConfirmInput").focus(), 60);
             }
 
-            function pwdConfirmSubmit() {
-                const val = document.getElementById("pwdConfirmInput").value;
-                const err = document.getElementById("pwdConfirmErr");
-                if (val !== "Xa#M1") {
+            async function pinHash(p) {
+                const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("mc-pin-v1:" + p));
+                return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+            }
+            async function pinGet() {   // null = not set yet, undefined = could not reach cloud
+                try { const sn = await window.fsGetDoc(window.fsDoc(window.db, "meridian", "admin_pin")); return sn.exists() ? sn.data().h : null; }
+                catch (e) { return undefined; }
+            }
+            async function pwdConfirmSubmit() {
+                const inp = document.getElementById("pwdConfirmInput"), err = document.getElementById("pwdConfirmErr");
+                const val = inp.value;
+                const h = await pinGet();
+                if (h === undefined) { err.textContent = "Can't check the admin password right now (no connection)."; return; }
+                if (h === null) {
+                    if (val.length < 4) { err.textContent = "No admin password is set yet. Choose one (at least 4 characters)."; return; }
+                    try { await window.fsSetDoc(window.fsDoc(window.db, "meridian", "admin_pin"), { h: await pinHash(val), updated: new Date().toISOString() }); notif("Admin password set"); }
+                    catch (e) { err.textContent = "Could not save the admin password."; return; }
+                } else if (await pinHash(val) !== h) {
                     err.textContent = "Incorrect password.";
-                    const inp = document.getElementById("pwdConfirmInput");
-                    inp.value = "";
-                    inp.focus();
+                    inp.value = ""; inp.focus();
                     return;
                 }
                 document.getElementById("pwdConfirmModal").classList.remove("open");
@@ -6108,56 +6123,50 @@
                 showTab("dash");
             }
 
-            if (window.firebaseReady) { boot(); }
-            else { window.addEventListener("firebaseReady", boot); setTimeout(() => { if (!fbConnected) boot(); }, 3000); }
+            window.mcBoot = boot;   // started by the sign-in gate once the user is signed in
         </script>
 
     </div> <!-- /appWrap -->
 
     <script>
         (function () {
-            const PASS = "Xa#M1";
-            const SESSION_KEY = "mc_unlocked";
-
-            function unlock() {
-                const val = document.getElementById("lockInput").value;
-                const inp = document.getElementById("lockInput");
-                const err = document.getElementById("lockErr");
-                if (val === PASS) {
-                    sessionStorage.setItem(SESSION_KEY, "1");
-                    document.getElementById("lockScreen").classList.add("hidden");
-                    document.getElementById("appWrap").style.display = "";
-                } else {
-                    inp.classList.remove("error");
-                    void inp.offsetWidth; // restart animation
-                    inp.classList.add("error");
-                    err.textContent = "Incorrect password. Please try again.";
-                    inp.value = "";
-                    inp.focus();
-                }
+            let started = false;
+            const errEl = () => document.getElementById("lockErr");
+            function showLock(msg) {
+                document.getElementById("lockScreen").classList.remove("hidden");
+                document.getElementById("appWrap").style.display = "none";
+                errEl().textContent = msg || "";
             }
-
-            function toggleLockEye(btn) {
-                const inp = document.getElementById("lockInput");
-                if (inp.type === "password") {
-                    inp.type = "text";
-                    btn.innerHTML = "&#128064;";
-                } else {
-                    inp.type = "password";
-                    btn.innerHTML = "&#128065;";
-                }
-            }
-
-            window.unlock = unlock;
-            window.toggleLockEye = toggleLockEye;
-
-            // If already unlocked this session, skip lock screen
-            if (sessionStorage.getItem(SESSION_KEY) === "1") {
+            function start() {
+                if (started) return; started = true;
                 document.getElementById("lockScreen").classList.add("hidden");
                 document.getElementById("appWrap").style.display = "";
-            } else {
-                setTimeout(() => document.getElementById("lockInput").focus(), 100);
+                if (window.mcBoot) window.mcBoot();
             }
+            async function onAuth() {
+                const u = window.fbUser;
+                if (!u) { started = false; showLock(); return; }
+                try { await window.fsGetDoc(window.fsDoc(window.db, "meridian", "main")); }
+                catch (e) {
+                    if (e && e.code === "permission-denied") {
+                        try { await window.fbSignOut(); } catch (x) { }
+                        showLock("This Google account is not allowed. Use the office account.");
+                        return;
+                    }
+                }
+                try { localStorage.setItem("mc_auth_ok", u.email || "1"); } catch (e) { }
+                start();
+            }
+            window.mcSignIn = async function () {
+                errEl().textContent = "";
+                try { await window.fbSignIn(); }
+                catch (e) { errEl().textContent = (e && e.code === "auth/popup-closed-by-user") ? "" : "Sign-in failed. Check internet and try again."; }
+            };
+            window.mcSignOut = function () { Promise.resolve(window.fbSignOut && window.fbSignOut()).finally(() => { try { localStorage.removeItem("mc_auth_ok"); } catch (e) { } location.reload(); }); };
+            window.addEventListener("authChanged", onAuth);
+            if (window.authReady) onAuth();
+            // offline / cloud not reachable: let a previously signed-in device open its local copy
+            setTimeout(() => { if (!window.authReady) { let ok = ""; try { ok = localStorage.getItem("mc_auth_ok") || ""; } catch (e) { } if (ok) start(); } }, 4000);
         })();
     </script>
 </body>
