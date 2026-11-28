@@ -2141,6 +2141,14 @@
         </div>
 
         <!-- Pay supplier: pick supplier, pick invoice, pay outstanding -->
+        <div class="modal-bg" id="supPayModal">
+            <div class="modal" style="width:600px;max-height:88vh;overflow:auto">
+                <h3 id="supPayTitle">Payments</h3>
+                <div id="supPayBody"></div>
+                <div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn btn-grey" onclick="closeModal('supPayModal')">Close</button></div>
+            </div>
+        </div>
+
         <div class="modal-bg" id="paySupModal">
             <div class="modal" style="width:540px">
                 <h3>Pay Supplier</h3>
@@ -4479,7 +4487,7 @@
                           </td>
                         </tr>
                         <tr id="pd-${type}-${idx}" style="display:none"><td colspan="9" style="padding:10px;background:#f5f5f5">
-                          ${isV && p.name !== "(Unknown)" ? `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-blue" style="font-size:11px;padding:4px 10px" onclick="openBillModal({supplier:'${jsq(p.name)}'})">&#128196; Add bill for ${esc(p.name)}</button></div>` : ""}
+                          ${isV && p.name !== "(Unknown)" ? `<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px"><button class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="openSupPayments('${jsq(p.name)}')">&#128179; Payments / delete</button><button class="btn btn-blue" style="font-size:11px;padding:4px 10px" onclick="openBillModal({supplier:'${jsq(p.name)}'})">&#128196; Add bill for ${esc(p.name)}</button></div>` : ""}
                           <table class="etbl" style="margin:0"><thead><tr>${detailCols}</tr></thead><tbody>${dtRows}</tbody></table>
                         </td></tr>`;
                     });
@@ -5193,6 +5201,41 @@
                 const amt = document.getElementById("ps-amt");
                 amt.value = x.pending;
                 amt.max = x.pending;
+            }
+
+            let supPayName = "";
+            function openSupPayments(name) {
+                supPayName = name;
+                document.getElementById("supPayTitle").textContent = "Payments — " + name;
+                const rows = [];
+                const vr = vendors.find(v => v.name === name);
+                const op = vr ? (parseFloat(vr.openingPaid) || 0) : 0;
+                if (op > 0.005) rows.push(`<tr><td>—</td><td>Opening balance</td><td>—</td><td class="r">${fmt(op)}</td><td>—</td><td><button class="btn btn-red" style="font-size:10px;padding:3px 8px" onclick="delSupPayment('open')">Delete</button></td></tr>`);
+                const all = [];
+                sites.forEach((st, si) => Object.keys(st.mat || {}).forEach(cat => (st.mat[cat] || []).forEach((e, ei) => {
+                    if ((e.det || "") !== name) return;
+                    (e.payments || []).forEach((pm, k) => all.push({ si, cat, ei, k, pm, e, site: st.name }));
+                })));
+                all.sort((a, b) => String(b.pm.date || "").localeCompare(String(a.pm.date || "")));
+                all.forEach(a => rows.push(`<tr><td>${fmtDate(a.pm.date)}</td><td>Bill ${esc(a.e.bill || "-")} · ${esc(a.e.item || a.cat)}<div style="font-size:10px;color:#888">${esc(a.site)}</div></td><td>${esc(a.pm.method || "")}${a.pm.note ? '<div style="font-size:10px;color:#888">' + esc(a.pm.note) + '</div>' : ''}</td><td class="r">${fmt(a.pm.amount)}</td><td></td><td><button class="btn btn-red" style="font-size:10px;padding:3px 8px" onclick="delSupPayment(${a.si},'${jsq(a.cat)}',${a.ei},${a.k})">Delete</button></td></tr>`));
+                document.getElementById("supPayBody").innerHTML = rows.length
+                    ? `<div style="font-size:11px;color:#666;margin-bottom:8px">Deleting a payment puts that amount back as pending on the bill.</div><div class="tbl-wrap"><table class="etbl"><thead><tr><th>Date</th><th>Bill</th><th>Method / note</th><th class="r">Amount</th><th></th><th></th></tr></thead><tbody>${rows.join("")}</tbody></table></div>`
+                    : `<div style="padding:14px;color:#888;font-size:12px">No payments recorded for this supplier.</div>`;
+                document.getElementById("supPayModal").classList.add("open");
+            }
+            function delSupPayment(si, cat, ei, k) {
+                if (!confirm("Delete this payment? The amount will show as pending again.")) return;
+                if (si === "open") {
+                    const vr = vendors.find(v => v.name === supPayName); if (vr) vr.openingPaid = 0;
+                } else {
+                    const e = ((sites[si] || {}).mat || {})[cat] && sites[si].mat[cat][ei];
+                    if (!e || !e.payments || !e.payments[k]) { notif("Payment not found"); return; }
+                    e.payments.splice(k, 1);
+                    e.paid = round2(e.payments.reduce((a, p) => a + (p.amount || 0), 0));
+                }
+                saveData(); renderVendors(); renderDash(); refreshDaybookPage();
+                openSupPayments(supPayName);
+                notif("Payment deleted");
             }
 
             function applyInvoicePayment(x, amount, method, date, note, name) {
